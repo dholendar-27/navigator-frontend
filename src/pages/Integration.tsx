@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { Plus, RotateCw, Search, ToyBrick as Plug } from "lucide-react";
+import { useMemo, useState } from "react";
+import { RotateCw, Search, ToyBrick as Plug } from "lucide-react";
 import IntegrationCard from "@/components/integration/IntegrationCard";
 
 const SlackIcon = () => (

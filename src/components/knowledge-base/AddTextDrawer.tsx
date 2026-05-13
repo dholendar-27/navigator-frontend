@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -12,18 +12,13 @@ import {
     SelectItem,
     SelectValue,
 } from "@/components/ui/select";
-
-interface AddTextPayload {
-    title: string;
-    folder: string;
-    content: string;
-}
+import type { KBEntry, AddTextPayload } from "@/types/knowledge-base";
 
 interface AddTextDrawerProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSubmit: (payload: AddTextPayload) => void;
-    folders: { id: string; name: string }[];
+    folders: KBEntry[];
 }
 
 export default function AddTextDrawer({

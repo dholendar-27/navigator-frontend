@@ -16,21 +16,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
-type KBType = "folder" | "file" | "url";
-
-interface KnowledgeBaseEntry {
-    id: string;
-    name: string;
-    type: KBType;
-    folder: string;
-    owner: string;
-    createdDate: string;
-}
+import type { KBEntry, KBType } from "@/types/knowledge-base";
 
 interface KnowledgeBaseTableProps {
-    entries: KnowledgeBaseEntry[];
+    entries: KBEntry[];
     onDelete: (id: string) => void;
-    onView: (entry: KnowledgeBaseEntry) => void;
+    onView: (entry: KBEntry) => void;
 }
 
 function TypeIcon({ type }: { type: KBType }) {

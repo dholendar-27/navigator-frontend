@@ -1,12 +1,6 @@
 import React, { useState } from "react";
-import { Settings, MoreVertical } from "lucide-react";
+import { Settings } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 type Integration = {
     id: string | number;

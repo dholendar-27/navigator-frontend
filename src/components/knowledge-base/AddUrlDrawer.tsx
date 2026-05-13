@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -11,44 +11,30 @@ import {
     SelectItem,
     SelectValue,
 } from "@/components/ui/select";
-
-const CATEGORIES = [
-    "Engineering",
-    "Marketing",
-    "Sales",
-    "HR",
-    "Finance",
-    "Compliance",
-] as const;
-
-type Category = (typeof CATEGORIES)[number];
-
-interface AddUrlPayload {
-    url: string;
-    title: string;
-    category: Category;
-}
+import type { KBEntry, AddUrlPayload } from "@/types/knowledge-base";
 
 interface AddUrlDrawerProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSubmit: (payload: AddUrlPayload) => void;
+    folders: KBEntry[];
 }
 
 export default function AddUrlDrawer({
     open,
     onOpenChange,
     onSubmit,
+    folders,
 }: AddUrlDrawerProps) {
     const [url, setUrl] = useState<string>("");
     const [title, setTitle] = useState<string>("");
-    const [category, setCategory] = useState<Category | "">("");
+    const [folder, setFolder] = useState<string>("Root");
 
     useEffect(() => {
         if (!open) {
             setUrl("");
             setTitle("");
-            setCategory("");
+            setFolder("Root");
         }
     }, [open]);
 
@@ -56,7 +42,7 @@ export default function AddUrlDrawer({
     const isValidUrl = /^https?:\/\//i.test(trimmedUrl);
 
     const canSave =
-        trimmedUrl.length > 0 && isValidUrl && category !== "";
+        trimmedUrl.length > 0 && isValidUrl;
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
@@ -111,27 +97,27 @@ export default function AddUrlDrawer({
                         />
                     </div>
 
-                    {/* Category */}
                     <div className="space-y-1.5">
                         <Label className="text-sm font-medium text-zinc-700">
-                            Category
+                            Select Folder
                         </Label>
 
                         <Select
-                            value={category}
-                            onValueChange={(value: Category) => setCategory(value)}
+                            value={folder}
+                            onValueChange={setFolder}
                         >
                             <SelectTrigger
                                 className="h-11 rounded-lg border-zinc-200"
-                                data-testid="url-category-select"
+                                data-testid="url-folder-select"
                             >
-                                <SelectValue placeholder="Select category" />
+                                <SelectValue placeholder="Select folder" />
                             </SelectTrigger>
 
                             <SelectContent>
-                                {CATEGORIES.map((c) => (
-                                    <SelectItem key={c} value={c}>
-                                        {c}
+                                <SelectItem value="Root">Root</SelectItem>
+                                {folders.map((f) => (
+                                    <SelectItem key={f.id} value={f.name}>
+                                        {f.name}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -156,7 +142,7 @@ export default function AddUrlDrawer({
                             onSubmit({
                                 url: trimmedUrl,
                                 title: title.trim(),
-                                category: category as Category,
+                                folder: folder,
                             })
                         }
                         data-testid="add-url-submit-btn"

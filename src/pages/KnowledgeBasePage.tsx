@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
     FolderPlus,
     FilePlus2,
@@ -19,19 +19,9 @@ import AddFilesDrawer from "@/components/knowledge-base/AddFilesDrawer";
 import AddTextDrawer from "@/components/knowledge-base/AddTextDrawer";
 import AddUrlDrawer from "@/components/knowledge-base/AddUrlDrawer";
 import KnowledgeBaseDetailDrawer from "@/components/knowledge-base/KnowledgeBaseDetailDrawer";
+import type { KBEntry, KBType, AddUrlPayload, AddTextPayload, AddFilesPayload, CreateFolderPayload } from "@/types/knowledge-base";
 
 /** ---------------- Types ---------------- */
-
-type KBType = "folder" | "file" | "url";
-
-interface KBEntry {
-    id: string;
-    name: string;
-    type: KBType;
-    folder: string;
-    owner: string;
-    createdDate: string;
-}
 
 interface Filters {
     type: "" | KBType;
@@ -90,16 +80,13 @@ export default function KnowledgeBasePage() {
         ]);
     };
 
-    const handleCreateFolder = (payload: { name: string; folder: string }) => {
+    const handleCreateFolder = (payload: CreateFolderPayload) => {
         addEntry({ name: payload.name, folder: payload.folder, type: "folder" });
         toast.success("Folder created");
         setFolderOpen(false);
     };
 
-    const handleAddFiles = (payload: {
-        folder: string;
-        files: string[];
-    }) => {
+    const handleAddFiles = (payload: AddFilesPayload) => {
         payload.files.forEach((f) =>
             addEntry({
                 name: f,
@@ -114,17 +101,13 @@ export default function KnowledgeBasePage() {
         setFilesOpen(false);
     };
 
-    const handleAddText = (payload: { title: string; folder: string }) => {
+    const handleAddText = (payload: AddTextPayload) => {
         addEntry({ name: payload.title, folder: payload.folder, type: "file" });
         toast.success("Text saved");
         setTextOpen(false);
     };
 
-    const handleAddUrl = (payload: {
-        url: string;
-        title?: string;
-        folder: string;
-    }) => {
+    const handleAddUrl = (payload: AddUrlPayload) => {
         addEntry({
             name: payload.title || payload.url,
             folder: payload.folder,

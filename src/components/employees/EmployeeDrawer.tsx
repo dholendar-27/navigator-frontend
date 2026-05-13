@@ -1,4 +1,3 @@
-import React from "react";
 import { X, FileText, MessageSquare, MessagesSquare } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -43,23 +42,7 @@ function UsageCard({ icon: Icon, label, value }: UsageCardProps) {
     );
 }
 
-export type Employee = {
-    avatar?: string;
-    name: string;
-    id: string | number;
-    email?: string;
-    mobile?: string;
-    countryCode?: string;
-    gender?: string;
-    dob?: string | Date;
-    role?: string;
-    category?: string;
-    createdBy?: string;
-    createdDate?: string;
-    kbFiles?: number;
-    simpleInteraction?: number | string;
-    complexInteraction?: number | string;
-};
+import type { Employee } from "@/types/employee";
 
 type EmployeeDetailsDrawerProps = {
     open: boolean;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -11,17 +11,13 @@ import {
     SelectItem,
     SelectValue,
 } from "@/components/ui/select";
-
-interface CreateFolderPayload {
-    name: string;
-    folder: string;
-}
+import type { KBEntry, CreateFolderPayload } from "@/types/knowledge-base";
 
 interface CreateFolderDrawerProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSubmit: (payload: CreateFolderPayload) => void;
-    folders: { id: string; name: string }[];
+    folders: KBEntry[];
 }
 
 export default function CreateFolderDrawer({

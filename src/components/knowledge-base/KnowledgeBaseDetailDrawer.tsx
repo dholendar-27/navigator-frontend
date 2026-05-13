@@ -1,23 +1,12 @@
-import React from "react";
 import { X, FolderClosed, FileText, Link2, Globe, Clock, User, Tag } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
-
-type KBType = "folder" | "file" | "url";
-
-interface KnowledgeBaseEntry {
-    id: string;
-    name: string;
-    type: KBType;
-    category: string;
-    owner: string;
-    createdDate: string;
-}
+import type { KBEntry } from "@/types/knowledge-base";
 
 interface KBDetailDrawerProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    entry: KnowledgeBaseEntry | null;
+    entry: KBEntry | null;
 }
 
 function Field({ icon: Icon, label, value }: { icon: any, label: string, value: string }) {
@@ -84,7 +73,7 @@ export default function KnowledgeBaseDetailDrawer({
                     </div>
 
                     <div className="grid grid-cols-1 gap-6">
-                        <Field icon={Tag} label="Category" value={entry.category} />
+                        <Field icon={Tag} label="Category" value={entry.folder} />
                         <Field icon={User} label="Owner" value={entry.owner} />
                         <Field icon={Clock} label="Created Date" value={entry.createdDate} />
                         {entry.type === "url" && (
@@ -95,7 +84,7 @@ export default function KnowledgeBaseDetailDrawer({
                     <div className="rounded-xl border border-zinc-100 bg-zinc-50/50 p-4">
                         <div className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Description</div>
                         <p className="mt-2 text-sm leading-relaxed text-zinc-600">
-                            This {entry.type} contains important information regarding {entry.category.toLowerCase()} processes and guidelines. 
+                            This {entry.type} contains important information regarding {entry.folder.toLowerCase()} processes and guidelines. 
                             Last reviewed by {entry.owner} on {entry.createdDate}.
                         </p>
                     </div>

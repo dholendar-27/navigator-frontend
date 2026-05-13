@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X, FilePlus2, FileText } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -11,17 +11,13 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-
-interface AddFilesPayload {
-    folder: string;
-    files: string[];
-}
+import type { KBEntry, AddFilesPayload } from "@/types/knowledge-base";
 
 interface AddFilesDrawerProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSubmit: (payload: AddFilesPayload) => void;
-    folders: Folder[];
+    folders: KBEntry[];
 }
 
 export default function AddFilesDrawer({

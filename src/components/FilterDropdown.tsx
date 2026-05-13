@@ -10,7 +10,7 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import React, { type JSX } from "react";
+import { type JSX } from "react";
 import { cn } from "@/lib/utils";
 
 type FilterDropdownProps = {

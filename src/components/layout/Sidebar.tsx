@@ -13,7 +13,6 @@ import {
     Search,
     AlertTriangle,
     ArrowRight,
-    Sparkles,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";

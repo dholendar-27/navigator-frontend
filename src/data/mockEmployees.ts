@@ -15,6 +15,8 @@ const NAMES = [
   "Samuel Gomez", "Zoe Rivera", "David Peterson", "Lily Morgan",
 ] as const;
 
+const CATEGORIES = ["Engineering", "Marketing", "Sales", "HR"] as const;
+
 const AVATAR_SEEDS = [
   "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=80&h=80&fit=crop",
   "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop",
@@ -37,6 +39,7 @@ export interface Employee {
   role: Role;
   avatar: string;
   status: Status;
+  category: string;
   kbFiles: number | null;
   simpleInteraction: string | null;
   complexInteraction: string | null;
@@ -55,12 +58,14 @@ export function generateMockEmployees(count: number = 160): Employee[] {
   for (let i = 0; i < count; i++) {
     const name = NAMES[i % NAMES.length];
     const role = ROLES[i % ROLES.length];
+    const category = CATEGORIES[i % CATEGORIES.length];
     const hasData = i % 7 !== 2; // simulate missing data rows
 
     list.push({
       id: `EMP${pad(i + 100)}`,
       name,
       role,
+      category,
       avatar: AVATAR_SEEDS[i % AVATAR_SEEDS.length],
       status: STATUSES[i % STATUSES.length],
       kbFiles: hasData ? Math.floor(Math.random() * 100) + 1 : null,
