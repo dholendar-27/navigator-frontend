@@ -40,12 +40,14 @@ export interface Employee {
   avatar: string;
   status: Status;
   category: string;
-  kbFiles: number | null;
+  kbFiles: number | null | string;
   simpleInteraction: string | null;
   complexInteraction: string | null;
   email: string;
   createdBy: string;
   createdDate: string;
+  isActive?: boolean;
+  inviteId?: string;
 }
 
 function pad(n: number, len: number = 6): string {

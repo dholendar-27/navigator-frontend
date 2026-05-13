@@ -1,30 +1,9 @@
-import React, {
-    useEffect,
-    useRef,
-    useState,
-    type JSX,
-} from "react";
-
-import { format } from "date-fns";
-
-import {
-    Calendar as CalendarIcon,
-    X,
-    User as UserIcon,
-} from "lucide-react";
-
-import {
-    Sheet,
-    SheetContent,
-    SheetTitle,
-} from "@/components/ui/sheet";
-
+import React, { useEffect, useState, type JSX } from "react";
+import { X, AlertCircle } from "lucide-react";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-
 import { Input } from "@/components/ui/input";
-
 import { Label } from "@/components/ui/label";
-
 import {
     Select,
     SelectTrigger,
@@ -32,133 +11,29 @@ import {
     SelectItem,
     SelectValue,
 } from "@/components/ui/select";
-
-import {
-    Popover,
-    PopoverTrigger,
-    PopoverContent,
-} from "@/components/ui/popover";
-
-import { Calendar } from "@/components/ui/calendar";
-
-import { cn } from "@/lib/utils";
-
-type CountryCode = {
-    code: string;
-    flag: string;
-    label: string;
-};
-
-type Gender =
-    | "Male"
-    | "Female"
-    | "Other"
-    | "Prefer not to say"
-    | "";
-
-type Role =
-    | "Super Admin"
-    | "Admin"
-    | "Editor"
-    | "Member"
-    | "";
-
-type Category =
-    | "Engineering"
-    | "Marketing"
-    | "Sales"
-    | "HR"
-    | "Finance"
-    | "";
+import { useKindeAuth } from "@kinde-oss/kinde-auth-react";
+import { createInvite, listRoles } from "@/lib/api";
+import { toast } from "sonner";
 
 type EmployeeForm = {
-    name: string;
+    firstName: string;
+    lastName: string;
     email: string;
-    mobile: string;
-    countryCode: string;
-    gender: Gender;
-    dob: Date | null;
-    role: Role;
-    category: Category;
-    avatar: string | null;
-};
-
-type EmployeePayload = EmployeeForm & {
-    id: string;
+    roleId: string;
 };
 
 interface AddEmployeeDrawerProps {
     open: boolean;
-    onOpenChange: (
-        open: boolean
-    ) => void;
-    onSubmit: (
-        data: EmployeePayload,
-        invite: boolean
-    ) => void;
+    onOpenChange: (open: boolean) => void;
+    onSubmit: (data: any, invite: boolean) => void;
     nextEmployeeId: string;
 }
 
-const COUNTRY_CODES: CountryCode[] = [
-    {
-        code: "+1",
-        flag: "🇺🇸",
-        label: "US",
-    },
-    {
-        code: "+44",
-        flag: "🇬🇧",
-        label: "UK",
-    },
-    {
-        code: "+91",
-        flag: "🇮🇳",
-        label: "IN",
-    },
-    {
-        code: "+61",
-        flag: "🇦🇺",
-        label: "AU",
-    },
-    {
-        code: "+49",
-        flag: "🇩🇪",
-        label: "DE",
-    },
-];
-
-const ROLES: Role[] = [
-    "Super Admin",
-    "Admin",
-    "Editor",
-    "Member",
-];
-
-const CATEGORIES: Category[] = [
-    "Engineering",
-    "Marketing",
-    "Sales",
-    "HR",
-    "Finance",
-];
-
-const GENDERS: Gender[] = [
-    "Male",
-    "Female",
-    "Other",
-    "Prefer not to say",
-];
-
 const initialForm: EmployeeForm = {
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
-    mobile: "",
-    countryCode: "+1",
-    gender: "",
-    dob: null,
-    role: "",
-    category: "",
-    avatar: null,
+    roleId: "",
 };
 
 export default function AddEmployeeDrawer({
@@ -167,31 +42,33 @@ export default function AddEmployeeDrawer({
     onSubmit,
     nextEmployeeId,
 }: AddEmployeeDrawerProps): JSX.Element {
-    const [form, setForm] =
-        useState<EmployeeForm>(
-            initialForm
-        );
-
-    const [
-        avatarPreview,
-        setAvatarPreview,
-    ] = useState<string | null>(
-        null
-    );
-
-    const fileInputRef =
-        useRef<HTMLInputElement>(null);
+    const { getToken } = useKindeAuth();
+    const [form, setForm] = useState<EmployeeForm>(initialForm);
+    const [touched, setTouched] = useState<{ [K in keyof EmployeeForm]?: boolean }>({});
+    const [roles, setRoles] = useState<{ id: string; name: string; description?: string }[]>([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         if (!open) {
             setForm(initialForm);
-            setAvatarPreview(null);
+            setTouched({});
+        } else {
+            const fetchRoles = async () => {
+                try {
+                    const token = await getToken();
+                    if (token) {
+                        const data = await listRoles(token);
+                        setRoles(Array.isArray(data) ? data : []);
+                    }
+                } catch (err) {
+                    console.error("Failed to load roles:", err);
+                }
+            };
+            fetchRoles();
         }
     }, [open]);
 
-    const updateField = <
-        K extends keyof EmployeeForm
-    >(
+    const updateField = <K extends keyof EmployeeForm>(
         key: K,
         value: EmployeeForm[K]
     ): void => {
@@ -199,75 +76,66 @@ export default function AddEmployeeDrawer({
             ...prev,
             [key]: value,
         }));
+        setTouched((prev) => ({
+            ...prev,
+            [key]: true,
+        }));
     };
 
-    const handleFileChange = (
-        e: React.ChangeEvent<HTMLInputElement>
-    ): void => {
-        const file =
-            e.target.files?.[0];
+    const handleBlur = (key: keyof EmployeeForm) => {
+        setTouched((prev) => ({ ...prev, [key]: true }));
+    };
 
-        if (!file) {
-            return;
-        }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isFirstNameValid = form.firstName.trim() !== "";
+    const isLastNameValid = form.lastName.trim() !== "";
+    const isEmailValid = emailRegex.test(form.email.trim());
+    const isRoleValid = form.roleId !== "";
 
-        const reader =
-            new FileReader();
+    const canSave = isFirstNameValid && isLastNameValid && isEmailValid && isRoleValid;
 
-        reader.onloadend = () => {
-            const result =
-                reader.result as string;
+    const submit = async (): Promise<void> => {
+        if (!canSave || isSubmitting) return;
 
-            setAvatarPreview(result);
+        try {
+            setIsSubmitting(true);
+            const token = await getToken();
+            if (!token) {
+                toast.error("You must be logged in to invite employees");
+                return;
+            }
 
-            updateField(
-                "avatar",
-                result
+            // Call invite API
+            await createInvite({
+                email: form.email,
+                first_name: form.firstName,
+                last_name: form.lastName || null,
+                role_name: roles.find(r => r.id === form.roleId)?.name || "member",
+            }, token);
+
+            toast.success(`Invite sent to ${form.email}`);
+            
+            // Notify parent
+            onSubmit(
+                {
+                    id: nextEmployeeId,
+                    name: `${form.firstName} ${form.lastName}`.trim(),
+                    email: form.email,
+                    role: roles.find(r => r.id === form.roleId)?.name || "Member",
+                },
+                true
             );
-        };
-
-        reader.readAsDataURL(file);
-    };
-
-    const canSave =
-        form.name.trim() !== "" &&
-        form.email.trim() !== "";
-
-    const submit = (
-        invite: boolean
-    ): void => {
-        if (!canSave) {
-            return;
+            onOpenChange(false);
+        } catch (error: any) {
+            console.error("Invite error:", error);
+            toast.error(error.message || "Failed to send invite");
+        } finally {
+            setIsSubmitting(false);
         }
-
-        onSubmit(
-            {
-                ...form,
-                id: nextEmployeeId,
-                avatar:
-                    avatarPreview ||
-                    "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=80&h=80&fit=crop",
-                role:
-                    form.role || "Member",
-            },
-            invite
-        );
     };
-
-    const country =
-        COUNTRY_CODES.find(
-            (c) =>
-                c.code ===
-                form.countryCode
-        ) || COUNTRY_CODES[0];
 
     return (
-        <Sheet
-            open={open}
-            onOpenChange={
-                onOpenChange
-            }
-        >
+        <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent
                 side="right"
                 className="flex w-full flex-col gap-0 p-0 sm:max-w-[480px]"
@@ -277,9 +145,7 @@ export default function AddEmployeeDrawer({
                 <div className="flex items-center gap-3 border-b border-zinc-100 px-6 py-5">
                     <button
                         type="button"
-                        onClick={() =>
-                            onOpenChange(false)
-                        }
+                        onClick={() => onOpenChange(false)}
                         className="rounded-md p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
                         data-testid="close-drawer-btn"
                         aria-label="Close"
@@ -294,103 +160,56 @@ export default function AddEmployeeDrawer({
 
                 {/* Body */}
                 <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5">
-                    {/* Avatar */}
-                    <div>
-                        <Label className="text-sm font-medium text-zinc-700">
-                            Employee Avatar
-                        </Label>
-
-                        <div className="mt-2 flex items-start gap-4">
-                            <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl bg-zinc-100">
-                                {avatarPreview ? (
-                                    <img
-                                        src={
-                                            avatarPreview
-                                        }
-                                        alt="avatar"
-                                        className="h-full w-full object-cover"
-                                    />
-                                ) : (
-                                    <UserIcon className="h-10 w-10 text-zinc-400" />
-                                )}
-                            </div>
-
-                            <div className="flex-1">
-                                <p className="text-xs text-zinc-500">
-                                    Allowed only
-                                    .jpeg, .jpg,
-                                    .png.
-                                    <br />
-                                    Maximum size of
-                                    5 mb.
-                                </p>
-
-                                <input
-                                    ref={
-                                        fileInputRef
-                                    }
-                                    type="file"
-                                    accept="image/png,image/jpeg,image/jpg"
-                                    className="hidden"
-                                    onChange={
-                                        handleFileChange
-                                    }
-                                    data-testid="avatar-file-input"
-                                />
-
-                                <Button
-                                    type="button"
-                                    size="sm"
-                                    className="mt-2 bg-blue-600 text-white hover:bg-blue-700"
-                                    onClick={() =>
-                                        fileInputRef.current?.click()
-                                    }
-                                    data-testid="choose-file-btn"
-                                >
-                                    Choose File
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Name */}
+                    {/* First Name */}
                     <div className="space-y-1.5">
                         <Label
-                            htmlFor="emp-name"
+                            htmlFor="emp-first-name"
                             className="text-sm font-medium text-zinc-700"
                         >
-                            Employee Name
+                            First Name <span className="text-red-500 ml-0.5">*</span>
                         </Label>
 
                         <Input
-                            id="emp-name"
-                            value={form.name}
-                            onChange={(e) =>
-                                updateField(
-                                    "name",
-                                    e.target.value
-                                )
-                            }
-                            placeholder="Enter your name"
-                            data-testid="emp-name-input"
+                            id="emp-first-name"
+                            value={form.firstName}
+                            onChange={(e) => updateField("firstName", e.target.value)}
+                            onBlur={() => handleBlur("firstName")}
+                            placeholder="Enter first name"
+                            data-testid="emp-first-name-input"
                             className="h-11 rounded-lg border-zinc-200"
                         />
+                        {touched.firstName && !isFirstNameValid && (
+                            <div className="flex items-center gap-1.5 text-xs text-red-500 mt-1">
+                                <AlertCircle className="h-3.5 w-3.5" />
+                                <span>First name is required.</span>
+                            </div>
+                        )}
                     </div>
 
-                    {/* Employee ID */}
+                    {/* Last Name */}
                     <div className="space-y-1.5">
-                        <Label className="text-sm font-medium text-zinc-700">
-                            Employee ID
+                        <Label
+                            htmlFor="emp-last-name"
+                            className="text-sm font-medium text-zinc-700"
+                        >
+                            Last Name <span className="text-red-500 ml-0.5">*</span>
                         </Label>
 
                         <Input
-                            value={
-                                nextEmployeeId
-                            }
-                            readOnly
-                            data-testid="emp-id-input"
-                            className="h-11 cursor-not-allowed rounded-lg border-zinc-200 bg-zinc-50 text-zinc-700"
+                            id="emp-last-name"
+                            value={form.lastName}
+                            onChange={(e) => updateField("lastName", e.target.value)}
+                            onBlur={() => handleBlur("lastName")}
+                            placeholder="Enter last name"
+                            data-testid="emp-last-name-input"
+                            className="h-11 rounded-lg border-zinc-200"
                         />
+                        {touched.lastName && !isLastNameValid && (
+                            <div className="flex items-center gap-1.5 text-xs text-red-500 mt-1">
+                                <AlertCircle className="h-3.5 w-3.5" />
+                                <span>Last name is required.</span>
+                            </div>
+                        )}
                     </div>
 
                     {/* Email */}
@@ -399,220 +218,42 @@ export default function AddEmployeeDrawer({
                             htmlFor="emp-email"
                             className="text-sm font-medium text-zinc-700"
                         >
-                            Email
+                            Email <span className="text-red-500 ml-0.5">*</span>
                         </Label>
 
                         <Input
                             id="emp-email"
                             type="email"
                             value={form.email}
-                            onChange={(e) =>
-                                updateField(
-                                    "email",
-                                    e.target.value
-                                )
-                            }
-                            placeholder="Enter your email"
+                            onChange={(e) => updateField("email", e.target.value)}
+                            onBlur={() => handleBlur("email")}
+                            placeholder="Enter email address"
                             data-testid="emp-email-input"
                             className="h-11 rounded-lg border-zinc-200"
                         />
-                    </div>
-
-                    {/* Mobile */}
-                    <div className="space-y-1.5">
-                        <Label className="text-sm font-medium text-zinc-700">
-                            Mobile Number
-                        </Label>
-
-                        <div className="flex gap-2">
-                            <Select
-                                value={
-                                    form.countryCode
-                                }
-                                onValueChange={(
-                                    v
-                                ) =>
-                                    updateField(
-                                        "countryCode",
-                                        v
-                                    )
-                                }
-                            >
-                                <SelectTrigger
-                                    className="h-11 w-24 rounded-lg border-zinc-200"
-                                    data-testid="country-code-select"
-                                >
-                                    <span className="flex items-center gap-1.5">
-                                        <span className="text-base">
-                                            {
-                                                country.flag
-                                            }
-                                        </span>
-
-                                        <span className="text-sm">
-                                            {
-                                                country.code
-                                            }
-                                        </span>
-                                    </span>
-                                </SelectTrigger>
-
-                                <SelectContent>
-                                    {COUNTRY_CODES.map(
-                                        (c) => (
-                                            <SelectItem
-                                                key={
-                                                    c.code
-                                                }
-                                                value={
-                                                    c.code
-                                                }
-                                            >
-                                                <span className="flex items-center gap-2">
-                                                    <span className="text-base">
-                                                        {
-                                                            c.flag
-                                                        }
-                                                    </span>
-
-                                                    <span>
-                                                        {
-                                                            c.code
-                                                        }
-                                                    </span>
-                                                </span>
-                                            </SelectItem>
-                                        )
-                                    )}
-                                </SelectContent>
-                            </Select>
-
-                            <Input
-                                value={
-                                    form.mobile
-                                }
-                                onChange={(e) =>
-                                    updateField(
-                                        "mobile",
-                                        e.target.value
-                                    )
-                                }
-                                placeholder="Enter your mobile number"
-                                data-testid="emp-mobile-input"
-                                className="h-11 flex-1 rounded-lg border-zinc-200"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Gender */}
-                    <div className="space-y-1.5">
-                        <Label className="text-sm font-medium text-zinc-700">
-                            Gender
-                        </Label>
-
-                        <Select
-                            value={form.gender}
-                            onValueChange={(
-                                v
-                            ) =>
-                                updateField(
-                                    "gender",
-                                    v as Gender
-                                )
-                            }
-                        >
-                            <SelectTrigger
-                                className="h-11 rounded-lg border-zinc-200"
-                                data-testid="emp-gender-select"
-                            >
-                                <SelectValue placeholder="Select gender" />
-                            </SelectTrigger>
-
-                            <SelectContent>
-                                {GENDERS.map(
-                                    (g) => (
-                                        <SelectItem
-                                            key={g}
-                                            value={g}
-                                        >
-                                            {g}
-                                        </SelectItem>
-                                    )
-                                )}
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    {/* DOB */}
-                    <div className="space-y-1.5">
-                        <Label className="text-sm font-medium text-zinc-700">
-                            Date Of Birth
-                        </Label>
-
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <button
-                                    type="button"
-                                    className={cn(
-                                        "flex h-11 w-full items-center justify-between rounded-lg border border-zinc-200 bg-white px-3 text-left text-sm",
-                                        !form.dob &&
-                                        "text-zinc-400"
-                                    )}
-                                    data-testid="emp-dob-trigger"
-                                >
-                                    <span>
-                                        {form.dob
-                                            ? format(
-                                                form.dob,
-                                                "dd MMMM yyyy"
-                                            )
-                                            : "Select date"}
-                                    </span>
-
-                                    <CalendarIcon className="h-4 w-4 text-zinc-400" />
-                                </button>
-                            </PopoverTrigger>
-
-                            <PopoverContent
-                                className="w-auto p-0"
-                                align="start"
-                            >
-                                <Calendar
-                                    mode="single"
-                                    selected={
-                                        form.dob ||
-                                        undefined
-                                    }
-                                    onSelect={(
-                                        d
-                                    ) =>
-                                        updateField(
-                                            "dob",
-                                            d || null
-                                        )
-                                    }
-
-                                />
-                            </PopoverContent>
-                        </Popover>
+                        {touched.email && form.email.trim() === "" && (
+                            <div className="flex items-center gap-1.5 text-xs text-red-500 mt-1">
+                                <AlertCircle className="h-3.5 w-3.5" />
+                                <span>Email address is required.</span>
+                            </div>
+                        )}
+                        {touched.email && form.email.trim() !== "" && !isEmailValid && (
+                            <div className="flex items-center gap-1.5 text-xs text-red-500 mt-1">
+                                <AlertCircle className="h-3.5 w-3.5" />
+                                <span>Please enter a valid email address.</span>
+                            </div>
+                        )}
                     </div>
 
                     {/* Role */}
                     <div className="space-y-1.5">
                         <Label className="text-sm font-medium text-zinc-700">
-                            Role
+                            Role <span className="text-red-500 ml-0.5">*</span>
                         </Label>
 
                         <Select
-                            value={form.role}
-                            onValueChange={(
-                                v
-                            ) =>
-                                updateField(
-                                    "role",
-                                    v as Role
-                                )
-                            }
+                            value={form.roleId}
+                            onValueChange={(v) => updateField("roleId", v)}
                         >
                             <SelectTrigger
                                 className="h-11 rounded-lg border-zinc-200"
@@ -622,88 +263,24 @@ export default function AddEmployeeDrawer({
                             </SelectTrigger>
 
                             <SelectContent>
-                                {ROLES.map(
-                                    (r) => (
-                                        <SelectItem
-                                            key={r}
-                                            value={r}
-                                        >
-                                            {r}
+                                {roles.map((r) => {
+                                    const displayRole = r.name === "super_admin" 
+                                        ? "Super Admin" 
+                                        : r.name.charAt(0).toUpperCase() + r.name.slice(1);
+                                    return (
+                                        <SelectItem key={r.id} value={r.id}>
+                                            {displayRole}
                                         </SelectItem>
-                                    )
-                                )}
+                                    );
+                                })}
                             </SelectContent>
                         </Select>
-                    </div>
-
-                    {/* Category */}
-                    <div className="space-y-1.5">
-                        <Label className="text-sm font-medium text-zinc-700">
-                            Category
-                        </Label>
-
-                        <Select
-                            value={
-                                form.category
-                            }
-                            onValueChange={(
-                                v
-                            ) =>
-                                updateField(
-                                    "category",
-                                    v as Category
-                                )
-                            }
-                        >
-                            <SelectTrigger
-                                className="h-11 rounded-lg border-zinc-200"
-                                data-testid="emp-category-select"
-                            >
-                                <SelectValue placeholder="Select categories" />
-                            </SelectTrigger>
-
-                            <SelectContent>
-                                {CATEGORIES.map(
-                                    (c) => (
-                                        <SelectItem
-                                            key={c}
-                                            value={c}
-                                        >
-                                            {c}
-                                        </SelectItem>
-                                    )
-                                )}
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    {/* Created By */}
-                    <div className="space-y-1.5">
-                        <Label className="text-sm font-medium text-zinc-700">
-                            Created By
-                        </Label>
-
-                        <Input
-                            value="William Jones"
-                            readOnly
-                            className="h-11 cursor-not-allowed rounded-lg border-zinc-200 bg-zinc-50 text-zinc-700"
-                            data-testid="emp-created-by"
-                        />
-                    </div>
-
-                    {/* Created Date */}
-                    <div className="space-y-1.5">
-                        <Label className="text-sm font-medium text-zinc-700">
-                            Created Date
-                        </Label>
-
-                        <div className="flex h-11 w-full items-center justify-between rounded-lg border border-zinc-200 bg-zinc-50 px-3 text-sm text-zinc-700">
-                            <span data-testid="emp-created-date">
-                                28 April 2026
-                            </span>
-
-                            <CalendarIcon className="h-4 w-4 text-zinc-400" />
-                        </div>
+                        {touched.roleId && !isRoleValid && (
+                            <div className="flex items-center gap-1.5 text-xs text-red-500 mt-1">
+                                <AlertCircle className="h-3.5 w-3.5" />
+                                <span>Please select a role.</span>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -711,9 +288,7 @@ export default function AddEmployeeDrawer({
                 <div className="flex items-center justify-end gap-3 border-t border-zinc-100 bg-white px-6 py-4">
                     <Button
                         variant="ghost"
-                        onClick={() =>
-                            onOpenChange(false)
-                        }
+                        onClick={() => onOpenChange(false)}
                         data-testid="cancel-drawer-btn"
                         className="text-zinc-600 hover:text-zinc-900"
                     >
@@ -721,26 +296,12 @@ export default function AddEmployeeDrawer({
                     </Button>
 
                     <Button
-                        variant="outline"
-                        onClick={() =>
-                            submit(false)
-                        }
-                        disabled={!canSave}
-                        data-testid="save-employee-btn"
-                        className="rounded-lg border-zinc-200"
-                    >
-                        Save
-                    </Button>
-
-                    <Button
-                        onClick={() =>
-                            submit(true)
-                        }
-                        disabled={!canSave}
+                        onClick={submit}
+                        disabled={!canSave || isSubmitting}
                         data-testid="save-invite-employee-btn"
                         className="rounded-lg bg-blue-600 text-white hover:bg-blue-700"
                     >
-                        Save & Invite
+                        {isSubmitting ? "Sending..." : "Send Invite"}
                     </Button>
                 </div>
             </SheetContent>

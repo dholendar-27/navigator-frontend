@@ -35,6 +35,22 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogFooter,
+    DialogTitle,
+    DialogDescription,
+} from "@/components/ui/dialog";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -50,12 +66,16 @@ type RowMenuProps = {
     employee: Employee;
     onDelete: (id: string) => void;
     onView: (employee: Employee) => void;
+    onResendInvite?: (id: string) => void;
+    onRevokeInvite?: (id: string) => void;
 };
 
 type EmployeeTableProps = {
     employees: Employee[];
     onDelete: (id: string) => void;
     onView: (employee: Employee) => void;
+    onResendInvite?: (id: string) => void;
+    onRevokeInvite?: (id: string) => void;
 };
 
 function StatusDot({
@@ -82,6 +102,8 @@ function RowMenu({
     employee,
     onDelete,
     onView,
+    onResendInvite,
+    onRevokeInvite,
 }: RowMenuProps): JSX.Element {
     return (
         <DropdownMenu>
@@ -128,16 +150,16 @@ function RowMenu({
                     Add to Category
                 </DropdownMenuItem>
 
-                <DropdownMenuItem
-                    onClick={() =>
-                        toast(
-                            `Invite resent to ${employee.name}`
-                        )
-                    }
-                >
-                    <RotateCw className="mr-2 h-4 w-4 text-zinc-600" />
-                    Resend Invite
-                </DropdownMenuItem>
+                {employee.isActive === false && onResendInvite && (
+                    <DropdownMenuItem
+                        onClick={() =>
+                            onResendInvite(employee.inviteId || employee.id)
+                        }
+                    >
+                        <RotateCw className="mr-2 h-4 w-4 text-zinc-600" />
+                        Resend Invite
+                    </DropdownMenuItem>
+                )}
 
                 <DropdownMenuItem
                     onClick={() =>
@@ -148,16 +170,30 @@ function RowMenu({
                     Archive
                 </DropdownMenuItem>
 
-                <DropdownMenuItem
-                    data-testid={`delete-${employee.id}`}
-                    onClick={() =>
-                        onDelete(employee.id)
-                    }
-                    className="text-red-600 focus:text-red-600"
-                >
-                    <Trash2 className="mr-2 h-4 w-4 text-red-600" />
-                    Delete
-                </DropdownMenuItem>
+                {employee.isActive !== false ? (
+                    <DropdownMenuItem
+                        data-testid={`delete-${employee.id}`}
+                        onClick={() =>
+                            onDelete(employee.id)
+                        }
+                        className="text-red-600 focus:text-red-600 cursor-pointer"
+                    >
+                        <Trash2 className="mr-2 h-4 w-4 text-red-600" />
+                        Delete
+                    </DropdownMenuItem>
+                ) : (
+                    onRevokeInvite && (
+                        <DropdownMenuItem
+                            onClick={() =>
+                                onRevokeInvite(employee.inviteId || employee.id)
+                            }
+                            className="text-red-600 focus:text-red-600 cursor-pointer"
+                        >
+                            <Trash2 className="mr-2 h-4 w-4 text-red-600" />
+                            Revoke Invite
+                        </DropdownMenuItem>
+                    )
+                )}
             </DropdownMenuContent>
         </DropdownMenu>
     );
@@ -167,7 +203,12 @@ export default function EmployeeTable({
     employees,
     onDelete,
     onView,
+    onResendInvite,
+    onRevokeInvite,
 }: EmployeeTableProps): JSX.Element {
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+    const [confirmRevokeId, setConfirmRevokeId] = useState<string | null>(null);
+
     const [selected, setSelected] =
         useState<Set<string>>(new Set());
 
@@ -232,112 +273,144 @@ export default function EmployeeTable({
 
     return (
         <div
-            className="overflow-hidden rounded-2xl border border-zinc-100 bg-white"
+            className="overflow-hidden rounded-2xl border border-zinc-100 bg-white flex flex-col h-full"
             data-testid="employees-table"
         >
-            {/* Header */}
-            <div className="grid grid-cols-[48px_2fr_1fr_1fr_1fr_56px] items-center gap-2 border-b border-zinc-100 bg-zinc-50/60 px-5 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500">
-                <div>
-                    <Checkbox
-                        checked={allChecked}
-                        onCheckedChange={toggleAll}
-                        data-testid="select-all-checkbox"
-                    />
-                </div>
-
-                <div className="text-sm normal-case tracking-normal text-zinc-600">
-                    Employee Name
-                </div>
-
-                <div className="text-sm normal-case tracking-normal text-zinc-600">
-                    No. Of KB Files
-                </div>
-
-                <div className="text-sm normal-case tracking-normal text-zinc-600">
-                    Simple Interaction
-                </div>
-
-                <div className="text-sm normal-case tracking-normal text-zinc-600">
-                    Complex Interaction
-                </div>
-
-                <div />
+            <div className="bg-zinc-50/80 border-b border-zinc-100 px-4 py-2 flex items-center justify-between md:hidden text-xs text-zinc-600 font-medium shrink-0">
+                <span>Swipe left/right to view more columns</span>
+                <span className="flex items-center gap-1 font-semibold text-blue-600">Scroll <ChevronRight className="h-3.5 w-3.5" /></span>
             </div>
-
-            {/* Rows */}
-            <div>
-                {pageRows.map((emp) => (
-                    <div
-                        key={emp.id}
-                        className="grid grid-cols-[48px_2fr_1fr_1fr_1fr_56px] items-center gap-2 border-b border-zinc-50 px-5 py-4 transition-colors hover:bg-zinc-50/60"
-                        data-testid={`employee-row-${emp.id}`}
-                    >
+            <div className="w-full overflow-x-auto flex-1 flex flex-col min-h-0">
+                <div className="min-w-[800px] flex-1 flex flex-col min-h-0">
+                    {/* Header */}
+                    <div className="grid grid-cols-[48px_2fr_1fr_1fr_1fr_56px] items-center gap-2 border-b border-zinc-100 bg-zinc-50/60 px-5 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500 shrink-0">
                         <div>
                             <Checkbox
-                                checked={selected.has(emp.id)}
-                                onCheckedChange={() =>
-                                    toggleOne(emp.id)
-                                }
-                                data-testid={`select-row-${emp.id}`}
+                                checked={allChecked}
+                                onCheckedChange={toggleAll}
+                                data-testid="select-all-checkbox"
                             />
                         </div>
 
-                        <div className="flex items-center gap-3">
-                            <div className="relative">
-                                <Avatar className="h-9 w-9">
-                                    <AvatarImage
-                                        src={emp.avatar}
-                                        alt={emp.name}
-                                    />
-
-                                    <AvatarFallback>
-                                        {emp.name
-                                            .split(" ")
-                                            .map((n) => n[0])
-                                            .join("")
-                                            .slice(0, 2)}
-                                    </AvatarFallback>
-                                </Avatar>
-
-                                <StatusDot status={emp.status} />
-                            </div>
-
-                            <div>
-                                <div className="text-sm font-medium text-zinc-900">
-                                    {emp.name}
-                                </div>
-
-                                <div className="text-xs text-zinc-500">
-                                    {emp.role}
-                                </div>
-                            </div>
+                        <div className="text-sm normal-case tracking-normal text-zinc-600">
+                            Employee Name
                         </div>
 
-                        <div className="text-sm text-zinc-700">
-                            {emp.kbFiles ?? "-"}
+                        <div className="text-sm normal-case tracking-normal text-zinc-600">
+                            No. Of KB Files
                         </div>
 
-                        <div className="text-sm text-zinc-700">
-                            {emp.simpleInteraction ?? "-"}
+                        <div className="text-sm normal-case tracking-normal text-zinc-600">
+                            Simple Interaction
                         </div>
 
-                        <div className="text-sm text-zinc-700">
-                            {emp.complexInteraction ?? "-"}
+                        <div className="text-sm normal-case tracking-normal text-zinc-600">
+                            Complex Interaction
                         </div>
 
-                        <div className="flex justify-end">
-                            <RowMenu
-                                employee={emp}
-                                onDelete={onDelete}
-                                onView={onView}
-                            />
-                        </div>
+                        <div />
                     </div>
-                ))}
+
+                    {/* Rows */}
+                    <div className="flex-1 overflow-y-auto hover-scrollbar min-h-0">
+                        {pageRows.map((emp) => (
+                            <div
+                                key={emp.id}
+                                onClick={() => onView(emp)}
+                                className="grid grid-cols-[48px_2fr_1fr_1fr_1fr_56px] items-center gap-2 border-b border-zinc-50 px-5 py-4 transition-all hover:bg-zinc-50/80 hover:shadow-2xs cursor-pointer group"
+                                data-testid={`employee-row-${emp.id}`}
+                            >
+                                <div onClick={(e) => e.stopPropagation()}>
+                                    <Checkbox
+                                        checked={selected.has(emp.id)}
+                                        onCheckedChange={() =>
+                                            toggleOne(emp.id)
+                                        }
+                                        data-testid={`select-row-${emp.id}`}
+                                    />
+                                </div>
+
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                    <div className="relative shrink-0">
+                                        <Avatar className="h-9 w-9">
+                                            <AvatarImage
+                                                src={emp.avatar}
+                                                alt={emp.name}
+                                            />
+
+                                            <AvatarFallback>
+                                                {emp.name
+                                                    ? emp.name
+                                                        .split(" ")
+                                                        .filter(Boolean)
+                                                        .map((n) => n[0])
+                                                        .join("")
+                                                        .slice(0, 2)
+                                                    : "EMP"}
+                                            </AvatarFallback>
+                                        </Avatar>
+
+                                        <StatusDot status={emp.status} />
+                                    </div>
+
+                                    <div className="truncate min-w-0 flex-1">
+                                        <TooltipProvider delayDuration={200}>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <div className="text-sm font-medium text-zinc-900 truncate group-hover:text-blue-600 transition-colors">
+                                                        {emp.name}
+                                                    </div>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="top" className="text-xs">
+                                                    {emp.name}
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+
+                                        <TooltipProvider delayDuration={200}>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <div className="text-xs text-zinc-500 truncate mt-0.5">
+                                                        {emp.role}
+                                                    </div>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="bottom" className="text-xs capitalize">
+                                                    {emp.role}
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    </div>
+                                </div>
+
+                                <div className="text-sm text-zinc-700 truncate">
+                                    {emp.kbFiles ?? "-"}
+                                </div>
+
+                                <div className="text-sm text-zinc-700 truncate">
+                                    {emp.simpleInteraction ?? "-"}
+                                </div>
+
+                                <div className="text-sm text-zinc-700 truncate">
+                                    {emp.complexInteraction ?? "-"}
+                                </div>
+
+                                <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
+                                    <RowMenu
+                                        employee={emp}
+                                        onDelete={(id) => setConfirmDeleteId(id)}
+                                        onView={onView}
+                                        onResendInvite={onResendInvite}
+                                        onRevokeInvite={(id) => setConfirmRevokeId(id)}
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-end gap-6 px-5 py-3 text-sm text-zinc-600">
+            <div className="flex items-center justify-end gap-6 px-5 py-3 text-sm text-zinc-600 shrink-0 border-t border-zinc-100 bg-white">
                 <div className="flex items-center gap-2">
                     <span>Rows per Page</span>
 
@@ -435,8 +508,82 @@ export default function EmployeeTable({
                     >
                         <ChevronRight className="h-4 w-4" />
                     </button>
+
+                    <div className="flex items-center gap-1.5 ml-2 pl-2 border-l border-zinc-200">
+                        <span className="text-zinc-500 text-xs font-medium tracking-wide uppercase">Go to</span>
+                        <input
+                            type="number"
+                            min={1}
+                            max={totalPages}
+                            value={page}
+                            onChange={(e) => {
+                                const val = parseInt(e.target.value, 10);
+                                if (!isNaN(val) && val >= 1 && val <= totalPages) {
+                                    setPage(val);
+                                }
+                            }}
+                            className="h-8 w-14 rounded-md border border-zinc-200 bg-white px-2 text-center text-sm text-zinc-700 font-medium focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                            aria-label="Go to page"
+                        />
+                    </div>
                 </div>
             </div>
+
+            <Dialog open={!!confirmDeleteId} onOpenChange={(open) => !open && setConfirmDeleteId(null)}>
+                <DialogContent className="bg-white rounded-2xl max-w-md border border-zinc-100 shadow-xl p-6">
+                    <DialogHeader>
+                        <DialogTitle className="text-zinc-900 font-semibold text-lg">Delete Employee</DialogTitle>
+                        <DialogDescription className="text-zinc-500 text-sm mt-2">
+                            Are you sure you want to delete this employee? This action cannot be undone and will permanently remove their access.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="mt-6 gap-2">
+                        <Button variant="outline" onClick={() => setConfirmDeleteId(null)} className="rounded-lg">
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            className="bg-red-600 hover:bg-red-700 text-white rounded-lg"
+                            onClick={() => {
+                                if (confirmDeleteId) {
+                                    onDelete(confirmDeleteId);
+                                    setConfirmDeleteId(null);
+                                }
+                            }}
+                        >
+                            Confirm Delete
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={!!confirmRevokeId} onOpenChange={(open) => !open && setConfirmRevokeId(null)}>
+                <DialogContent className="bg-white rounded-2xl max-w-md border border-zinc-100 shadow-xl p-6">
+                    <DialogHeader>
+                        <DialogTitle className="text-zinc-900 font-semibold text-lg">Revoke Invitation</DialogTitle>
+                        <DialogDescription className="text-zinc-500 text-sm mt-2">
+                            Are you sure you want to revoke this pending invitation? The user will no longer be able to use the invite link to sign up.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="mt-6 gap-2">
+                        <Button variant="outline" onClick={() => setConfirmRevokeId(null)} className="rounded-lg">
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            className="bg-red-600 hover:bg-red-700 text-white rounded-lg"
+                            onClick={() => {
+                                if (confirmRevokeId && onRevokeInvite) {
+                                    onRevokeInvite(confirmRevokeId);
+                                    setConfirmRevokeId(null);
+                                }
+                            }}
+                        >
+                            Confirm Revoke
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

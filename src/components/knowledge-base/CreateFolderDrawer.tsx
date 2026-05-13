@@ -4,35 +4,24 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-    Select,
-    SelectTrigger,
-    SelectContent,
-    SelectItem,
-    SelectValue,
-} from "@/components/ui/select";
-import type { KBEntry, CreateFolderPayload } from "@/types/knowledge-base";
+import type { CreateFolderPayload } from "@/types/knowledge-base";
 
 interface CreateFolderDrawerProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSubmit: (payload: CreateFolderPayload) => void;
-    folders: KBEntry[];
 }
 
 export default function CreateFolderDrawer({
     open,
     onOpenChange,
     onSubmit,
-    folders,
 }: CreateFolderDrawerProps) {
     const [name, setName] = useState<string>("");
-    const [folder, setFolder] = useState<string>("Root");
 
     useEffect(() => {
         if (!open) {
             setName("");
-            setFolder("Root");
         }
     }, [open]);
 
@@ -78,33 +67,6 @@ export default function CreateFolderDrawer({
                             className="h-11 rounded-lg border-zinc-200"
                         />
                     </div>
-
-                    <div className="space-y-1.5">
-                        <Label className="text-sm font-medium text-zinc-700">
-                            Select Folder
-                        </Label>
-
-                        <Select
-                            value={folder}
-                            onValueChange={setFolder}
-                        >
-                            <SelectTrigger
-                                className="h-11 rounded-lg border-zinc-200"
-                                data-testid="folder-select"
-                            >
-                                <SelectValue placeholder="Select folder" />
-                            </SelectTrigger>
-
-                            <SelectContent>
-                                <SelectItem value="Root">Root</SelectItem>
-                                {folders.map((f) => (
-                                    <SelectItem key={f.id} value={f.name}>
-                                        {f.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
                 </div>
 
                 <div className="flex items-center justify-end gap-3 border-t border-zinc-100 bg-white px-6 py-4">
@@ -119,7 +81,7 @@ export default function CreateFolderDrawer({
 
                     <Button
                         onClick={() =>
-                            onSubmit({ name: name.trim(), folder: folder })
+                            onSubmit({ name: name.trim(), folder: "" })
                         }
                         disabled={!canCreate}
                         data-testid="create-folder-submit-btn"

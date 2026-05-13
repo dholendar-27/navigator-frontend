@@ -94,10 +94,13 @@ export default function EmployeeDetailsDrawer({
                                 />
                                 <AvatarFallback className="rounded-2xl text-lg">
                                     {employee.name
-                                        .split(" ")
-                                        .map((n) => n[0])
-                                        .join("")
-                                        .slice(0, 2)}
+                                        ? employee.name
+                                            .split(" ")
+                                            .filter(Boolean)
+                                            .map((n) => n[0])
+                                            .join("")
+                                            .slice(0, 2)
+                                        : "EMP"}
                                 </AvatarFallback>
                             </Avatar>
                         </div>
@@ -121,13 +124,13 @@ export default function EmployeeDetailsDrawer({
                             value={
                                 employee.mobile
                                     ? `${employee.countryCode || "+1"} ${employee.mobile}`
-                                    : "+1 202 555 0147"
+                                    : "-"
                             }
                             testId="details-mobile"
                         />
                         <Field
                             label="Gender"
-                            value={employee.gender || "Male"}
+                            value={employee.gender || "-"}
                             testId="details-gender"
                         />
                         <Field
@@ -138,15 +141,15 @@ export default function EmployeeDetailsDrawer({
                                         day: "numeric",
                                         month: "long",
                                         year: "numeric",
-                                    })
-                                    : "18 September 1993"
+                                      })
+                                    : "-"
                             }
                             testId="details-dob"
                         />
                         <Field label="Role" value={employee.role} testId="details-role" />
                         <Field
                             label="Categories"
-                            value={employee.category || "HR, Admin, Development"}
+                            value={employee.category || "-"}
                             testId="details-categories"
                         />
                         <Field
@@ -170,17 +173,17 @@ export default function EmployeeDetailsDrawer({
                             <UsageCard
                                 icon={FileText}
                                 label="No. Of KB Files"
-                                value={employee.kbFiles ?? 0}
+                                value={employee.kbFiles !== undefined && employee.kbFiles !== null ? employee.kbFiles : "-"}
                             />
                             <UsageCard
                                 icon={MessageSquare}
                                 label="Simple Interaction"
-                                value={employee.simpleInteraction ?? "$0"}
+                                value={employee.simpleInteraction !== undefined && employee.simpleInteraction !== null ? employee.simpleInteraction : "-"}
                             />
                             <UsageCard
                                 icon={MessagesSquare}
                                 label="Complex Interaction"
-                                value={employee.complexInteraction ?? "$0"}
+                                value={employee.complexInteraction !== undefined && employee.complexInteraction !== null ? employee.complexInteraction : "-"}
                             />
                         </div>
                     </div>

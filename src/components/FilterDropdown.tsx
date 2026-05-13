@@ -48,24 +48,30 @@ export default function FilterDropdown({
                     align="start"
                     className="w-44"
                 >
-                    {options.map((opt) => (
-                        <DropdownMenuItem
-                            key={opt}
-                            data-testid={testId ? `${testId}-option-${opt
-                                .toLowerCase()
-                                .replace(/\s+/g, "-")}` : undefined}
-                            onClick={() => onChange(opt)}
-                            className="flex items-center justify-between"
-                        >
-                            <span className="capitalize">
-                                {opt}
-                            </span>
+                    {options.length === 0 ? (
+                        <div className="py-3 px-3 text-xs text-zinc-500 text-center italic">
+                            No matching items
+                        </div>
+                    ) : (
+                        options.map((opt) => (
+                            <DropdownMenuItem
+                                key={opt}
+                                data-testid={testId ? `${testId}-option-${opt
+                                    .toLowerCase()
+                                    .replace(/\s+/g, "-")}` : undefined}
+                                onClick={() => onChange(opt)}
+                                className="flex items-center justify-between"
+                            >
+                                <span className="capitalize">
+                                    {opt}
+                                </span>
 
-                            {value === opt && (
-                                <Check className="h-4 w-4 text-blue-600" />
-                            )}
-                        </DropdownMenuItem>
-                    ))}
+                                {value === opt && (
+                                    <Check className="h-4 w-4 text-blue-600" />
+                                )}
+                            </DropdownMenuItem>
+                        ))
+                    )}
                 </DropdownMenuContent>
             </DropdownMenu>
 

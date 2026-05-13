@@ -27,25 +27,25 @@
   }
 
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
+    --background: 222 47% 8%;
+    --foreground: 210 40% 96%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 96%;
+    --popover: 222 47% 10%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 210 40% 96%;
+    --primary-foreground: 222 47% 8%;
+    --secondary: 222 47% 15%;
+    --secondary-foreground: 210 40% 96%;
+    --muted: 222 47% 15%;
+    --muted-foreground: 215 20% 60%;
+    --accent: 222 47% 15%;
+    --accent-foreground: 210 40% 96%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --border: 222 47% 18%;
+    --input: 222 47% 18%;
+    --ring: 212 97% 60%;
   }
 }
 
@@ -53,8 +53,123 @@
   * {
     border-color: hsl(var(--border));
   }
+
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  /* ============================================
+     GLOBAL DARK MODE CASCADE
+     Uses exact class selectors (.bg-zinc-50) so
+     hover:bg-zinc-50 variants are NOT affected
+     ============================================ */
+
+  /* Page & layout backgrounds */
+  .dark .bg-white {
+    background-color: hsl(var(--card)) !important;
+  }
+
+  .dark .bg-zinc-50 {
+    background-color: hsl(222 47% 13%) !important;
+  }
+
+  .dark .bg-zinc-100 {
+    background-color: hsl(222 47% 17%) !important;
+  }
+
+  /* Text colors */
+  .dark .text-zinc-900 {
+    color: hsl(210 40% 96%) !important;
+  }
+
+  .dark .text-zinc-800 {
+    color: hsl(210 40% 90%) !important;
+  }
+
+  .dark .text-zinc-700 {
+    color: hsl(215 20% 80%) !important;
+  }
+
+  .dark .text-zinc-600 {
+    color: hsl(215 20% 65%) !important;
+  }
+
+  .dark .text-zinc-500 {
+    color: hsl(215 20% 55%) !important;
+  }
+
+  /* Border colors */
+  .dark .border-zinc-100 {
+    border-color: hsl(222 47% 18%) !important;
+  }
+
+  .dark .border-zinc-200 {
+    border-color: hsl(222 47% 20%) !important;
+  }
+
+  /* Input & search */
+  .dark input,
+  .dark textarea {
+    background-color: hsl(222 47% 13%) !important;
+    color: hsl(210 40% 96%) !important;
+    border-color: hsl(222 47% 22%) !important;
+  }
+
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    color: hsl(215 20% 45%) !important;
+  }
+
+  /* Dividers */
+  .dark .divide-zinc-100 > * + * {
+    border-color: hsl(222 47% 18%) !important;
+  }
+
+  /* Skeleton loading pulses */
+  .dark .bg-zinc-100.animate-pulse {
+    background-color: hsl(222 47% 20%) !important;
+  }
+
+  .dark .bg-zinc-200.animate-pulse {
+    background-color: hsl(222 47% 22%) !important;
+  }
+
+}
+
+@layer base {
+  /* Modern Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #e4e4e7;
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #d4d4d8;
+  }
+
+  /* Custom Sidebar Scrollbar - Only shows on hover */
+  .hover-scrollbar::-webkit-scrollbar-thumb {
+    background: transparent;
+  }
+
+  .hover-scrollbar:hover::-webkit-scrollbar-thumb {
+    background: #e4e4e7;
+  }
+
+  /* For Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #e4e4e7 transparent;
   }
 }

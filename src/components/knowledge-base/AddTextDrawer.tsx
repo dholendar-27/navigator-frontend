@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { X, AlertCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ interface AddTextDrawerProps {
     onOpenChange: (open: boolean) => void;
     onSubmit: (payload: AddTextPayload) => void;
     folders: KBEntry[];
+    isInsideFolder?: boolean;
 }
 
 export default function AddTextDrawer({
@@ -26,22 +27,33 @@ export default function AddTextDrawer({
     onOpenChange,
     onSubmit,
     folders,
+    isInsideFolder = false,
 }: AddTextDrawerProps) {
     const [title, setTitle] = useState<string>("");
-    const [folder, setFolder] = useState<string>("Root");
+    const [folder, setFolder] = useState<string>("");
     const [content, setContent] = useState<string>("");
+    const [touched, setTouched] = useState<{ title?: boolean; content?: boolean; folder?: boolean }>({});
 
     useEffect(() => {
         if (!open) {
             setTitle("");
-            setFolder("Root");
+            setFolder("");
             setContent("");
+            setTouched({});
+        } else if (folders.length > 0) {
+            setFolder(folders[0].name);
         }
-    }, [open]);
+    }, [open, folders]);
 
-    const canSave =
-        title.trim().length > 0 &&
-        content.trim().length > 0;
+    const isTitleValid = title.trim().length > 0;
+    const isContentValid = content.trim().length > 0;
+    const isFolderValid = folder.trim().length > 0;
+
+    const canSave = isTitleValid && isContentValid && isFolderValid;
+
+    const handleBlur = (field: "title" | "content" | "folder") => {
+        setTouched((prev) => ({ ...prev, [field]: true }));
+    };
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
@@ -69,26 +81,40 @@ export default function AddTextDrawer({
                     {/* Title */}
                     <div className="space-y-1.5">
                         <Label className="text-sm font-medium text-zinc-700">
-                            Title
+                            Title <span className="text-red-500 ml-0.5">*</span>
                         </Label>
 
                         <Input
                             value={title}
-                            onChange={(e) => setTitle(e.target.value)}
+                            onChange={(e) => {
+                                setTitle(e.target.value);
+                                setTouched((prev) => ({ ...prev, title: true }));
+                            }}
+                            onBlur={() => handleBlur("title")}
                             placeholder="Enter a title"
                             data-testid="text-title-input"
                             className="h-11 rounded-lg border-zinc-200"
                         />
+                        {touched.title && !isTitleValid && (
+                            <div className="flex items-center gap-1.5 text-xs text-red-500 mt-1">
+                                <AlertCircle className="h-3.5 w-3.5" />
+                                <span>Title is required.</span>
+                            </div>
+                        )}
                     </div>
 
                     <div className="space-y-1.5">
                         <Label className="text-sm font-medium text-zinc-700">
-                            Select Folder
+                            Select Folder <span className="text-red-500 ml-0.5">*</span>
                         </Label>
 
                         <Select
                             value={folder}
-                            onValueChange={setFolder}
+                            onValueChange={(v) => {
+                                setFolder(v);
+                                setTouched((prev) => ({ ...prev, folder: true }));
+                            }}
+                            disabled={isInsideFolder}
                         >
                             <SelectTrigger
                                 className="h-11 rounded-lg border-zinc-200"
@@ -98,7 +124,6 @@ export default function AddTextDrawer({
                             </SelectTrigger>
 
                             <SelectContent>
-                                <SelectItem value="Root">Root</SelectItem>
                                 {folders.map((f) => (
                                     <SelectItem key={f.id} value={f.name}>
                                         {f.name}
@@ -106,22 +131,38 @@ export default function AddTextDrawer({
                                 ))}
                             </SelectContent>
                         </Select>
+                        {touched.folder && !isFolderValid && (
+                            <div className="flex items-center gap-1.5 text-xs text-red-500 mt-1">
+                                <AlertCircle className="h-3.5 w-3.5" />
+                                <span>Please select a folder.</span>
+                            </div>
+                        )}
                     </div>
 
                     {/* Content */}
                     <div className="space-y-1.5">
                         <Label className="text-sm font-medium text-zinc-700">
-                            Content
+                            Content <span className="text-red-500 ml-0.5">*</span>
                         </Label>
 
                         <Textarea
                             value={content}
-                            onChange={(e) => setContent(e.target.value)}
+                            onChange={(e) => {
+                                setContent(e.target.value);
+                                setTouched((prev) => ({ ...prev, content: true }));
+                            }}
+                            onBlur={() => handleBlur("content")}
                             rows={8}
                             placeholder="Paste or write the content..."
                             data-testid="text-content-input"
                             className="rounded-lg border-zinc-200"
                         />
+                        {touched.content && !isContentValid && (
+                            <div className="flex items-center gap-1.5 text-xs text-red-500 mt-1">
+                                <AlertCircle className="h-3.5 w-3.5" />
+                                <span>Content is required.</span>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -131,7 +172,7 @@ export default function AddTextDrawer({
                         variant="ghost"
                         onClick={() => onOpenChange(false)}
                         data-testid="cancel-add-text-btn"
-                        className="text-zinc-600 hover:text-zinc-900"
+                        className="text-zinc-600 hover:text-zinc-900 rounded-lg"
                     >
                         Cancel
                     </Button>

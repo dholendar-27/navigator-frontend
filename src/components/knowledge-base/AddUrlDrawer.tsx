@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { X, AlertCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ interface AddUrlDrawerProps {
     onOpenChange: (open: boolean) => void;
     onSubmit: (payload: AddUrlPayload) => void;
     folders: KBEntry[];
+    isInsideFolder?: boolean;
 }
 
 export default function AddUrlDrawer({
@@ -25,24 +26,33 @@ export default function AddUrlDrawer({
     onOpenChange,
     onSubmit,
     folders,
+    isInsideFolder = false,
 }: AddUrlDrawerProps) {
     const [url, setUrl] = useState<string>("");
     const [title, setTitle] = useState<string>("");
-    const [folder, setFolder] = useState<string>("Root");
+    const [folder, setFolder] = useState<string>("");
+    const [touched, setTouched] = useState<{ url?: boolean; folder?: boolean }>({});
 
     useEffect(() => {
         if (!open) {
             setUrl("");
             setTitle("");
-            setFolder("Root");
+            setFolder("");
+            setTouched({});
+        } else if (folders.length > 0) {
+            setFolder(folders[0].name);
         }
-    }, [open]);
+    }, [open, folders]);
 
     const trimmedUrl = url.trim();
     const isValidUrl = /^https?:\/\//i.test(trimmedUrl);
+    const isFolderValid = folder.trim().length > 0;
 
-    const canSave =
-        trimmedUrl.length > 0 && isValidUrl;
+    const canSave = trimmedUrl.length > 0 && isValidUrl && isFolderValid;
+
+    const handleBlur = (field: "url" | "folder") => {
+        setTouched((prev) => ({ ...prev, [field]: true }));
+    };
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
@@ -70,16 +80,32 @@ export default function AddUrlDrawer({
                     {/* URL */}
                     <div className="space-y-1.5">
                         <Label className="text-sm font-medium text-zinc-700">
-                            URL
+                            URL <span className="text-red-500 ml-0.5">*</span>
                         </Label>
 
                         <Input
                             value={url}
-                            onChange={(e) => setUrl(e.target.value)}
+                            onChange={(e) => {
+                                setUrl(e.target.value);
+                                setTouched((prev) => ({ ...prev, url: true }));
+                            }}
+                            onBlur={() => handleBlur("url")}
                             placeholder="https://example.com/docs"
                             data-testid="url-input"
                             className="h-11 rounded-lg border-zinc-200"
                         />
+                        {touched.url && trimmedUrl === "" && (
+                            <div className="flex items-center gap-1.5 text-xs text-red-500 mt-1">
+                                <AlertCircle className="h-3.5 w-3.5" />
+                                <span>URL is required.</span>
+                            </div>
+                        )}
+                        {touched.url && trimmedUrl !== "" && !isValidUrl && (
+                            <div className="flex items-center gap-1.5 text-xs text-red-500 mt-1">
+                                <AlertCircle className="h-3.5 w-3.5" />
+                                <span>Please enter a valid URL starting with http:// or https://.</span>
+                            </div>
+                        )}
                     </div>
 
                     {/* Title */}
@@ -99,12 +125,16 @@ export default function AddUrlDrawer({
 
                     <div className="space-y-1.5">
                         <Label className="text-sm font-medium text-zinc-700">
-                            Select Folder
+                            Select Folder <span className="text-red-500 ml-0.5">*</span>
                         </Label>
 
                         <Select
                             value={folder}
-                            onValueChange={setFolder}
+                            onValueChange={(v) => {
+                                setFolder(v);
+                                setTouched((prev) => ({ ...prev, folder: true }));
+                            }}
+                            disabled={isInsideFolder}
                         >
                             <SelectTrigger
                                 className="h-11 rounded-lg border-zinc-200"
@@ -114,7 +144,6 @@ export default function AddUrlDrawer({
                             </SelectTrigger>
 
                             <SelectContent>
-                                <SelectItem value="Root">Root</SelectItem>
                                 {folders.map((f) => (
                                     <SelectItem key={f.id} value={f.name}>
                                         {f.name}
@@ -122,6 +151,12 @@ export default function AddUrlDrawer({
                                 ))}
                             </SelectContent>
                         </Select>
+                        {touched.folder && !isFolderValid && (
+                            <div className="flex items-center gap-1.5 text-xs text-red-500 mt-1">
+                                <AlertCircle className="h-3.5 w-3.5" />
+                                <span>Please select a folder.</span>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -131,7 +166,7 @@ export default function AddUrlDrawer({
                         variant="ghost"
                         onClick={() => onOpenChange(false)}
                         data-testid="cancel-add-url-btn"
-                        className="text-zinc-600 hover:text-zinc-900"
+                        className="text-zinc-600 hover:text-zinc-900 rounded-lg"
                     >
                         Cancel
                     </Button>

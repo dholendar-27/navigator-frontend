@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { RotateCw, Search, ToyBrick as Plug } from "lucide-react";
 import IntegrationCard from "@/components/integration/IntegrationCard";
+import UnifiedEmptyState from "@/components/ui/empty-state";
 
 const SlackIcon = () => (
     <img src="/Slack.svg" alt="Slack" className="h-7 w-7 object-contain" />
@@ -72,13 +73,13 @@ const Integration: React.FC<IntegrationProps> = ({ variant = "populated" }) => {
     return (
         <section
             data-testid="integration-screen"
-            className="min-h-screen w-full bg-[#FAFAF7] px-8 py-8 md:px-12 md:py-10"
+            className="w-full bg-[#FAFAF7] dark:bg-zinc-950 px-4 sm:px-8 py-8 md:px-12 md:py-10 h-full overflow-y-auto"
         >
             {/* Title row */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <h1
                     data-testid="integration-title"
-                    className="text-[26px] font-semibold tracking-tight text-neutral-900"
+                    className="text-[26px] font-semibold tracking-tight text-neutral-900 dark:text-zinc-100"
                 >
                     Integration
                 </h1>
@@ -86,7 +87,7 @@ const Integration: React.FC<IntegrationProps> = ({ variant = "populated" }) => {
                 <button
                     type="button"
                     data-testid="integration-refresh-btn"
-                    className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-colors hover:bg-neutral-50 hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
+                    className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2 text-sm font-medium text-neutral-700 dark:text-zinc-300 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-colors hover:bg-neutral-50 dark:hover:bg-zinc-700 hover:text-neutral-900 dark:hover:text-zinc-100 focus:outline-none"
                 >
                     <RotateCw className="h-4 w-4" />
                     Refresh
@@ -103,37 +104,23 @@ const Integration: React.FC<IntegrationProps> = ({ variant = "populated" }) => {
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         setQuery(e.target.value)
                     }
-                    placeholder="Search Integrations..."
+                    placeholder="Search integrations by name or description..."
                     aria-label="Search integrations"
                     data-testid="integration-search-input"
                     disabled={isEmpty}
-                    className="block h-12 w-full rounded-xl border border-neutral-200 bg-white pl-11 pr-4 text-sm text-neutral-900 placeholder:text-neutral-400 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-colors focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-200 disabled:opacity-70"
+                    className="block h-12 w-full rounded-xl border border-neutral-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 pl-11 pr-4 text-sm text-neutral-900 dark:text-zinc-100 placeholder:text-neutral-400 dark:placeholder:text-zinc-500 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-colors focus:border-neutral-400 dark:focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-neutral-200 dark:focus:ring-zinc-700 disabled:opacity-70"
                 />
             </div>
 
             {/* Body */}
             <div className="mt-6">
                 {isEmpty || filtered.length === 0 ? (
-                    <div
-                        data-testid="integration-empty-state"
-                        className="flex min-h-[480px] w-full flex-col items-center justify-center rounded-2xl bg-neutral-100/80"
-                    >
-                        <EmptyPlugIcon className="h-20 w-20 text-neutral-600" />
-
-                        <p
-                            data-testid="integration-empty-title"
-                            className="mt-6 text-lg font-semibold text-neutral-900"
-                        >
-                            No Data Found
-                        </p>
-
-                        <p
-                            data-testid="integration-empty-subtitle"
-                            className="mt-1.5 text-sm text-neutral-500"
-                        >
-                            No integrations have been added yet.
-                        </p>
-                    </div>
+                    <UnifiedEmptyState
+                        title="No Data Found"
+                        description="No integrations have been added yet."
+                        icon={<EmptyPlugIcon className="h-8 w-8 text-neutral-600" />}
+                        testId="integration-empty-state"
+                    />
                 ) : (
                     <div
                         data-testid="integration-grid"
