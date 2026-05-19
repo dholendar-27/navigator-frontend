@@ -57,9 +57,12 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    transition: background-color 0.25s ease, color 0.25s ease;
+    font-family: 'Inter Display', 'Inter', system-ui, -apple-system, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
+}
 
+@layer base {
   /* ============================================
      GLOBAL DARK MODE CASCADE
      Uses exact class selectors (.bg-zinc-50) so

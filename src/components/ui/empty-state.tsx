@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import { type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 interface EmptyStateProps {
@@ -7,6 +7,7 @@ interface EmptyStateProps {
     icon?: ReactNode;
     className?: string;
     testId?: string;
+    children?: ReactNode;
 }
 
 export default function UnifiedEmptyState({
@@ -15,6 +16,7 @@ export default function UnifiedEmptyState({
     icon,
     className,
     testId = "empty-state",
+    children,
 }: EmptyStateProps) {
     return (
         <div
@@ -37,6 +39,12 @@ export default function UnifiedEmptyState({
             <p className="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400 max-w-sm">
                 {description}
             </p>
+
+            {children && (
+                <div className="mt-5">
+                    {children}
+                </div>
+            )}
         </div>
     );
 }

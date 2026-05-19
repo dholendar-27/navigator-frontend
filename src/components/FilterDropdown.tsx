@@ -29,18 +29,18 @@ export default function FilterDropdown({
     testId,
 }: FilterDropdownProps): JSX.Element {
     return (
-        <div className="group flex items-center gap-0 rounded-lg border border-zinc-200 bg-white hover:border-zinc-300 transition-colors">
+        <div className="group flex items-center gap-0 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600 transition-colors h-8 shadow-xs">
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <button
                         type="button"
                         data-testid={testId}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-zinc-700 outline-none"
+                        className="flex items-center gap-1 px-2.5 h-full text-xs text-zinc-700 dark:text-zinc-300 outline-none cursor-pointer"
                     >
-                        <span className={cn("transition-colors", value ? "font-medium text-zinc-900" : "text-zinc-600")}>
+                        <span className={cn("transition-colors", value ? "font-medium text-zinc-900 dark:text-zinc-100" : "text-zinc-600 dark:text-zinc-400")}>
                             {value || label}
                         </span>
-                        {!value && <ChevronDown className="h-3.5 w-3.5 text-zinc-400" />}
+                        {!value && <ChevronDown className="h-3 w-3 text-zinc-400 dark:text-zinc-500" />}
                     </button>
                 </DropdownMenuTrigger>
 
@@ -49,7 +49,7 @@ export default function FilterDropdown({
                     className="w-44"
                 >
                     {options.length === 0 ? (
-                        <div className="py-3 px-3 text-xs text-zinc-500 text-center italic">
+                        <div className="py-3 px-3 text-xs text-zinc-500 dark:text-zinc-400 text-center italic">
                             No matching items
                         </div>
                     ) : (
@@ -60,14 +60,14 @@ export default function FilterDropdown({
                                     .toLowerCase()
                                     .replace(/\s+/g, "-")}` : undefined}
                                 onClick={() => onChange(opt)}
-                                className="flex items-center justify-between"
+                                className="flex items-center justify-between text-xs"
                             >
                                 <span className="capitalize">
                                     {opt}
                                 </span>
 
                                 {value === opt && (
-                                    <Check className="h-4 w-4 text-blue-600" />
+                                    <Check className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                                 )}
                             </DropdownMenuItem>
                         ))
@@ -83,10 +83,10 @@ export default function FilterDropdown({
                         e.stopPropagation();
                         onChange("");
                     }}
-                    className="flex items-center pr-2.5 py-1.5 text-zinc-400 hover:text-red-500 transition-colors"
+                    className="flex items-center pr-2 h-full text-zinc-400 dark:text-zinc-500 hover:text-red-500 dark:hover:text-red-400 transition-colors cursor-pointer"
                     aria-label="Clear filter"
                 >
-                    <X className="h-3.5 w-3.5" />
+                    <X className="h-3 w-3" />
                 </button>
             )}
         </div>

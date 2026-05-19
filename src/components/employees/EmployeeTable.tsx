@@ -68,6 +68,7 @@ type RowMenuProps = {
     onView: (employee: Employee) => void;
     onResendInvite?: (id: string) => void;
     onRevokeInvite?: (id: string) => void;
+    currentUserEmail?: string;
 };
 
 type EmployeeTableProps = {
@@ -76,6 +77,7 @@ type EmployeeTableProps = {
     onView: (employee: Employee) => void;
     onResendInvite?: (id: string) => void;
     onRevokeInvite?: (id: string) => void;
+    currentUserEmail?: string;
 };
 
 function StatusDot({
@@ -104,7 +106,12 @@ function RowMenu({
     onView,
     onResendInvite,
     onRevokeInvite,
+    currentUserEmail,
 }: RowMenuProps): JSX.Element {
+    // Delete is hidden if: target is Super Admin, OR target is the current user
+    const isSelf = currentUserEmail && employee.email === currentUserEmail;
+    const isTargetSuperAdmin = employee.role === "Super Admin";
+    const canDelete = !isSelf && !isTargetSuperAdmin;
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -143,11 +150,11 @@ function RowMenu({
 
                 <DropdownMenuItem
                     onClick={() =>
-                        toast("Add to category")
+                        toast("Add to team")
                     }
                 >
                     <FolderPlus className="mr-2 h-4 w-4 text-zinc-600" />
-                    Add to Category
+                    Add to Team
                 </DropdownMenuItem>
 
                 {employee.isActive === false && onResendInvite && (
@@ -171,18 +178,18 @@ function RowMenu({
                 </DropdownMenuItem>
 
                 {employee.isActive !== false ? (
-                    <DropdownMenuItem
-                        data-testid={`delete-${employee.id}`}
-                        onClick={() =>
-                            onDelete(employee.id)
-                        }
-                        className="text-red-600 focus:text-red-600 cursor-pointer"
-                    >
-                        <Trash2 className="mr-2 h-4 w-4 text-red-600" />
-                        Delete
-                    </DropdownMenuItem>
+                    canDelete && (
+                        <DropdownMenuItem
+                            data-testid={`delete-${employee.id}`}
+                            onClick={() => onDelete(employee.id)}
+                            className="text-red-600 focus:text-red-600 cursor-pointer"
+                        >
+                            <Trash2 className="mr-2 h-4 w-4 text-red-600" />
+                            Delete
+                        </DropdownMenuItem>
+                    )
                 ) : (
-                    onRevokeInvite && (
+                    canDelete && onRevokeInvite && (
                         <DropdownMenuItem
                             onClick={() =>
                                 onRevokeInvite(employee.inviteId || employee.id)
@@ -205,6 +212,7 @@ export default function EmployeeTable({
     onView,
     onResendInvite,
     onRevokeInvite,
+    currentUserEmail,
 }: EmployeeTableProps): JSX.Element {
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     const [confirmRevokeId, setConfirmRevokeId] = useState<string | null>(null);
@@ -273,17 +281,17 @@ export default function EmployeeTable({
 
     return (
         <div
-            className="overflow-hidden rounded-2xl border border-zinc-100 bg-white flex flex-col h-full"
+            className="overflow-hidden rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col h-full"
             data-testid="employees-table"
         >
-            <div className="bg-zinc-50/80 border-b border-zinc-100 px-4 py-2 flex items-center justify-between md:hidden text-xs text-zinc-600 font-medium shrink-0">
+            <div className="bg-zinc-50/80 dark:bg-zinc-800/60 border-b border-zinc-100 dark:border-zinc-800 px-4 py-2 flex items-center justify-between md:hidden text-xs text-zinc-600 dark:text-zinc-400 font-medium shrink-0">
                 <span>Swipe left/right to view more columns</span>
                 <span className="flex items-center gap-1 font-semibold text-blue-600">Scroll <ChevronRight className="h-3.5 w-3.5" /></span>
             </div>
             <div className="w-full overflow-x-auto flex-1 flex flex-col min-h-0">
                 <div className="min-w-[800px] flex-1 flex flex-col min-h-0">
                     {/* Header */}
-                    <div className="grid grid-cols-[48px_2fr_1fr_1fr_1fr_56px] items-center gap-2 border-b border-zinc-100 bg-zinc-50/60 px-5 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500 shrink-0">
+                    <div className="grid grid-cols-[48px_2fr_1fr_1fr_1fr_56px] items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-800/80 px-5 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400 shrink-0">
                         <div>
                             <Checkbox
                                 checked={allChecked}
@@ -317,7 +325,7 @@ export default function EmployeeTable({
                             <div
                                 key={emp.id}
                                 onClick={() => onView(emp)}
-                                className="grid grid-cols-[48px_2fr_1fr_1fr_1fr_56px] items-center gap-2 border-b border-zinc-50 px-5 py-4 transition-all hover:bg-zinc-50/80 hover:shadow-2xs cursor-pointer group"
+                                className="grid grid-cols-[48px_2fr_1fr_1fr_1fr_56px] items-center gap-2 border-b border-zinc-50 dark:border-zinc-800 px-5 py-4 transition-all hover:bg-zinc-50/80 dark:hover:bg-zinc-800/60 hover:shadow-2xs cursor-pointer group"
                                 data-testid={`employee-row-${emp.id}`}
                             >
                                 <div onClick={(e) => e.stopPropagation()}>
@@ -401,6 +409,7 @@ export default function EmployeeTable({
                                         onView={onView}
                                         onResendInvite={onResendInvite}
                                         onRevokeInvite={(id) => setConfirmRevokeId(id)}
+                                        currentUserEmail={currentUserEmail}
                                     />
                                 </div>
                             </div>
@@ -410,7 +419,7 @@ export default function EmployeeTable({
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-end gap-6 px-5 py-3 text-sm text-zinc-600 shrink-0 border-t border-zinc-100 bg-white">
+            <div className="flex items-center justify-end gap-6 px-5 py-3 text-sm text-zinc-600 dark:text-zinc-400 shrink-0 border-t border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900">
                 <div className="flex items-center gap-2">
                     <span>Rows per Page</span>
 
@@ -481,8 +490,8 @@ export default function EmployeeTable({
                             className={cn(
                                 "h-8 w-8 rounded-md text-sm",
                                 page === p
-                                    ? "bg-zinc-900 text-white"
-                                    : "text-zinc-700 hover:bg-zinc-100"
+                                    ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900"
+                                    : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                             )}
                         >
                             {p}
@@ -522,7 +531,7 @@ export default function EmployeeTable({
                                     setPage(val);
                                 }
                             }}
-                            className="h-8 w-14 rounded-md border border-zinc-200 bg-white px-2 text-center text-sm text-zinc-700 font-medium focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                            className="h-8 w-14 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-2 text-center text-sm text-zinc-700 dark:text-zinc-200 font-medium focus:border-zinc-900 dark:focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-400"
                             aria-label="Go to page"
                         />
                     </div>
@@ -530,10 +539,10 @@ export default function EmployeeTable({
             </div>
 
             <Dialog open={!!confirmDeleteId} onOpenChange={(open) => !open && setConfirmDeleteId(null)}>
-                <DialogContent className="bg-white rounded-2xl max-w-md border border-zinc-100 shadow-xl p-6">
+                <DialogContent className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md border border-zinc-100 dark:border-zinc-800 shadow-xl p-6">
                     <DialogHeader>
-                        <DialogTitle className="text-zinc-900 font-semibold text-lg">Delete Employee</DialogTitle>
-                        <DialogDescription className="text-zinc-500 text-sm mt-2">
+                        <DialogTitle className="text-zinc-900 dark:text-zinc-100 font-semibold text-lg">Delete Employee</DialogTitle>
+                        <DialogDescription className="text-zinc-500 dark:text-zinc-400 text-sm mt-2">
                             Are you sure you want to delete this employee? This action cannot be undone and will permanently remove their access.
                         </DialogDescription>
                     </DialogHeader>
@@ -558,10 +567,10 @@ export default function EmployeeTable({
             </Dialog>
 
             <Dialog open={!!confirmRevokeId} onOpenChange={(open) => !open && setConfirmRevokeId(null)}>
-                <DialogContent className="bg-white rounded-2xl max-w-md border border-zinc-100 shadow-xl p-6">
+                <DialogContent className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md border border-zinc-100 dark:border-zinc-800 shadow-xl p-6">
                     <DialogHeader>
-                        <DialogTitle className="text-zinc-900 font-semibold text-lg">Revoke Invitation</DialogTitle>
-                        <DialogDescription className="text-zinc-500 text-sm mt-2">
+                        <DialogTitle className="text-zinc-900 dark:text-zinc-100 font-semibold text-lg">Revoke Invitation</DialogTitle>
+                        <DialogDescription className="text-zinc-500 dark:text-zinc-400 text-sm mt-2">
                             Are you sure you want to revoke this pending invitation? The user will no longer be able to use the invite link to sign up.
                         </DialogDescription>
                     </DialogHeader>

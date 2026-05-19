@@ -76,22 +76,27 @@ const Integration: React.FC<IntegrationProps> = ({ variant = "populated" }) => {
             className="w-full bg-[#FAFAF7] dark:bg-zinc-950 px-4 sm:px-8 py-8 md:px-12 md:py-10 h-full overflow-y-auto"
         >
             {/* Title row */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <h1
-                    data-testid="integration-title"
-                    className="text-[26px] font-semibold tracking-tight text-neutral-900 dark:text-zinc-100"
-                >
-                    Integration
-                </h1>
+            <div className="flex flex-col gap-1">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <h1
+                        data-testid="integration-title"
+                        className="text-[26px] font-semibold tracking-tight text-neutral-900 dark:text-zinc-100"
+                    >
+                        Integration
+                    </h1>
 
-                <button
-                    type="button"
-                    data-testid="integration-refresh-btn"
-                    className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2 text-sm font-medium text-neutral-700 dark:text-zinc-300 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-colors hover:bg-neutral-50 dark:hover:bg-zinc-700 hover:text-neutral-900 dark:hover:text-zinc-100 focus:outline-none"
-                >
-                    <RotateCw className="h-4 w-4" />
-                    Refresh
-                </button>
+                    <button
+                        type="button"
+                        data-testid="integration-refresh-btn"
+                        className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2 text-sm font-medium text-neutral-700 dark:text-zinc-300 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-colors hover:bg-neutral-50 dark:hover:bg-zinc-700 hover:text-neutral-900 dark:hover:text-zinc-100 focus:outline-none"
+                    >
+                        <RotateCw className="h-4 w-4" />
+                        Refresh
+                    </button>
+                </div>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                    Connect your existing work tools and external apps to sync data.
+                </p>
             </div>
 
             {/* Search */}

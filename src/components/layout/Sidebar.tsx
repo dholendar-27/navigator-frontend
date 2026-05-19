@@ -54,7 +54,7 @@ type SidebarProps = {
 const mainNav: NavItemType[] = [
     { to: "dashboard", label: "Dashboard", icon: LayoutGrid },
     { to: "employees", label: "Employees", icon: Users },
-    { to: "category", label: "Category", icon: ListTree },
+    { to: "teams", label: "Teams", icon: ListTree },
     { to: "knowledge-base", label: "Knowledge Base", icon: FileStack },
     { to: "integration", label: "Integration", icon: Plug },
     { to: "subscription", label: "Subscription", icon: CreditCard },

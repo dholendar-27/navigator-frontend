@@ -1,5 +1,6 @@
 // Mock employees data — used to demonstrate the populated state of the Employees page.
 // Toggle to an empty list to demonstrate the empty state.
+import type { Employee, EmployeeStatus } from "@/types/employee";
 
 const ROLES = ["Super Admin", "Admin", "Editor", "Member"] as const;
 const NAMES = [
@@ -31,24 +32,7 @@ const AVATAR_SEEDS = [
 const STATUSES = ["online", "online", "online", "away", "online"] as const;
 
 type Role = typeof ROLES[number];
-type Status = typeof STATUSES[number];
-
-export interface Employee {
-  id: string;
-  name: string;
-  role: Role;
-  avatar: string;
-  status: Status;
-  category: string;
-  kbFiles: number | null | string;
-  simpleInteraction: string | null;
-  complexInteraction: string | null;
-  email: string;
-  createdBy: string;
-  createdDate: string;
-  isActive?: boolean;
-  inviteId?: string;
-}
+type Status = EmployeeStatus;
 
 function pad(n: number, len: number = 6): string {
   return String(n).padStart(len, "0");

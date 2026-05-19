@@ -1,10 +1,10 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { Plus, Download, Upload, RefreshCw, Search, Loader2 } from "lucide-react";
+import { Plus, Download, Upload, RefreshCw, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { type Employee } from "@/data/mockEmployees";
+import { type Employee } from "@/types/employee";
 import EmployeeTable from "@/components/employees/EmployeeTable";
 import EmptyState from "@/components/employees/EmptyState";
 import AddEmployeeDrawer from "@/components/employees/AddEmployeeDrawer";
@@ -13,6 +13,7 @@ import FilterDropdown from "@/components/FilterDropdown";
 import { useKindeAuth } from "@kinde-oss/kinde-auth-react";
 import { listEmployees, listInvites, resendInvite, revokeInvite, listRoles, deleteEmployee } from "@/lib/api";
 import { cacheWebSocket } from "@/utils/cacheWebSocket";
+import { SkeletonTable } from "@/components/ui/skeleton-table";
 
 export type Filters = {
     status: Employee["status"] | "";
@@ -21,8 +22,9 @@ export type Filters = {
     creator: string;
 };
 
+
 export default function EmployeesPage() {
-    const { getToken, isAuthenticated } = useKindeAuth();
+    const { getToken, isAuthenticated, user } = useKindeAuth();
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -66,8 +68,8 @@ export default function EmployeesPage() {
                 })
             ]);
 
-            const employeeList = Array.isArray(empData) ? empData : ((empData as any)?.employees || []);
-            const inviteList = Array.isArray(inviteData) ? inviteData : ((inviteData as any)?.invites || []);
+            const employeeList = empData?.employees || (Array.isArray(empData) ? empData : []);
+            const inviteList = empData?.pending_invites || (Array.isArray(inviteData) ? inviteData : ((inviteData as any)?.invites || []));
             const rolesList = Array.isArray(rolesData) ? (rolesData as any) : [];
 
             const mappedEmployees: Employee[] = employeeList.map((emp: any) => {
@@ -147,8 +149,8 @@ export default function EmployeesPage() {
                         complexInteraction: "-",
                         email: inv.email || "-",
                         createdBy: "-",
-                        createdDate: inv.created_at
-                            ? new Date(inv.created_at).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })
+                        createdDate: inv.invited_at || inv.created_at
+                            ? new Date(inv.invited_at || inv.created_at).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })
                             : "-",
                         isActive: false,
                     };
@@ -223,13 +225,48 @@ export default function EmployeesPage() {
         }
     }, [isAuthenticated]);
 
+    const uniqueStatuses = useMemo(() => {
+        const list = new Set<string>();
+        employees.forEach((emp) => {
+            if (emp.status) {
+                const capitalized = emp.status.charAt(0).toUpperCase() + emp.status.slice(1);
+                list.add(capitalized);
+            }
+        });
+        return Array.from(list).sort();
+    }, [employees]);
+
+    const uniqueRoles = useMemo(() => {
+        const list = new Set<string>();
+        employees.forEach((emp) => {
+            if (emp.role) list.add(emp.role);
+        });
+        return Array.from(list).sort();
+    }, [employees]);
+
+    const uniqueCategories = useMemo(() => {
+        const list = new Set<string>();
+        employees.forEach((emp) => {
+            if (emp.category && emp.category !== "-") list.add(emp.category);
+        });
+        return Array.from(list).sort();
+    }, [employees]);
+
+    const uniqueCreators = useMemo(() => {
+        const list = new Set<string>();
+        employees.forEach((emp) => {
+            if (emp.createdBy && emp.createdBy !== "-") list.add(emp.createdBy);
+        });
+        return Array.from(list).sort();
+    }, [employees]);
+
     const filteredEmployees = useMemo(() => {
         const query = search.toLowerCase();
         const { status, role, category, creator } = filters;
 
         return employees.filter((emp) => {
             // Filters (check first as they're faster)
-            if (status && emp.status !== status) return false;
+            if (status && emp.status.toLowerCase() !== status.toLowerCase()) return false;
             if (role && emp.role !== role) return false;
             if (category && emp.category !== category) return false;
             if (creator && emp.createdBy !== creator) return false;
@@ -270,25 +307,30 @@ export default function EmployeesPage() {
         <div className="flex flex-col h-full overflow-hidden" data-testid="employees-page">
             <div className="px-4 sm:px-8 py-6 flex flex-col h-full overflow-y-auto">
                 {/* Header - Fixed */}
-                <div className="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-2">
-                        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
-                            Employees
-                        </h1>
+                <div className="shrink-0 flex flex-col gap-1">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+                                Employees
+                            </h1>
 
-                        {!isEmpty && (
-                            <Badge className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-600">
-                                {employees.length}
-                            </Badge>
-                        )}
-                    </div>
+                            {!isEmpty && (
+                                <Badge className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-600">
+                                    {employees.length}
+                                </Badge>
+                            )}
+                        </div>
 
-                    <div className="flex items-center gap-2">
-                        <Button variant="outline" className="w-full sm:w-auto" onClick={fetchEmployees} disabled={isLoading}>
-                            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-                            Refresh
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" className="w-full sm:w-auto" onClick={fetchEmployees} disabled={isLoading}>
+                                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+                                Refresh
+                            </Button>
+                        </div>
                     </div>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                        Manage your team members, their roles, access permissions, and track their activity.
+                    </p>
                 </div>
 
                 {/* Actions - Fixed */}
@@ -311,14 +353,14 @@ export default function EmployeesPage() {
 
                 {/* Search - Fixed */}
                 <div className="relative mt-5 shrink-0">
-                    <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+                    <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 dark:text-zinc-500" />
                     <Input
                         value={search}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                             setSearch(e.target.value)
                         }
                         placeholder="Search employees by name or email..."
-                        className="pl-11"
+                        className="h-10 rounded-lg border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 pl-11 text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:ring-blue-500/20"
                     />
                 </div>
 
@@ -327,7 +369,7 @@ export default function EmployeesPage() {
                     <FilterDropdown
                         label="Status"
                         value={filters.status}
-                        options={["online", "away", "offline"]}
+                        options={uniqueStatuses.length > 0 ? uniqueStatuses : ["Online", "Away", "Offline"]}
                         onChange={(v: any) =>
                             setFilters((f) => ({ ...f, status: v }))
                         }
@@ -336,16 +378,16 @@ export default function EmployeesPage() {
                     <FilterDropdown
                         label="Role"
                         value={filters.role}
-                        options={["Super Admin", "Admin", "Editor", "Member"]}
+                        options={uniqueRoles.length > 0 ? uniqueRoles : ["Super Admin", "Admin", "Editor", "Member"]}
                         onChange={(v: string) =>
                             setFilters((f) => ({ ...f, role: v }))
                         }
                     />
 
                     <FilterDropdown
-                        label="Category"
+                        label="Team"
                         value={filters.category}
-                        options={["Engineering", "Marketing", "Sales", "HR"]}
+                        options={uniqueCategories.length > 0 ? uniqueCategories : ["Engineering", "Marketing", "Sales", "HR"]}
                         onChange={(v: string) =>
                             setFilters((f) => ({ ...f, category: v }))
                         }
@@ -354,7 +396,7 @@ export default function EmployeesPage() {
                     <FilterDropdown
                         label="Creator"
                         value={filters.creator}
-                        options={["William Jones", "Admin"]}
+                        options={uniqueCreators.length > 0 ? uniqueCreators : ["Admin"]}
                         onChange={(v: string) =>
                             setFilters((f) => ({ ...f, creator: v }))
                         }
@@ -364,41 +406,50 @@ export default function EmployeesPage() {
                 {/* Body - Pinned Layout */}
                 <div className="mt-6 flex-1 flex flex-col min-h-0">
                     {isLoading ? (
-                        <div className="overflow-hidden rounded-2xl border border-zinc-100 bg-white flex flex-col flex-1 shadow-sm">
-                            <div className="grid grid-cols-[48px_2fr_1fr_1fr_1fr_56px] items-center gap-2 border-b border-zinc-100 bg-zinc-50/60 px-5 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500">
-                                <div className="h-4 w-4 rounded bg-zinc-200 animate-pulse" />
-                                <span className="normal-case text-sm tracking-normal text-zinc-600 font-medium">Employee Name</span>
-                                <span className="normal-case text-sm tracking-normal text-zinc-600 font-medium">No. Of KB Files</span>
-                                <span className="normal-case text-sm tracking-normal text-zinc-600 font-medium">Simple Interaction</span>
-                                <span className="normal-case text-sm tracking-normal text-zinc-600 font-medium">Complex Interaction</span>
-                                <span className="w-8" />
-                            </div>
-                            <div className="divide-y divide-zinc-100 flex-1">
-                                {[...Array(5)].map((_, i) => (
-                                    <div key={i} className="grid grid-cols-[48px_2fr_1fr_1fr_1fr_56px] items-center gap-2 px-5 py-3.5 h-[60px]">
-                                        <div className="h-4 w-4 rounded bg-zinc-100 animate-pulse" />
+                        <SkeletonTable
+                            gridCols="[48px_2fr_1fr_1fr_1fr_56px]"
+                            headers={[
+                                <div className="h-4 w-4 rounded bg-zinc-200 dark:bg-zinc-700 animate-pulse" />,
+                                "Employee Name",
+                                "No. Of KB Files",
+                                "Simple Interaction",
+                                "Complex Interaction",
+                                "",
+                            ]}
+                            columns={[
+                                { width: "w-4", render: () => <div className="h-4 w-4 rounded bg-zinc-100 dark:bg-zinc-800 animate-pulse" /> },
+                                {
+                                    width: "w-40",
+                                    render: () => (
                                         <div className="flex items-center gap-3">
-                                            <div className="h-9 w-9 rounded-full bg-zinc-100 animate-pulse shrink-0" />
+                                            <div className="h-9 w-9 rounded-full bg-zinc-100 dark:bg-zinc-800 animate-pulse shrink-0" />
                                             <div className="space-y-1.5 flex-1">
-                                                <div className="h-4 w-32 bg-zinc-100 rounded animate-pulse" />
-                                                <div className="h-3 w-20 bg-zinc-100 rounded animate-pulse" />
+                                                <div className="h-4 w-32 bg-zinc-100 dark:bg-zinc-800 rounded animate-pulse" />
+                                                <div className="h-3 w-20 bg-zinc-100 dark:bg-zinc-800 rounded animate-pulse" />
                                             </div>
                                         </div>
-                                        <div className="h-4 w-8 bg-zinc-100 rounded animate-pulse" />
-                                        <div className="h-4 w-12 bg-zinc-100 rounded animate-pulse" />
-                                        <div className="h-4 w-12 bg-zinc-100 rounded animate-pulse" />
-                                        <div className="h-8 w-8 bg-zinc-100 rounded animate-pulse" />
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+                                    ),
+                                },
+                                { width: "w-8" },
+                                { width: "w-12" },
+                                { width: "w-12" },
+                                { width: "w-8", render: () => <div className="h-8 w-8 bg-zinc-100 dark:bg-zinc-800 rounded animate-pulse" /> },
+                            ]}
+                        />
                     ) : isEmpty ? (
                         <div className="flex-1 flex flex-col pt-4">
-                            <EmptyState />
+                            <EmptyState onAddClick={() => setDrawerOpen(true)} />
                         </div>
                     ) : isNoResults ? (
-                        <div className="flex-1 flex flex-col items-center justify-center py-12 text-center text-sm text-zinc-500 border border-dashed border-zinc-200 rounded-xl bg-zinc-50/50 px-4 my-2">
-                            No employees match your search or filters.
+                        <div className="flex-1 flex flex-col pt-4">
+                            <div className="flex flex-1 min-h-[220px] w-full flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-700 bg-zinc-50/30 dark:bg-zinc-900/30 px-6 py-8 text-center my-2">
+                                <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                                    No employees match your search or filters.
+                                </p>
+                                <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">
+                                    Try adjusting your filters or search terms.
+                                </p>
+                            </div>
                         </div>
                     ) : (
                         <EmployeeTable
@@ -410,6 +461,8 @@ export default function EmployeesPage() {
                             }}
                             onResendInvite={handleResendInvite}
                             onRevokeInvite={handleRevokeInvite}
+                            currentUserEmail={user?.email ?? undefined}
+                            currentUserRole={undefined}
                         />
                     )}
                 </div>

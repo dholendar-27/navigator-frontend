@@ -56,7 +56,7 @@ export default function TopBar({
         }
     }, [user]);
 
-    const fullName = profile?.display_name || (user?.given_name ? `${user.given_name} ${user.family_name || ""}`.trim() : (isLoading ? "Loading..." : "User"));
+    const fullName = profile?.display_name || (user?.givenName ? `${user.givenName} ${user.familyName || ""}`.trim() : (isLoading ? "Loading..." : "User"));
     const initials = fullName
         ? fullName
               .split(" ")

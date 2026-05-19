@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { X, FolderClosed, FileText, Loader2, Plus, Search, Minus } from "lucide-react";
+import { X, FileText, Loader2, Plus, Search, Minus } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -146,28 +146,28 @@ export default function KnowledgeBaseDetailDrawer({
             <SheetContent
                 side="right"
                 hideClose
-                className="flex w-full flex-col gap-0 p-0 sm:max-w-[1100px] border-l border-zinc-200 bg-white"
+                className="flex w-full flex-col gap-0 p-0 sm:max-w-[1000px] border-l border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
                 data-testid="kb-detail-drawer"
             >
                 {/* Upper Top Bar */}
-                <div className="flex items-center gap-3 border-b border-zinc-100 px-8 py-5">
+                <div className="flex items-center gap-3 border-b border-zinc-100 dark:border-zinc-800 px-8 py-5">
                     <button
                         onClick={() => onOpenChange(false)}
-                        className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 transition-colors"
+                        className="rounded-lg p-1.5 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
                         aria-label="Close"
                     >
                         <X className="h-5 w-5" />
                     </button>
-                    <SheetTitle className="text-xl font-semibold text-zinc-900 tracking-tight">
+                    <SheetTitle className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
                         Knowledge Base
                     </SheetTitle>
                 </div>
 
                 {/* 2-Column Responsive Body */}
-                <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-0 overflow-y-auto min-h-0 bg-white">
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-0 overflow-y-auto min-h-0 bg-white dark:bg-zinc-900">
                     
                     {/* Left Column: Form Details (4 Cols) */}
-                    <div className="md:col-span-4 p-8 border-r border-zinc-100 space-y-6 flex flex-col justify-between">
+                    <div className="md:col-span-4 p-8 border-r border-zinc-100 dark:border-zinc-800 space-y-6 flex flex-col justify-between">
                         <div className="space-y-6">
                             {/* Folder Name */}
                             <div className="space-y-2">
@@ -180,8 +180,8 @@ export default function KnowledgeBaseDetailDrawer({
                                     disabled={mode === "view"}
                                     placeholder="Enter folder name"
                                     className={cn(
-                                        "h-11 rounded-xl border-zinc-200 font-medium text-zinc-950 focus:border-zinc-400 focus:ring-0 focus-visible:ring-0 transition-all",
-                                        mode === "view" && "bg-zinc-50/50 border-zinc-100 text-zinc-600 cursor-not-allowed"
+                                        "h-11 rounded-xl border-zinc-200 dark:border-zinc-700 font-medium text-zinc-950 dark:text-zinc-100 focus:border-zinc-400 focus:ring-0 focus-visible:ring-0 transition-all",
+                                        mode === "view" && "bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-100 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 cursor-not-allowed"
                                     )}
                                 />
                             </div>
@@ -198,8 +198,8 @@ export default function KnowledgeBaseDetailDrawer({
                                     placeholder="Enter folder description..."
                                     rows={8}
                                     className={cn(
-                                        "rounded-xl border-zinc-200 font-medium text-zinc-950 focus:border-zinc-400 focus:ring-0 focus-visible:ring-0 leading-relaxed resize-none transition-all",
-                                        mode === "view" && "bg-zinc-50/50 border-zinc-100 text-zinc-600 cursor-not-allowed"
+                                        "rounded-xl border-zinc-200 dark:border-zinc-700 font-medium text-zinc-950 dark:text-zinc-100 focus:border-zinc-400 focus:ring-0 focus-visible:ring-0 leading-relaxed resize-none transition-all",
+                                        mode === "view" && "bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-100 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 cursor-not-allowed"
                                     )}
                                 />
                                 {mode === "edit" && (
@@ -222,7 +222,7 @@ export default function KnowledgeBaseDetailDrawer({
                     </div>
 
                     {/* Right Column: Files & Documents List (8 Cols) */}
-                    <div className="md:col-span-8 p-8 flex flex-col min-h-0 bg-white">
+                    <div className="md:col-span-8 p-8 flex flex-col min-h-0 bg-white dark:bg-zinc-900">
                         
                         {/* Title & "+ Add" Action */}
                         <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
@@ -246,7 +246,7 @@ export default function KnowledgeBaseDetailDrawer({
                                 ref={fileInputRef}
                                 type="file"
                                 multiple
-                                accept=".pdf,.docx,.txt"
+                                accept=".pdf,.docx,.ppt,.pptx,.txt"
                                 className="hidden"
                                 onChange={handleUploadFiles}
                             />
@@ -357,14 +357,14 @@ export default function KnowledgeBaseDetailDrawer({
 
                 {/* Footer Bar (Visible only during active Edit mode) */}
                 {mode === "edit" ? (
-                    <div className="flex items-center justify-end gap-3 border-t border-zinc-100 bg-zinc-50/50 px-8 py-4">
+                    <div className="flex items-center justify-end gap-3 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/40 px-8 py-4">
                         <Button
                             variant="ghost"
                             onClick={() => {
                                 setMode("view");
-                                fetchFolderFiles(); // Reset draft values
+                                fetchFolderFiles();
                             }}
-                            className="text-zinc-600 hover:text-zinc-900 font-bold"
+                            className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 font-bold"
                         >
                             Cancel
                         </Button>
@@ -384,11 +384,11 @@ export default function KnowledgeBaseDetailDrawer({
                         </Button>
                     </div>
                 ) : (
-                    <div className="flex items-center justify-end gap-3 border-t border-zinc-100 bg-zinc-50/50 px-8 py-4">
+                    <div className="flex items-center justify-end gap-3 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/40 px-8 py-4">
                         <Button
                             variant="ghost"
                             onClick={() => onOpenChange(false)}
-                            className="text-zinc-600 hover:text-zinc-900 font-bold"
+                            className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 font-bold"
                         >
                             Close
                         </Button>

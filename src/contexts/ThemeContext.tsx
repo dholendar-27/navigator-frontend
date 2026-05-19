@@ -18,21 +18,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const [theme, setThemeState] = useState<Theme>(() => {
         const stored = localStorage.getItem("navigator_theme") as Theme | null;
         if (stored === "dark" || stored === "light") return stored;
-        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        return "dark"; // default to dark theme
     });
 
     useEffect(() => {
-        const root = document.documentElement;
-        if (theme === "dark") {
-            root.classList.add("dark");
-        } else {
-            root.classList.remove("dark");
-        }
+        document.documentElement.classList.toggle("dark", theme === "dark");
         localStorage.setItem("navigator_theme", theme);
     }, [theme]);
 
+    const toggleTheme = () =>
+        setThemeState((prev) => (prev === "light" ? "dark" : "light"));
+
     const setTheme = (t: Theme) => setThemeState(t);
-    const toggleTheme = () => setThemeState((prev) => (prev === "light" ? "dark" : "light"));
 
     return (
         <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Sparkles, X, History } from "lucide-react";
+import { Send, Bot, User, Sparkles, X } from "lucide-react";
 import { 
     Sheet, 
     SheetContent, 
@@ -92,7 +92,7 @@ export default function AskAiDrawer({ open, onOpenChange, folderId }: AskAiDrawe
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent side="right" className="sm:max-w-md p-0 flex flex-col h-full border-l border-zinc-200">
+            <SheetContent side="right" className="sm:max-w-[480px] p-0 flex flex-col h-full border-l border-zinc-200">
                 <SheetHeader className="p-6 border-b border-zinc-100 flex-row items-center justify-between space-y-0">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">

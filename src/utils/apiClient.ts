@@ -202,7 +202,7 @@ class ApiClient {
 
         const text = await response.text();
         try {
-            return text ? JSON.parse(text) : {};
+            return text ? JSON.parse(text) : ({} as T);
         } catch {
             return {} as T;
         }

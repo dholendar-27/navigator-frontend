@@ -4,6 +4,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import EmployeesPage from "@/pages/EmployeesPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import KnowledgeBasePage from "./pages/KnowledgeBasePage";
+import CategoryPage from "./pages/CategoryPage";
 import Integration from "./pages/Integration";
 import LandingPage from "./pages/LandingPage";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
@@ -42,8 +43,8 @@ function AppRoutes(): JSX.Element {
                     />
 
                     <Route
-                        path="/category"
-                        element={<PlaceholderPage title="Category" />}
+                        path="/teams"
+                        element={<CategoryPage />}
                     />
 
                     <Route

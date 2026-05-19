@@ -62,7 +62,7 @@ export default function EmployeeDetailsDrawer({
             <SheetContent
                 side="right"
                 hideClose
-                className="flex w-full flex-col gap-0 p-0 sm:max-w-[520px]"
+                className="flex w-full flex-col gap-0 p-0 sm:max-w-[480px]"
                 data-testid="employee-details-drawer"
             >
                 {/* Header */}
@@ -148,7 +148,7 @@ export default function EmployeeDetailsDrawer({
                         />
                         <Field label="Role" value={employee.role} testId="details-role" />
                         <Field
-                            label="Categories"
+                            label="Teams"
                             value={employee.category || "-"}
                             testId="details-categories"
                         />
