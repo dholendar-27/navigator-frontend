@@ -19,17 +19,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-// Removed unused Select imports
-import {
-    DropdownMenu,
-    DropdownMenuTrigger,
-    DropdownMenuContent,
-    DropdownMenuCheckboxItem,
-} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { type Category, type CategoryEmployee, type CategoryFile } from "@/types/category";
 import { cn } from "@/lib/utils";
 import AddEmployeesDialog from "./AddEmployeesDialog";
+import AddFilesDialog from "./AddFilesDialog";
 
 interface CategoryDrawerProps {
     open: boolean;
@@ -66,6 +61,7 @@ export default function CategoryDrawer({
     const [employeeSearch, setEmployeeSearch] = useState("");
     const [fileSearch, setFileSearch] = useState("");
     const [addEmployeesOpen, setAddEmployeesOpen] = useState(false);
+    const [addFilesOpen, setAddFilesOpen] = useState(false);
     const [empPage, setEmpPage] = useState(1);
     const [filePage, setFilePage] = useState(1);
     const [rowsPerPage] = useState(50);
@@ -106,10 +102,12 @@ export default function CategoryDrawer({
 
     // Filter available managers (all employees list)
     const managerOptions = useMemo(() => {
-        return allEmployees.map((emp) => ({
-            id: emp.id,
-            name: emp.name,
-        }));
+        return allEmployees
+            .filter((emp) => emp.id && emp.name)
+            .map((emp) => ({
+                id: emp.id,
+                name: emp.name,
+            }));
     }, [allEmployees]);
 
     // Validation
@@ -123,9 +121,9 @@ export default function CategoryDrawer({
         if (!query) return selectedEmployees;
         return selectedEmployees.filter(
             (emp) =>
-                emp.name.toLowerCase().includes(query) ||
-                emp.id.toLowerCase().includes(query) ||
-                emp.role.toLowerCase().includes(query)
+                (emp.name ?? "").toLowerCase().includes(query) ||
+                (emp.id ?? "").toLowerCase().includes(query) ||
+                (emp.role ?? "").toLowerCase().includes(query)
         );
     }, [selectedEmployees, employeeSearch]);
 
@@ -176,10 +174,25 @@ export default function CategoryDrawer({
                 role: emp.role || "Member",
                 avatar: emp.avatar || "",
             }));
-            
+
         if (newEmps.length > 0) {
             setSelectedEmployees((prev) => [...prev, ...newEmps]);
             setEmpPage(1);
+        }
+    };
+
+    const handleAddMultipleFiles = (files: any[]) => {
+        const newFiles = files
+            .filter((file) => !selectedFiles.some((f) => f.id === file.id))
+            .map((file) => ({
+                id: file.id,
+                name: file.name,
+                size: file.size || "0 B",
+            }));
+
+        if (newFiles.length > 0) {
+            setSelectedFiles((prev) => [...prev, ...newFiles]);
+            setFilePage(1);
         }
     };
 
@@ -227,7 +240,10 @@ export default function CategoryDrawer({
             };
 
             await onSubmit(newCategory);
+            toast.success(`Category "${name}" ${category ? "updated" : "created"} successfully`, { id: "category-save" });
             onOpenChange(false);
+        } catch (error: any) {
+            toast.error(error.message || "Failed to save category", { id: "category-save" });
         } finally {
             setIsSubmitting(false);
         }
@@ -261,7 +277,7 @@ export default function CategoryDrawer({
 
                 {/* Split Content Area */}
                 <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
-                    
+
                     {/* LEFT PANEL: Form parameters */}
                     <div className="w-full md:w-1/2 border-r border-zinc-150 dark:border-zinc-800 p-8 space-y-6 overflow-y-auto min-h-0 bg-white dark:bg-zinc-900">
                         {/* Category Name */}
@@ -335,15 +351,15 @@ export default function CategoryDrawer({
                                 <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 shadow-md">
                                     <div className="flex flex-col">
                                         <div className="px-3 py-2 border-b border-zinc-100 dark:border-zinc-700">
-                                            <Input 
+                                            <Input
                                                 value={managerSearch}
                                                 onChange={(e) => setManagerSearch(e.target.value)}
-                                                placeholder="Search manager..." 
+                                                placeholder="Search manager..."
                                                 className="h-8 border-none focus-visible:ring-0 px-0 rounded-none shadow-none text-sm bg-transparent placeholder:text-zinc-400 text-zinc-900 dark:text-zinc-100"
                                             />
                                         </div>
                                         <div className="max-h-56 overflow-y-auto py-1">
-                                            {managerOptions.filter(m => m.name.toLowerCase().includes(managerSearch.toLowerCase())).map((emp) => (
+                                            {managerOptions.filter(m => (m.name ?? "").toLowerCase().includes(managerSearch.toLowerCase())).map((emp) => (
                                                 <div
                                                     key={emp.id}
                                                     className="px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-700 flex items-center justify-between"
@@ -357,7 +373,7 @@ export default function CategoryDrawer({
                                                     {emp.name}
                                                 </div>
                                             ))}
-                                            {managerOptions.filter(m => m.name.toLowerCase().includes(managerSearch.toLowerCase())).length === 0 && (
+                                            {managerOptions.filter(m => (m.name ?? "").toLowerCase().includes(managerSearch.toLowerCase())).length === 0 && (
                                                 <div className="px-3 py-4 text-center text-sm text-zinc-500">
                                                     No results found.
                                                 </div>
@@ -454,39 +470,15 @@ export default function CategoryDrawer({
                                             <Plus className="h-3.5 w-3.5" /> Add
                                         </Button>
                                     ) : (
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="h-8 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 gap-1 rounded-lg text-xs font-semibold shadow-xs"
-                                                    data-testid="add-file-trigger-btn"
-                                                >
-                                                    <Plus className="h-3.5 w-3.5" /> Add
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent
-                                                align="end"
-                                                className="w-64 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 max-h-64 overflow-y-auto"
-                                            >
-                                                {availableFilesPool.length === 0 ? (
-                                                    <div className="px-3 py-2 text-xs text-zinc-400 text-center">
-                                                        No new files available
-                                                    </div>
-                                                ) : (
-                                                    availableFilesPool.map((f) => (
-                                                        <DropdownMenuCheckboxItem
-                                                            key={f.id}
-                                                            checked={false}
-                                                            onCheckedChange={() => handleAddFile(f)}
-                                                            className="text-xs cursor-pointer truncate max-w-[240px]"
-                                                        >
-                                                            <span className="truncate">{f.name}</span>
-                                                        </DropdownMenuCheckboxItem>
-                                                    ))
-                                                )}
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-8 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 gap-1 rounded-lg text-xs font-semibold shadow-xs"
+                                            data-testid="add-file-trigger-btn"
+                                            onClick={() => setAddFilesOpen(true)}
+                                        >
+                                            <Plus className="h-3.5 w-3.5" /> Add
+                                        </Button>
                                     )}
                                 </div>
                             )}
@@ -748,6 +740,12 @@ export default function CategoryDrawer({
                 onOpenChange={setAddEmployeesOpen}
                 unselectedEmployees={unselectedEmployees}
                 onAdd={handleAddMultipleEmployees}
+            />
+            <AddFilesDialog
+                open={addFilesOpen}
+                onOpenChange={setAddFilesOpen}
+                unselectedFiles={availableFilesPool}
+                onAdd={handleAddMultipleFiles}
             />
         </Sheet>
     );

@@ -180,6 +180,14 @@ export async function removeGroupMembers(groupId: string, userIds: string[], tok
     return apiClient.delete<any>(`/groups/${groupId}/members`, { user_ids: userIds }, { token });
 }
 
+export async function addGroupFiles(groupId: string, fileIds: string[], token: string) {
+    return apiClient.post<any>(`/groups/${groupId}/files`, { file_ids: fileIds }, { token });
+}
+
+export async function removeGroupFiles(groupId: string, fileIds: string[], token: string) {
+    return apiClient.delete<any>(`/groups/${groupId}/files`, { file_ids: fileIds }, { token });
+}
+
 // ── Chat / RAG ────────────────────────────────────────────────────────────────
 
 export interface ChatQueryPayload {
@@ -239,6 +247,8 @@ export interface ConversationListResponse {
 /** SSE streaming callbacks for sendChatQueryStream */
 export interface ChatStreamCallbacks {
     onThinking?: (step: string, message: string) => void;
+    onToolCall?: (toolName: string, query: string) => void;
+    onToolResult?: (toolName: string, resultCount: number) => void;
     onToken: (token: string) => void;
     onCitation?: (citation: Citation) => void;
     onDone: (data: { conversation_id: string; message_id: string }) => void;
@@ -284,12 +294,32 @@ export async function sendChatQueryStream(
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
+    let lastEventTime = Date.now();
+    const eventTimeoutMs = 30000; // 30 second timeout per event
 
     try {
         while (true) {
-            const { done, value } = await reader.read();
+            // Set a timeout for reading each chunk to detect stalled connections
+            const readPromise = reader.read();
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(
+                    () => reject(new Error("SSE stream timeout - no data received")),
+                    eventTimeoutMs
+                )
+            );
+
+            let result;
+            try {
+                result = await Promise.race([readPromise, timeoutPromise]);
+            } catch (timeoutErr) {
+                console.error("SSE stream stalled:", timeoutErr);
+                throw timeoutErr;
+            }
+
+            const { done, value } = result as any;
             if (done) break;
 
+            lastEventTime = Date.now();
             buffer += decoder.decode(value, { stream: true });
 
             // SSE messages are separated by double newlines
@@ -302,6 +332,7 @@ export async function sendChatQueryStream(
                 let eventType = "";
                 let dataStr = "";
 
+                // Parse SSE format: event: type\ndata: {...}
                 for (const line of part.split("\n")) {
                     if (line.startsWith("event: ")) {
                         eventType = line.slice(7).trim();
@@ -310,13 +341,22 @@ export async function sendChatQueryStream(
                     }
                 }
 
-                if (!eventType || !dataStr) continue;
+                if (!eventType || !dataStr) {
+                    console.debug("Skipping malformed SSE line:", { eventType, dataStr });
+                    continue;
+                }
 
                 try {
                     const data = JSON.parse(dataStr);
                     switch (eventType) {
                         case "thinking":
                             callbacks.onThinking?.(data.step ?? "", data.message ?? "");
+                            break;
+                        case "tool_call":
+                            callbacks.onToolCall?.(data.tool_name ?? "", data.query ?? "");
+                            break;
+                        case "tool_result":
+                            callbacks.onToolResult?.(data.tool_name ?? "", data.result_count ?? 0);
                             break;
                         case "token":
                             callbacks.onToken(data.content ?? "");
@@ -333,9 +373,12 @@ export async function sendChatQueryStream(
                         case "error":
                             callbacks.onError?.(data.error ?? "Unknown error");
                             break;
+                        default:
+                            console.debug("Unknown SSE event type:", eventType);
                     }
-                } catch {
-                    // Ignore malformed JSON lines
+                } catch (parseErr) {
+                    console.error("Failed to parse SSE data:", { eventType, dataStr, error: parseErr });
+                    // Continue processing other events
                 }
             }
         }

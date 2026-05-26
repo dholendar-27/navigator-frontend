@@ -85,6 +85,21 @@ class ApiClient {
                     cacheManager.refresh(cacheKey, cacheTTL);
                     return cachedData;
                 }
+                // No stale cache available — fall through to a fresh fetch without ETag
+                // by retrying without the If-None-Match header
+                const retryHeaders: HeadersInit = { "Content-Type": "application/json" };
+                if (activeToken) retryHeaders["Authorization"] = `Bearer ${activeToken}`;
+                const retryResponse = await fetch(url, { method: "GET", headers: retryHeaders });
+                if (!retryResponse.ok) {
+                    const errorData = await retryResponse.json().catch(() => ({}));
+                    throw new Error(parseErrorDetail(errorData, `API error: ${retryResponse.status}`));
+                }
+                const retryData = await retryResponse.json();
+                const retryETag = retryResponse.headers.get("ETag");
+                if (cache) {
+                    cacheManager.set(cacheKey, retryData, retryETag ?? `etag-${Date.now()}`, cacheTTL);
+                }
+                return retryData;
             }
 
             if (!response.ok) {
@@ -216,32 +231,107 @@ class ApiClient {
     }
 
     private invalidateRelatedCaches(endpoint: string) {
-        // Invalidate caches for related endpoints
-        if (endpoint.includes("/folders")) {
-            cacheManager.invalidatePattern("/folders");
-            cacheManager.invalidatePattern("/api/root-folder");
+        /**
+         * IMPROVED: Selective cache invalidation strategy
+         * 
+         * BEFORE: Single file upload clears ALL folder + file caches (wasteful)
+         * AFTER: Upload to folder ABC only clears cache for folder ABC (selective)
+         * 
+         * Strategy:
+         * 1. Extract resource ID from endpoint (folder_id, file_id, etc.)
+         * 2. Only invalidate the specific resource that was modified
+         * 3. For files, also invalidate parent folder since file count changes
+         * 4. For folders, only invalidate that folder's contents
+         */
+
+        // Extract folder ID from various endpoint patterns
+        const folderIdMatch = endpoint.match(/\/folders\/([a-f0-9-]+)/i);
+        const folderFromBodyMatch = endpoint.match(/\/folders\/([a-f0-9-]+)\/(upload|files)/i);
+        
+        // Extract file ID from various endpoint patterns
+        const fileIdMatch = endpoint.match(/\/files\/([a-f0-9-]+)/i);
+        
+        // Handle folder operations (create, update, delete, upload files)
+        if (folderIdMatch || folderFromBodyMatch) {
+            const folderId = folderIdMatch?.[1] || folderFromBodyMatch?.[1];
+            if (folderId) {
+                // Only invalidate this specific folder's cache
+                cacheManager.invalidatePattern(`folders/${folderId}`);
+                // Also invalidate root folder if files were added/removed
+                if (endpoint.includes("upload") || endpoint.includes("files")) {
+                    cacheManager.invalidatePattern("root-folder");
+                }
+            }
         }
-        if (endpoint.includes("/files")) {
-            cacheManager.invalidatePattern("/files");
-            cacheManager.invalidatePattern("/folders");
-            cacheManager.invalidatePattern("/api/root-folder");
+        // Handle file operations (delete, share, download)
+        else if (fileIdMatch) {
+            const fileId = fileIdMatch[1];
+            // Only invalidate this specific file's cache
+            cacheManager.invalidatePattern(`files/${fileId}`);
+            // If deleting file, also invalidate parent folder (file count changed)
+            if (endpoint.includes("DELETE") || endpoint.toLowerCase().includes("delete")) {
+                cacheManager.invalidatePattern("folders");
+            }
         }
-        if (endpoint.includes("/groups")) {
-            cacheManager.invalidatePattern("/groups");
+        // Handle group operations (create, update, delete)
+        else if (endpoint.includes("/groups")) {
+            const groupIdMatch = endpoint.match(/\/groups\/([a-f0-9-]+)/i);
+            if (groupIdMatch) {
+                // Only invalidate this specific group's cache
+                cacheManager.invalidatePattern(`groups/${groupIdMatch[1]}`);
+            } else {
+                // List/create groups: invalidate groups pattern
+                cacheManager.invalidatePattern("groups");
+            }
         }
-        if (endpoint.includes("/rbac")) {
-            cacheManager.invalidatePattern("/rbac");
+        // Handle RBAC operations (assign/revoke)
+        else if (endpoint.includes("/rbac")) {
+            const resourceMatch = endpoint.match(/\/rbac\/([a-z]+)\/([a-f0-9-]+)/i);
+            if (resourceMatch) {
+                const resourceType = resourceMatch[1]; // "folder", "file", etc.
+                const resourceId = resourceMatch[2];
+                // Only invalidate permissions for this specific resource
+                cacheManager.invalidatePattern(`rbac/${resourceType}/${resourceId}`);
+            } else {
+                cacheManager.invalidatePattern("rbac");
+            }
         }
-        if (endpoint.includes("/invite") || endpoint.includes("/auth")) {
-            cacheManager.invalidatePattern("/auth");
-            cacheManager.invalidatePattern("/invite");
-            cacheManager.invalidatePattern("/auth/employees");
+        // Handle auth/invite operations
+        else if (endpoint.includes("/invite") || endpoint.includes("/auth")) {
+            const isEmployeeInvite = endpoint.includes("employee");
+            if (isEmployeeInvite) {
+                // Only invalidate employees cache (not all auth)
+                cacheManager.invalidatePattern("employees");
+            } else if (endpoint.includes("/auth/refresh")) {
+                // Don't invalidate anything for token refresh
+            } else {
+                // For other auth changes, invalidate auth caches
+                cacheManager.invalidatePattern("auth");
+            }
         }
-        if (endpoint.includes("/ocr")) {
-            cacheManager.invalidatePattern("/ocr");
+        // Handle OCR operations
+        else if (endpoint.includes("/ocr")) {
+            const fileIdMatch = endpoint.match(/\/ocr\/([a-f0-9-]+)/i);
+            if (fileIdMatch) {
+                // Only invalidate this specific OCR result
+                cacheManager.invalidatePattern(`ocr/${fileIdMatch[1]}`);
+            } else {
+                cacheManager.invalidatePattern("ocr");
+            }
         }
-        if (endpoint.includes("/chat")) {
-            cacheManager.invalidatePattern("/chat");
+        // Handle chat operations
+        else if (endpoint.includes("/chat")) {
+            const sessionIdMatch = endpoint.match(/\/chat\/([a-f0-9-]+)/i);
+            if (sessionIdMatch) {
+                // Only invalidate this specific chat session's cache
+                cacheManager.invalidatePattern(`chat/${sessionIdMatch[1]}`);
+            } else {
+                cacheManager.invalidatePattern("chat");
+            }
+        }
+
+        if (import.meta.env.DEV) {
+            console.log(`[Cache Invalidate] ${endpoint} - selective invalidation applied`);
         }
     }
 }

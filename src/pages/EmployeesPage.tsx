@@ -18,7 +18,7 @@ import EmployeeDetailsDrawer from "@/components/employees/EmployeeDrawer";
 import FilterDropdown from "@/components/FilterDropdown";
 import { useKindeAuth } from "@kinde-oss/kinde-auth-react";
 import { listEmployees, listInvites, resendInvite, revokeInvite, listRoles, deleteEmployee, listGroups } from "@/lib/api";
-import { cacheWebSocket } from "@/utils/cacheWebSocket";
+
 import { SkeletonTable } from "@/components/ui/skeleton-table";
 
 export type Filters = {
@@ -227,14 +227,8 @@ export default function EmployeesPage() {
                 fetchEmployees();
             };
 
-            cacheWebSocket.on("user:added", handleUserChange);
-            cacheWebSocket.on("user:updated", handleUserChange);
-            cacheWebSocket.on("user:removed", handleUserChange);
-
             return () => {
-                cacheWebSocket.off("user:added", handleUserChange);
-                cacheWebSocket.off("user:updated", handleUserChange);
-                cacheWebSocket.off("user:removed", handleUserChange);
+                // Manual refresh will be triggered via UI actions instead of WebSocket
             };
         } else {
             setIsLoading(false);

@@ -38,12 +38,16 @@ export default function AddEmployeesDialog({
     // Filter employees by search
     const filteredEmployees = useMemo(() => {
         const query = search.toLowerCase().trim();
-        if (!query) return unselectedEmployees;
+        if (!query) return unselectedEmployees.filter((emp) => emp && emp.id);
         return unselectedEmployees.filter(
             (emp) =>
-                emp.name.toLowerCase().includes(query) ||
-                emp.id.toLowerCase().includes(query) ||
-                (emp.role && emp.role.toLowerCase().includes(query))
+                emp &&
+                emp.id &&
+                (
+                    (emp.name ?? "").toLowerCase().includes(query) ||
+                    (emp.id ?? "").toLowerCase().includes(query) ||
+                    (emp.role ?? "").toLowerCase().includes(query)
+                )
         );
     }, [unselectedEmployees, search]);
 
@@ -52,7 +56,7 @@ export default function AddEmployeesDialog({
     const totalPages = Math.ceil(total / rowsPerPage) || 1;
     const startIdx = (page - 1) * rowsPerPage;
     const endIdx = Math.min(startIdx + rowsPerPage, total);
-    
+
     const paginatedEmployees = useMemo(() => {
         return filteredEmployees.slice(startIdx, endIdx);
     }, [filteredEmployees, startIdx, endIdx]);
@@ -95,7 +99,7 @@ export default function AddEmployeesDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-[700px] p-0 bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 shadow-xl overflow-hidden flex flex-col h-[85vh] sm:h-[800px]">
+            <DialogContent className="max-w-[700px] w-[calc(100vw-32px)] sm:w-full p-0 bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 shadow-xl overflow-hidden flex flex-col max-h-[90vh] sm:max-h-[600px]">
                 <DialogHeader className="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
                     <DialogTitle className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
                         Add Employees to Team
@@ -132,13 +136,13 @@ export default function AddEmployeesDialog({
                     {/* Table Area */}
                     <div className="flex-1 overflow-auto flex flex-col px-6">
                         {/* Table Header */}
-                        <div className="sticky top-0 z-10 flex items-center gap-4 bg-zinc-50/80 dark:bg-zinc-800/80 backdrop-blur-sm border border-zinc-100 dark:border-zinc-800 rounded-t-lg px-4 py-3 shrink-0">
-                            <Checkbox 
+                        <div className="sticky top-0 z-10 flex items-center gap-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-800 rounded-t-lg px-4 py-3 shrink-0">
+                            <Checkbox
                                 checked={allSelectedOnPage}
                                 onCheckedChange={toggleAll}
                                 className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                             />
-                            <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                            <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
                                 Employee Name
                             </span>
                         </div>
@@ -152,7 +156,7 @@ export default function AddEmployeesDialog({
                             ) : (
                                 paginatedEmployees.map((emp) => (
                                     <div key={emp.id} className="flex items-center gap-4 px-4 py-3 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/50 transition-colors">
-                                        <Checkbox 
+                                        <Checkbox
                                             checked={selectedIds.has(emp.id)}
                                             onCheckedChange={() => toggleEmployee(emp.id)}
                                             className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
@@ -161,7 +165,7 @@ export default function AddEmployeesDialog({
                                             <div className="relative">
                                                 <Avatar className="h-9 w-9 border border-zinc-200 dark:border-zinc-700 shrink-0">
                                                     <AvatarImage src={emp.avatar} />
-                                                    <AvatarFallback className="text-xs">{emp.name[0]}</AvatarFallback>
+                                                    <AvatarFallback className="text-xs">{emp.name?.[0] ?? "?"}</AvatarFallback>
                                                 </Avatar>
                                                 {/* Status dot (green for active) */}
                                                 <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white dark:border-zinc-950 bg-green-500"></span>
@@ -183,11 +187,11 @@ export default function AddEmployeesDialog({
                 </div>
 
                 {/* Footer Controls (Pagination & Actions) */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-4 border-t border-zinc-100 dark:border-zinc-800 shrink-0 gap-4">
-                    {/* Pagination */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 text-xs text-zinc-500 dark:text-zinc-400">
+                <div className="flex flex-col gap-3 px-6 py-4 border-t border-zinc-100 dark:border-zinc-800 shrink-0 bg-white dark:bg-zinc-950">
+                    {/* Pagination Row */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-zinc-500 dark:text-zinc-400">
                         <div className="flex items-center gap-2">
-                            <span>Rows per Page</span>
+                            <span className="whitespace-nowrap">Rows per Page</span>
                             <Select
                                 value={rowsPerPage.toString()}
                                 onValueChange={(v) => {
@@ -195,7 +199,7 @@ export default function AddEmployeesDialog({
                                     setPage(1);
                                 }}
                             >
-                                <SelectTrigger className="h-7 w-[60px] text-xs bg-zinc-50 dark:bg-zinc-900 border-none">
+                                <SelectTrigger className="h-7 w-16 text-xs bg-zinc-50 dark:bg-zinc-900 border-none">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -206,8 +210,8 @@ export default function AddEmployeesDialog({
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div className="flex items-center gap-4">
-                            <span>{total > 0 ? startIdx + 1 : 0}-{endIdx} of {total}</span>
+                        <div className="flex items-center gap-3 justify-between sm:justify-start">
+                            <span className="whitespace-nowrap">{total > 0 ? startIdx + 1 : 0}-{endIdx} of {total}</span>
                             <div className="flex items-center gap-1">
                                 <button
                                     type="button"
@@ -217,7 +221,7 @@ export default function AddEmployeesDialog({
                                 >
                                     <ChevronLeft className="h-4 w-4" />
                                 </button>
-                                <span className="h-6 w-6 flex items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 font-medium text-zinc-900 dark:text-zinc-100">
+                                <span className="h-6 w-6 flex items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 font-medium text-zinc-900 dark:text-zinc-100 text-xs">
                                     {page}
                                 </span>
                                 <button
@@ -232,8 +236,8 @@ export default function AddEmployeesDialog({
                         </div>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                    {/* Actions Row */}
+                    <div className="flex items-center gap-3 w-full justify-end">
                         <Button
                             variant="ghost"
                             onClick={() => onOpenChange(false)}

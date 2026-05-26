@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { Plus, Download, Upload, RefreshCw, Search, FolderClosed, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,9 +19,10 @@ import CategoryTable from "@/components/category/CategoryTable";
 import CategoryDrawer from "@/components/category/CategoryDrawer";
 import FilterDropdown from "@/components/FilterDropdown";
 import { SkeletonTable } from "@/components/ui/skeleton-table";
+import { useCachedFiles } from "@/hooks/useCachedFiles";
 
 function pLimit(concurrency: number) {
-    return async function<T>(tasks: (() => Promise<T>)[]) {
+    return async function <T>(tasks: (() => Promise<T>)[]) {
         const results: T[] = new Array(tasks.length);
         let index = 0;
         const worker = async () => {
@@ -44,19 +45,28 @@ import {
     deleteGroup,
     addGroupMembers,
     removeGroupMembers,
+    addGroupFiles,
+    removeGroupFiles,
     listEmployees,
-    getRootContents,
     listRoles,
+    listFolders,
+    listFiles,
+    getRootContents,
 } from "@/lib/api";
 
 export default function CategoryPage() {
     const { getToken, isAuthenticated } = useKindeAuth();
 
+    // Use cached files hook for root-level files
+    const { files: cachedFiles } = useCachedFiles({ enabled: isAuthenticated });
+
+    // All KB files across every folder — used as the file pool in the drawer
+    const [allKBFiles, setAllKBFiles] = useState<any[]>([]);
+
     const [categories, setCategories] = useState<Category[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [search, setSearch] = useState<string>("");
     const [employeesList, setEmployeesList] = useState<any[]>([]);
-    const [filesList, setFilesList] = useState<any[]>([]);
     // Drawer open/edit states
     const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
     const [drawerMode, setDrawerMode] = useState<"add" | "edit" | "view">("add");
@@ -70,158 +80,132 @@ export default function CategoryPage() {
         kbFiles: "",
     });
 
-    // Populate employees list from API if available
-    const fetchEmployeesList = async (token: string) => {
-        try {
-            const data = await listEmployees(token);
-            const list = Array.isArray(data) ? data : (data?.employees || []);
-            if (list.length > 0) {
-                const mapped = list.map((emp: any) => {
-                    const firstName = emp.first_name || emp.given_name || "";
-                    const lastName = emp.last_name || emp.family_name || "";
-                    const fullName = emp.display_name || `${firstName} ${lastName}`.trim() || emp.name || emp.email?.split("@")[0] || "Unknown";
-                    return {
-                        id: emp.id,
-                        name: fullName,
-                        role: emp.role?.name || "Member",
-                        avatar: emp.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=random`
-                    };
-                });
-                setEmployeesList(mapped);
-                return mapped;
-            }
-        } catch (err) {
-            console.error("Failed to load employees for category manager matching:", err);
-        }
-        return [];
-    };
-
-    // Populate files list from API if available
-    const fetchFilesList = async (token: string) => {
-        try {
-            const data = await getRootContents(token);
-            const files = Array.isArray(data?.files) ? data.files : [];
-            const mappedFiles = files.map((f: any) => ({
-                id: f.id,
-                name: f.name,
-                size: f.size ? `${(f.size / (1024 * 1024)).toFixed(1)} MB` : "Unknown Size",
-                mimeType: f.mime_type || "application/octet-stream",
-            }));
-            setFilesList(mappedFiles);
-        } catch (err) {
-            console.error("Failed to load files for category mapping:", err);
-        }
-    };
-
     // Populate categories from API
-    const loadCategories = async () => {
+    const loadCategories = useCallback(async () => {
+        if (!isAuthenticated) return;
         setIsLoading(true);
         try {
-            if (isAuthenticated) {
-                const token = await getToken();
-                if (token) {
-                    // Pre-fetch organization employees & files for mapping
-                    const currentEmployees = await fetchEmployeesList(token);
-                    await fetchFilesList(token);
-                    const rolesData = await listRoles(token).catch(err => {
-                        console.error("Error fetching roles in CategoryPage:", err);
-                        return [];
-                    });
-                    const rolesList = Array.isArray(rolesData) ? rolesData : [];
+            const token = await getToken();
+            if (!token) return;
 
-                    const groupsData = await listGroups(token);
-                    const groupsList = Array.isArray(groupsData) ? groupsData : (groupsData?.groups || []);
+            // Fetch employees and roles in parallel
+            const [employeesResult, rolesResult, groupsResult] = await Promise.allSettled([
+                listEmployees(token),
+                listRoles(token),
+                listGroups(token),
+            ]);
 
-                    if (groupsList.length > 0) {
-                        // Fetch detailed members list for each group
-                        const limit = pLimit(5);
-                        const categoriesData: Category[] = await limit(
-                            groupsList.map((g: any) => async () => {
-                                try {
-                                    const details = await getGroup(g.id, token);
-                                    const members = details?.members || [];
-                                    const rawManagerId = g.created_by || details?.created_by || "";
-                                    const matchedEmp = currentEmployees.find((emp: any) => emp.id === rawManagerId);
-                                    const managerName = matchedEmp ? matchedEmp.name : (rawManagerId || "Administrator");
+            const employeesData = employeesResult.status === "fulfilled" ? employeesResult.value : [];
+            const rolesData = rolesResult.status === "fulfilled" ? rolesResult.value : [];
+            const groupsData = groupsResult.status === "fulfilled" ? groupsResult.value : [];
+
+            const currentEmployees = Array.isArray(employeesData)
+                ? employeesData
+                : ((employeesData as any)?.employees || []);
+            const rolesList = Array.isArray(rolesData)
+                ? rolesData
+                : ((rolesData as any)?.roles || []);
+            const groupsList = Array.isArray(groupsData) ? groupsData : (groupsData?.groups || []);
+
+            // Map employees for display
+            const mappedEmployees = currentEmployees.map((emp: any) => ({
+                id: emp.id,
+                name: emp.display_name || `${emp.first_name || ''} ${emp.last_name || ''}`.trim() || emp.name || emp.email?.split("@")[0] || "Unknown",
+                role: emp.role?.name || "Member",
+                avatar: emp.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name)}&background=random`
+            }));
+            setEmployeesList(mappedEmployees);
+
+            // Load categories with member details
+            if (groupsList.length > 0) {
+                const limit = pLimit(5);
+                const formatFileSize = (bytes: number): string => {
+                    if (!bytes) return "0 B";
+                    const k = 1024;
+                    const sizes = ["B", "KB", "MB", "GB"];
+                    const i = Math.floor(Math.log(bytes) / Math.log(k));
+                    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+                };
+
+                const categoriesData: Category[] = await limit(
+                    groupsList.map((g: any) => async () => {
+                        try {
+                            const details = await getGroup(g.id, token);
+                            const members = (details?.members || []) as any[];
+                            const rawManagerId = g.created_by || details?.created_by || "";
+                            const matchedEmp = mappedEmployees.find((emp: any) => emp.id === rawManagerId);
+                            const managerName = matchedEmp ? matchedEmp.name : (rawManagerId || "Administrator");
+
+                            const groupFiles = (details?.files || []) as any[];
+                            const mappedFiles = groupFiles.map((f: any) => ({
+                                id: f.id,
+                                name: f.name,
+                                size: formatFileSize(f.file_size || 0),
+                                mimeType: f.mime_type || "application/octet-stream"
+                            }));
+
+                            return {
+                                id: g.id,
+                                name: g.name,
+                                description: g.description || "",
+                                managerId: rawManagerId,
+                                managerName: managerName,
+                                kbCount: mappedFiles.length,
+                                employeeCount: members.length,
+                                employees: members.map((m: any) => {
+                                    const empDetails = mappedEmployees.find((emp: any) => emp.id === m.id);
+                                    const name = empDetails?.name || (m.display_name || m.email?.split("@")[0] || "Unknown");
+
+                                    let role = "Member";
+                                    if (empDetails?.role) {
+                                        role = empDetails.role;
+                                    } else if (m.role_id) {
+                                        const foundRole = rolesList.find((r: any) => r.id === m.role_id);
+                                        role = foundRole?.name || m.role_name || "Member";
+                                    }
 
                                     return {
-                                        id: g.id,
-                                        name: g.name,
-                                        description: g.description || "",
-                                        managerId: rawManagerId,
-                                        managerName: managerName,
-                                        kbCount: 0, // In the future, this can be linked to folder sharing APIs
-                                        employeeCount: members.length,
-                                        employees: members.map((m: any) => {
-                                            const matchedEmp = currentEmployees.find((emp: any) => emp.id === m.id);
-                                            const nameParts = matchedEmp ? matchedEmp.name : (m.display_name || m.email?.split("@")[0] || "Unknown");
-                                            
-                                            let rawRole = "member";
-                                            if (matchedEmp && matchedEmp.role) {
-                                                rawRole = matchedEmp.role;
-                                            } else if (m.role_id) {
-                                                const foundRole = rolesList.find((r: any) => r.id === m.role_id);
-                                                if (foundRole) {
-                                                    rawRole = foundRole.name;
-                                                } else if (m.role_name) {
-                                                    rawRole = m.role_name;
-                                                } else {
-                                                    rawRole = m.role_id;
-                                                }
-                                            }
-
-                                            const isUuid = (val: string) => /^[0-9a-fA-F-]{36}$/.test(val);
-                                            const finalRole = isUuid(rawRole) ? "Member" : (rawRole === "super_admin" ? "Super Admin" : rawRole.charAt(0).toUpperCase() + rawRole.slice(1));
-
-                                            return {
-                                                id: m.id,
-                                                name: nameParts,
-                                                role: finalRole,
-                                                avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(nameParts)}&background=random`
-                                            };
-                                        }),
-                                        files: [],
-                                        type: "Department",
-                                        createdBy: managerName,
-                                        createdDate: new Date(g.created_at || Date.now()).toLocaleDateString("en-GB", {
-                                            day: "numeric",
-                                            month: "long",
-                                            year: "numeric"
-                                        }),
-                                        isArchived: g.is_archived ?? false
+                                        id: m.id,
+                                        name: name,
+                                        role: role,
+                                        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
                                     };
-                                } catch (err) {
-                                    const rawManagerId = g.created_by || "";
-                                    const matchedEmp = currentEmployees.find((emp: any) => emp.id === rawManagerId);
-                                    const managerName = matchedEmp ? matchedEmp.name : (rawManagerId || "Administrator");
-                                    return {
-                                        id: g.id,
-                                        name: g.name,
-                                        description: g.description || "",
-                                        managerId: rawManagerId,
-                                        managerName: managerName,
-                                        kbCount: 0,
-                                        employeeCount: g.member_count || 0,
-                                        employees: [],
-                                        files: [],
-                                        type: "Department",
-                                        createdBy: managerName,
-                                        createdDate: new Date(g.created_at || Date.now()).toLocaleDateString("en-GB", {
-                                            day: "numeric",
-                                            month: "long",
-                                            year: "numeric"
-                                        }),
-                                        isArchived: g.is_archived ?? false
-                                    };
-                                }
-                            })
-                        );
-
-                        setCategories(categoriesData);
-                    } else {
-                        setCategories([]);
-                    }
-                }
+                                }),
+                                files: mappedFiles,
+                                type: "Department",
+                                createdBy: managerName,
+                                createdDate: new Date(g.created_at || Date.now()).toLocaleDateString("en-GB", {
+                                    day: "numeric",
+                                    month: "long",
+                                    year: "numeric"
+                                }),
+                                isArchived: g.is_archived ?? false
+                            };
+                        } catch (err) {
+                            console.error(`Failed to load group ${g.id}:`, err);
+                            return {
+                                id: g.id,
+                                name: g.name,
+                                description: g.description || "",
+                                managerId: g.created_by || "",
+                                managerName: "Administrator",
+                                kbCount: 0,
+                                employeeCount: 0,
+                                employees: [],
+                                files: [],
+                                type: "Department",
+                                createdBy: "Administrator",
+                                createdDate: new Date(g.created_at || Date.now()).toLocaleDateString("en-GB", {
+                                    day: "numeric",
+                                    month: "long",
+                                    year: "numeric"
+                                }),
+                                isArchived: g.is_archived ?? false
+                            };
+                        }
+                    })
+                );
+                setCategories(categoriesData);
             } else {
                 setCategories([]);
             }
@@ -232,11 +216,86 @@ export default function CategoryPage() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [isAuthenticated, getToken]);
+
+    // Load categories on mount and when dependencies change
+    useEffect(() => {
+        if (isAuthenticated) {
+            loadCategories();
+        }
+    }, [isAuthenticated, loadCategories]);
+
+    // Fetch all KB files from every folder so the drawer file-pool is complete
+    const loadAllKBFiles = useCallback(async () => {
+        if (!isAuthenticated) return;
+        try {
+            const token = await getToken();
+            if (!token) return;
+
+            const formatFileSize = (bytes: number): string => {
+                if (!bytes) return "0 B";
+                const k = 1024;
+                const sizes = ["B", "KB", "MB", "GB"];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+            };
+
+            const mapFile = (f: any) => ({
+                id: f.id,
+                name: f.name,
+                size: formatFileSize(f.file_size || f.size || 0),
+                mimeType: f.mime_type || "application/octet-stream",
+            });
+
+            // 1. Root-level files
+            const rootData = await getRootContents(token);
+            const rootFiles: any[] = (Array.isArray(rootData?.files) ? rootData.files : []).map(mapFile);
+
+            // 2. Files from every folder
+            const foldersData = await listFolders(token);
+            // listFolders returns a PaginatedResponse: { items: [...], total, ... }
+            const foldersList: any[] = Array.isArray(foldersData)
+                ? foldersData
+                : (Array.isArray(foldersData?.items) ? foldersData.items : []);
+
+            const limit = pLimit(5);
+            const folderFileLists = await limit(
+                foldersList.map((folder: any) => async () => {
+                    try {
+                        const filesData = await listFiles(folder.id, token);
+                        const rawFiles: any[] = Array.isArray(filesData)
+                            ? filesData
+                            : (Array.isArray(filesData?.files) ? filesData.files : []);
+                        return rawFiles.map(mapFile);
+                    } catch {
+                        return [];
+                    }
+                })
+            );
+
+            // Deduplicate by id
+            const seen = new Set<string>();
+            const combined: any[] = [];
+            for (const f of [...rootFiles, ...folderFileLists.flat()]) {
+                if (f.id && !seen.has(f.id)) {
+                    seen.add(f.id);
+                    combined.push(f);
+                }
+            }
+
+            setAllKBFiles(combined);
+        } catch (err) {
+            console.error("Failed to load all KB files:", err);
+            // Fall back to cached root files
+            setAllKBFiles(cachedFiles);
+        }
+    }, [isAuthenticated, getToken, cachedFiles]);
 
     useEffect(() => {
-        loadCategories();
-    }, [isAuthenticated]);
+        if (isAuthenticated) {
+            loadAllKBFiles();
+        }
+    }, [isAuthenticated, loadAllKBFiles]);
 
     const handleRefresh = () => {
         loadCategories();
@@ -324,6 +383,20 @@ export default function CategoryPage() {
                             await removeGroupMembers(newCat.id, removedIds, token);
                         }
 
+                        // 3. Sync files
+                        const originalFileIds = new Set<string>(original?.files?.map((f: any) => f.id) || []);
+                        const currentFileIds = new Set<string>(newCat.files?.map((f: any) => f.id) || []);
+
+                        const addedFileIds = Array.from(currentFileIds).filter(id => !originalFileIds.has(id));
+                        const removedFileIds = Array.from(originalFileIds).filter(id => !currentFileIds.has(id));
+
+                        if (addedFileIds.length > 0) {
+                            await addGroupFiles(newCat.id, addedFileIds, token);
+                        }
+                        if (removedFileIds.length > 0) {
+                            await removeGroupFiles(newCat.id, removedFileIds, token);
+                        }
+
                         setCategories(prev => prev.map(c => c.id === newCat.id ? {
                             ...c,
                             name: newCat.name,
@@ -332,6 +405,8 @@ export default function CategoryPage() {
                             managerName: newCat.managerName,
                             employeeCount: newCat.employees.length,
                             employees: newCat.employees,
+                            kbCount: newCat.files?.length || 0,
+                            files: newCat.files,
                         } : c));
 
                         toast.success(`Team "${newCat.name}" updated successfully`);
@@ -344,10 +419,16 @@ export default function CategoryPage() {
 
                         const newGroupId = response.id;
                         const currentIds = newCat.employees.map((e: any) => e.id);
+                        const currentFileIds = newCat.files?.map((f: any) => f.id) || [];
 
                         // 2. Add selected members
                         if (currentIds.length > 0) {
                             await addGroupMembers(newGroupId, currentIds, token);
+                        }
+
+                        // 3. Add selected files
+                        if (currentFileIds.length > 0) {
+                            await addGroupFiles(newGroupId, currentFileIds, token);
                         }
 
                         const createdCat: Category = {
@@ -683,7 +764,7 @@ export default function CategoryPage() {
                     category={selectedCategory}
                     mode={drawerMode}
                     allEmployees={employeesList}
-                    allFiles={filesList}
+                    allFiles={allKBFiles}
                 />
             </div>
         </div>

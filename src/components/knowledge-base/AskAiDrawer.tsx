@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { Send, Bot, User, Sparkles, X, FileText } from "lucide-react";
-import { 
-    Sheet, 
-    SheetContent, 
-    SheetHeader, 
-    SheetTitle 
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -156,13 +156,13 @@ export default function AskAiDrawer({ open, onOpenChange, folderId }: AskAiDrawe
                             prev.map((m) =>
                                 m.id === streamingId
                                     ? {
-                                          ...m,
-                                          id: data.message_id || streamingId,
-                                          content: accumulatedContent,
-                                          isStreaming: false,
-                                          citations: citations.length > 0 ? citations : undefined,
-                                          thinkingLabel: undefined,
-                                      }
+                                        ...m,
+                                        id: data.message_id || streamingId,
+                                        content: accumulatedContent,
+                                        isStreaming: false,
+                                        citations: citations.length > 0 ? citations : undefined,
+                                        thinkingLabel: undefined,
+                                    }
                                     : m
                             )
                         );
@@ -202,59 +202,97 @@ export default function AskAiDrawer({ open, onOpenChange, folderId }: AskAiDrawe
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent side="right" className="sm:max-w-[480px] p-0 flex flex-col h-full border-l border-zinc-200">
-                <SheetHeader className="p-6 border-b border-zinc-100 flex-row items-center justify-between space-y-0">
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                            <Sparkles className="h-5 w-5" />
+            <SheetContent side="right" className="sm:max-w-[520px] p-0 flex flex-col h-full border-l border-slate-200 bg-white">
+                {/* Header */}
+                <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white">
+                    <div className="flex items-center gap-2.5">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-sm">
+                            <Sparkles className="h-4 w-4" />
                         </div>
                         <div>
-                            <SheetTitle className="text-base font-semibold">Ask Navigator AI</SheetTitle>
-                            <p className="text-xs text-zinc-500">
-                                {folderId ? "Querying this folder's documents" : "Querying your Knowledge Base"}
+                            <SheetTitle className="text-sm font-semibold text-slate-900">Navigator AI</SheetTitle>
+                            <p className="text-xs text-slate-500 font-normal">
+                                {folderId ? "Folder Search" : "Knowledge Base"}
                             </p>
                         </div>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="rounded-full h-8 w-8">
-                        <X className="h-4 w-4 text-zinc-500" />
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onOpenChange(false)}
+                        className="rounded-lg h-7 w-7 hover:bg-slate-100 text-slate-500 transition-colors"
+                    >
+                        <X className="h-4 w-4" />
                     </Button>
-                </SheetHeader>
+                </div>
 
-                <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-[#FAFAFA]">
+                <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4 custom-scrollbar bg-white">
                     {messages.map((m) => (
-                        <div key={m.id} className={cn("flex gap-3", m.role === "user" ? "flex-row-reverse" : "flex-row")}>
+                        <div
+                            key={m.id}
+                            className={cn(
+                                "flex gap-3 animate-in fade-in-50 duration-300",
+                                m.role === "user" ? "flex-row-reverse justify-end" : "flex-row justify-start"
+                            )}
+                        >
+                            {/* Avatar */}
                             <div className={cn(
-                                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border shadow-sm",
-                                m.role === "assistant" ? "bg-blue-50 text-blue-600 border-blue-100" : "bg-white text-zinc-600 border-zinc-200"
+                                "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold mt-0.5",
+                                m.role === "assistant"
+                                    ? "bg-blue-600 text-white"
+                                    : "bg-slate-300 text-slate-700"
                             )}>
-                                {m.role === "assistant" ? <Bot className="h-4 w-4" /> : <User className="h-4 w-4" />}
+                                {m.role === "assistant" ? <Bot className="h-3.5 w-3.5" /> : <User className="h-3.5 w-3.5" />}
                             </div>
-                            <div className="flex flex-col gap-1.5 max-w-[85%]">
-                                {/* Thinking Step Label */}
+
+                            {/* Message Container */}
+                            <div className={cn(
+                                "flex flex-col gap-2 flex-1",
+                                m.role === "user" ? "items-end max-w-xs" : "items-start max-w-sm"
+                            )}>
+                                {/* Thinking State */}
                                 {m.isStreaming && !m.content && m.thinkingLabel && (
-                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-100 border border-zinc-200/40 rounded-xl text-[11px] text-zinc-500">
+                                    <div className={cn(
+                                        "flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium",
+                                        m.role === "assistant"
+                                            ? "bg-slate-100 text-slate-600"
+                                            : "bg-slate-100 text-slate-600"
+                                    )}>
                                         <div className="flex gap-1 items-center shrink-0">
-                                            <span className="h-1 w-1 rounded-full bg-zinc-400 animate-bounce" />
-                                            <span className="h-1 w-1 rounded-full bg-zinc-400 animate-bounce [animation-delay:0.2s]" />
-                                            <span className="h-1 w-1 rounded-full bg-zinc-400 animate-bounce [animation-delay:0.4s]" />
+                                            <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce" />
+                                            <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:0.2s]" />
+                                            <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:0.4s]" />
                                         </div>
                                         <span>{m.thinkingLabel}</span>
                                     </div>
                                 )}
 
-                                {/* Message bubble */}
+                                {/* Message Bubble */}
                                 {(m.content || (m.isStreaming && !m.thinkingLabel)) && (
                                     <div className={cn(
-                                        "rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm",
-                                        m.role === "user" ? "bg-blue-600 text-white" : "bg-white text-zinc-900 border border-zinc-100"
+                                        "rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm",
+                                        m.role === "user"
+                                            ? "bg-blue-600 text-white rounded-br-md"
+                                            : "bg-slate-100 text-slate-900 rounded-bl-md"
                                     )}>
                                         {m.content ? (
-                                            <div className="whitespace-pre-wrap">{m.content}</div>
+                                            <div className="whitespace-pre-wrap break-words text-[13px] leading-relaxed font-normal">
+                                                {m.content}
+                                            </div>
                                         ) : (
-                                            <div className="flex gap-1 items-center py-1">
-                                                <span className="h-1.5 w-1.5 rounded-full bg-zinc-400 animate-bounce" />
-                                                <span className="h-1.5 w-1.5 rounded-full bg-zinc-400 animate-bounce [animation-delay:0.2s]" />
-                                                <span className="h-1.5 w-1.5 rounded-full bg-zinc-400 animate-bounce [animation-delay:0.4s]" />
+                                            <div className="flex gap-1.5 items-center py-0.5">
+                                                <span className={cn(
+                                                    "h-1.5 w-1.5 rounded-full animate-bounce",
+                                                    m.role === "user" ? "bg-white/60" : "bg-slate-400"
+                                                )} />
+                                                <span className={cn(
+                                                    "h-1.5 w-1.5 rounded-full animate-bounce [animation-delay:0.2s]",
+                                                    m.role === "user" ? "bg-white/60" : "bg-slate-400"
+                                                )} />
+                                                <span className={cn(
+                                                    "h-1.5 w-1.5 rounded-full animate-bounce [animation-delay:0.4s]",
+                                                    m.role === "user" ? "bg-white/60" : "bg-slate-400"
+                                                )} />
                                             </div>
                                         )}
                                     </div>
@@ -262,29 +300,52 @@ export default function AskAiDrawer({ open, onOpenChange, folderId }: AskAiDrawe
 
                                 {/* Citations */}
                                 {m.citations && m.citations.length > 0 && (
-                                    <div className="flex flex-wrap gap-1.5 px-1 mt-1">
+                                    <div className={cn(
+                                        "flex flex-wrap gap-2 mt-1 w-full",
+                                        m.role === "user" ? "justify-end" : "justify-start"
+                                    )}>
                                         {m.citations.map((c, idx) => (
-                                            <div
+                                            <a
                                                 key={idx}
-                                                className="flex items-center gap-1 px-2 py-0.5 bg-zinc-100 rounded-md text-[10px] text-zinc-500 font-medium border border-zinc-200/60"
+                                                href="#"
+                                                onClick={(e) => e.preventDefault()}
+                                                className="group flex items-center gap-1.5 px-2 py-1 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 rounded-md text-[10px] font-medium text-slate-700 transition-colors cursor-pointer"
                                                 title={c.content_preview}
                                             >
-                                                <FileText className="h-3 w-3 shrink-0" />
-                                                <span className="truncate max-w-[140px]">{c.filename}</span>
+                                                <FileText className="h-2.5 w-2.5 shrink-0 text-slate-600" />
+                                                <span className="truncate max-w-[90px]">{c.filename}</span>
                                                 {c.relevance_score !== undefined && c.relevance_score > 0 && (
-                                                    <span className="text-zinc-400 ml-0.5">{Math.round(c.relevance_score * 100)}%</span>
+                                                    <span className="text-slate-500 ml-0.5 font-semibold">
+                                                        {Math.round(c.relevance_score * 100)}%
+                                                    </span>
                                                 )}
-                                            </div>
+                                            </a>
                                         ))}
                                     </div>
                                 )}
                             </div>
                         </div>
                     ))}
+
+                    {/* Empty state message */}
+                    {messages.length === 1 && (
+                        <div className="flex flex-col items-center justify-center h-full gap-3 text-center py-12">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100">
+                                <Sparkles className="h-6 w-6 text-blue-600" />
+                            </div>
+                            <div>
+                                <p className="font-semibold text-slate-900 text-sm">Ask Navigator AI</p>
+                                <p className="text-xs text-slate-500 mt-1 leading-relaxed max-w-[80%] mx-auto">
+                                    Search through your documents and get instant answers powered by AI
+                                </p>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
-                <div className="p-4 border-t border-zinc-100 bg-white">
-                    <div className="relative flex items-center">
+                {/* Input Area */}
+                <div className="border-t border-slate-200 bg-white px-4 py-3">
+                    <div className="relative flex items-end gap-2">
                         <textarea
                             rows={1}
                             value={input}
@@ -295,20 +356,20 @@ export default function AskAiDrawer({ open, onOpenChange, folderId }: AskAiDrawe
                                     handleSend();
                                 }
                             }}
-                            placeholder="Type your question..."
-                            className="w-full resize-none rounded-xl border border-zinc-200 bg-white px-4 py-3 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all max-h-32"
+                            placeholder="Ask a question..."
+                            className="flex-1 resize-none rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all max-h-24"
                         />
                         <Button
                             onClick={handleSend}
                             disabled={!input.trim() || isLoading}
-                            size="icon"
-                            className="absolute right-2 h-8 w-8 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition-all"
+                            size="sm"
+                            className="rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition-all flex-shrink-0"
                         >
-                            <Send className="h-3.5 w-3.5" />
+                            <Send className="h-4 w-4" />
                         </Button>
                     </div>
-                    <p className="text-[10px] text-zinc-400 mt-2 text-center">
-                        Powered by RAG — responses are grounded in your uploaded documents
+                    <p className="text-[11px] text-slate-400 mt-2 text-center font-normal">
+                        Shift + Enter for new line
                     </p>
                 </div>
             </SheetContent>

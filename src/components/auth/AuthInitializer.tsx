@@ -23,7 +23,7 @@ export default function AuthInitializer() {
                             await cacheWebSocket.connect();
                             cacheWebSocket.startHeartbeat();
                         } catch (wsError) {
-                            console.error("Failed to connect cache WebSocket:", wsError);
+                            console.warn("[WebSocket] Cache invalidation WS unavailable — real-time updates disabled:", wsError);
                         }
 
                         const userData = await syncUser(token);

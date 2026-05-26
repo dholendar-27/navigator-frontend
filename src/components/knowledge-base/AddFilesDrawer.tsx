@@ -3,6 +3,7 @@ import { X, Trash2, Loader2 } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 import {
     Select,
     SelectTrigger,
@@ -116,6 +117,10 @@ export default function AddFilesDrawer({
 
         try {
             await onSubmit(folder, items.map((it) => it.file));
+            toast.success(`${items.length} file${items.length > 1 ? "s" : ""} uploaded successfully`, { id: "files-upload" });
+            onOpenChange(false);
+        } catch (error: any) {
+            toast.error(error.message || "Failed to upload files", { id: "files-upload" });
         } finally {
             setIsUploading(false);
         }
@@ -246,61 +251,73 @@ export default function AddFilesDrawer({
                         </div>
                     )}
 
-                    {/* File list — card style matching reference */}
+                    {/* File list — table style matching AddEmployeesDialog and CategoryDrawer */}
                     {items.length > 0 && (
-                        <div className="space-y-3" data-testid="add-files-list">
-                            {items.map((item, i) => (
-                                <div
-                                    key={i}
-                                    className="rounded-xl bg-zinc-100 dark:bg-zinc-800 px-4 py-3"
-                                >
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="flex items-center gap-3 min-w-0">
+                        <div className="border border-zinc-200 dark:border-zinc-700 rounded-lg overflow-hidden" data-testid="add-files-list">
+                            {/* Table Header */}
+                            <div className="flex items-center gap-4 bg-zinc-50/80 dark:bg-zinc-800/80 px-4 py-3 sticky top-0 z-10 border-b border-zinc-100 dark:border-zinc-800">
+                                <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                                    File Name
+                                </span>
+                            </div>
+
+                            {/* Table Body */}
+                            <div className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
+                                {items.map((item, i) => (
+                                    <div
+                                        key={i}
+                                        className="flex items-center justify-between px-4 py-3 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/50 transition-colors group"
+                                    >
+                                        <div className="flex items-center gap-3 min-w-0 flex-1">
                                             {/* File icon */}
-                                            <div className="shrink-0">
+                                            <div className="h-9 w-9 shrink-0 bg-zinc-100 dark:bg-zinc-800 rounded-lg flex items-center justify-center border border-zinc-200/60 dark:border-zinc-700/60 text-zinc-500">
                                                 <svg
                                                     xmlns="http://www.w3.org/2000/svg"
                                                     viewBox="0 0 24 24"
                                                     fill="currentColor"
-                                                    className="h-8 w-8 text-zinc-400 dark:text-zinc-500"
+                                                    className="h-4 w-4"
                                                 >
                                                     <path d="M5 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.414A2 2 0 0 0 20.414 7L17 3.586A2 2 0 0 0 15.586 3H5zm0 2h9v3a2 2 0 0 0 2 2h3v9H5V5zm11 .414L18.586 8H16V5.414z" />
-                                                    <path d="M12 11a1 1 0 0 1 1 1v2h2a1 1 0 1 1 0 2h-2v2a1 1 0 1 1-2 0v-2H9a1 1 0 1 1 0-2h2v-2a1 1 0 0 1 1-1z" />
                                                 </svg>
                                             </div>
-                                            <div className="min-w-0">
-                                                <p className="truncate text-sm font-medium text-zinc-800 dark:text-zinc-200">
+                                            <div className="flex flex-col min-w-0">
+                                                <span className="text-xs font-medium text-zinc-800 dark:text-zinc-200 truncate">
                                                     {item.file.name}
-                                                </p>
-                                                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                                                </span>
+                                                <span className="text-[11px] font-mono text-zinc-500 dark:text-zinc-450 truncate mt-0.5">
                                                     {formatFileSize(item.file.size)}
-                                                </p>
+                                                </span>
                                             </div>
                                         </div>
 
-                                        {/* Trash icon */}
-                                        <button
-                                            type="button"
-                                            disabled={isUploading}
-                                            onClick={() => removeFile(i)}
-                                            className="shrink-0 rounded-md p-1 text-zinc-400 dark:text-zinc-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-40 transition-colors"
-                                            aria-label="Remove"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </button>
+                                        {/* Progress bar (shown while uploading) */}
+                                        {item.uploading ? (
+                                            <div className="flex items-center gap-3 ml-4">
+                                                <div className="flex-shrink-0 w-16 h-1.5 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
+                                                    <div
+                                                        className="h-full rounded-full bg-blue-600 transition-all duration-150"
+                                                        style={{ width: `${item.progress}%` }}
+                                                    />
+                                                </div>
+                                                <span className="text-xs text-zinc-500 dark:text-zinc-400 w-8 text-right">
+                                                    {Math.round(item.progress)}%
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            /* Trash icon */
+                                            <button
+                                                type="button"
+                                                disabled={isUploading}
+                                                onClick={() => removeFile(i)}
+                                                className="ml-4 shrink-0 rounded-md p-1 text-zinc-400 dark:text-zinc-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-40 transition-colors"
+                                                aria-label="Remove"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        )}
                                     </div>
-
-                                    {/* Per-file progress bar */}
-                                    {item.uploading && (
-                                        <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
-                                            <div
-                                                className="h-full rounded-full bg-blue-600 transition-all duration-150"
-                                                style={{ width: `${item.progress}%` }}
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
                     )}
                 </div>

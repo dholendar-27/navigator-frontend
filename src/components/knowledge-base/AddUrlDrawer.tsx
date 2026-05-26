@@ -4,6 +4,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 import {
     Select,
     SelectTrigger,
@@ -54,6 +55,10 @@ export default function AddUrlDrawer({
         setIsSubmitting(true);
         try {
             await onSubmit({ url: trimmedUrl, title: title.trim(), folderId });
+            toast.success(`URL reference saved successfully`, { id: "add-url" });
+            onOpenChange(false);
+        } catch (error: any) {
+            toast.error(error.message || "Failed to save URL", { id: "add-url" });
         } finally {
             setIsSubmitting(false);
         }

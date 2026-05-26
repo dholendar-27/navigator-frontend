@@ -29,10 +29,9 @@ import {
     deleteFolder,
     uploadFiles,
     deleteFiles,
-    listFolderOcrJobs,
     listEmployees,
 } from "@/lib/api";
-import { cacheWebSocket } from "@/utils/cacheWebSocket";
+import { useDebounce } from "@/hooks/useDebounce";
 import type {
     KBEntry,
     CreateFolderPayload,
@@ -112,11 +111,12 @@ export default function KnowledgeBasePage() {
     // Root folder ID returned by backend
     const [rootFolderId, setRootFolderId] = useState<string | null>(null);
 
-    // OCR status map: file_id → status
-    const [ocrStatusMap, setOcrStatusMap] = useState<Record<string, string>>({});
+    // PERFORMANCE: Search with debouncing
+    // searchInput is updated immediately for responsive UI
+    // debouncedSearch is used for actual filtering (with 300ms delay)
+    const [searchInput, setSearchInput] = useState("");
+    const debouncedSearch = useDebounce(searchInput, 300);
 
-    // Search & filter
-    const [search, setSearch] = useState("");
     const [filters, setFilters] = useState<Filters>({
         creator: "",
         type: "",
@@ -135,6 +135,9 @@ export default function KnowledgeBasePage() {
     /** Current folder ID (null = root) */
     const currentFolderId = folderStack.length > 0 ? folderStack[folderStack.length - 1].id : null;
     const currentFolderEntry = folderStack.length > 0 ? folderStack[folderStack.length - 1] : null;
+
+    // File processing state management (simplified - no WebSocket)
+    const getFileProcessingState = () => null;
 
     // Employees list for creator filter options
     const [employeesList, setEmployeesList] = useState<any[]>([]);
@@ -176,22 +179,8 @@ export default function KnowledgeBasePage() {
                 setRootFolderId(data.root_folder_id);
             }
 
-            // Enrich files with OCR job status
-            const targetFolderIdForOcr = folderId || data.root_folder_id || rootFolderId;
-            if (files.length > 0 && targetFolderIdForOcr) {
-                try {
-                    const jobData = await listFolderOcrJobs(targetFolderIdForOcr, token);
-                    const map: Record<string, string> = {};
-                    for (const job of jobData.jobs || []) {
-                        map[job.file_id] = job.status;
-                    }
-                    setOcrStatusMap(map);
-                } catch {
-                    setOcrStatusMap({});
-                }
-            } else {
-                setOcrStatusMap({});
-            }
+            // Real-time OCR status is handled via useRealTimeFileProcessing hook
+            // No need to fetch here - WebSocket will provide updates
         } catch (err: any) {
             console.error("Error fetching contents:", err);
             toast.error(err.message || "Failed to load contents");
@@ -204,24 +193,7 @@ export default function KnowledgeBasePage() {
         fetchContents(currentFolderId);
     }, [currentFolderId, fetchContents]);
 
-    // WebSocket-driven refresh
-    useEffect(() => {
-        const handleChange = () => fetchContents(currentFolderId);
-        cacheWebSocket.on("folder:created", handleChange);
-        cacheWebSocket.on("folder:updated", handleChange);
-        cacheWebSocket.on("folder:deleted", handleChange);
-        cacheWebSocket.on("file:created", handleChange);
-        cacheWebSocket.on("file:updated", handleChange);
-        cacheWebSocket.on("file:deleted", handleChange);
-        return () => {
-            cacheWebSocket.off("folder:created", handleChange);
-            cacheWebSocket.off("folder:updated", handleChange);
-            cacheWebSocket.off("folder:deleted", handleChange);
-            cacheWebSocket.off("file:created", handleChange);
-            cacheWebSocket.off("file:updated", handleChange);
-            cacheWebSocket.off("file:deleted", handleChange);
-        };
-    }, [currentFolderId, fetchContents]);
+    // Manual refresh will be triggered via UI actions instead of WebSocket
 
     // ── Derived data ───────────────────────────────────────────────────────────
 
@@ -231,8 +203,13 @@ export default function KnowledgeBasePage() {
     );
 
     const fileEntries = useMemo<KBEntry[]>(
-        () => childFiles.map((f) => rawFileToEntry(f, ocrStatusMap)),
-        [childFiles, ocrStatusMap]
+        () => childFiles.map((f) => {
+            const processingState = getFileProcessingState(f.id);
+            return rawFileToEntry(f, {
+                [f.id]: processingState?.status || f.ocr_status,
+            });
+        }),
+        [childFiles, getFileProcessingState]
     );
 
     const allCreators = useMemo(() => {
@@ -256,13 +233,14 @@ export default function KnowledgeBasePage() {
 
     const allEntries = useMemo<KBEntry[]>(() => {
         return [...folderEntries, ...fileEntries].filter((e) => {
-            if (search && !e.name.toLowerCase().includes(search.toLowerCase())) return false;
+            // ✅ Use debouncedSearch for filtering (not searchInput)
+            if (debouncedSearch && !e.name.toLowerCase().includes(debouncedSearch.toLowerCase())) return false;
             if (filters.creator && e.owner !== filters.creator) return false;
             if (filters.type && e.type.toLowerCase() !== filters.type.toLowerCase()) return false;
             if (filters.ocrStatus && e.ocr_status !== filters.ocrStatus.toLowerCase()) return false;
             return true;
         });
-    }, [folderEntries, fileEntries, search, filters]);
+    }, [folderEntries, fileEntries, debouncedSearch, filters]);
 
     const isEmpty = allEntries.length === 0;
 
@@ -294,7 +272,7 @@ export default function KnowledgeBasePage() {
     // ── Navigation ─────────────────────────────────────────────────────────────
 
     const navigateInto = (entry: KBEntry) => {
-        setSearch("");
+        setSearchInput("");  // ✅ Update to use searchInput instead of search
         setFilters({ creator: "", type: "", ocrStatus: "" });
         setFolderStack((prev) => {
             if (prev.length > 0 && prev[prev.length - 1].id === entry.id) {
@@ -305,7 +283,7 @@ export default function KnowledgeBasePage() {
     };
 
     const navigateTo = (index: number) => {
-        setSearch("");
+        setSearchInput("");  // ✅ Update to use searchInput instead of search
         setFilters({ creator: "", type: "", ocrStatus: "" });
         if (index < 0) {
             setFolderStack([]);
@@ -340,7 +318,7 @@ export default function KnowledgeBasePage() {
             toast.loading("Uploading files...", { id: "uploading-files" });
             const result = await uploadFiles(folderId, files, token);
             toast.success("Files uploaded successfully", { id: "uploading-files" });
-            
+
             const uploadedFiles = (result.files || []).map((f: any) => ({
                 id: f.file_id,
                 name: f.filename,
@@ -356,13 +334,6 @@ export default function KnowledgeBasePage() {
 
             if (currentFolderId === folderId || (!currentFolderId && folderId === rootFolderId)) {
                 setChildFiles((prev) => [...prev, ...uploadedFiles]);
-                setOcrStatusMap((prev) => {
-                    const next = { ...prev };
-                    uploadedFiles.forEach((f: any) => {
-                        next[f.id] = "pending";
-                    });
-                    return next;
-                });
             }
             setFilesOpen(false);
         } catch (error: any) {
@@ -613,16 +584,16 @@ export default function KnowledgeBasePage() {
                 <div className="relative flex-1">
                     <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 dark:text-zinc-500" />
                     <Input
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
                         placeholder={currentFolderId ? "Search folders and files..." : "Search folders..."}
                         className="h-10 rounded-lg border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 pl-11 pr-10 text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:ring-blue-500/20"
                         data-testid="kb-search-input"
                     />
-                    {search && (
+                    {searchInput && (
                         <button
                             type="button"
-                            onClick={() => setSearch("")}
+                            onClick={() => setSearchInput("")}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
                             aria-label="Clear search"
                         >

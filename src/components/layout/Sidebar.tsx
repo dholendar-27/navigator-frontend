@@ -43,9 +43,10 @@ import {
 } from "@/components/ui/dialog";
 import type { JSX } from "react";
 import { toast } from "sonner";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useState } from "react";
 import { useKindeAuth } from "@kinde-oss/kinde-auth-react";
-import { listConversations, deleteConversation, updateConversation, type Conversation } from "@/lib/api";
+import { deleteConversation, updateConversation, type Conversation } from "@/lib/api";
+import { useCachedConversations } from "@/hooks/useCachedConversations";
 
 type NavItemType = {
     to: string;
@@ -308,53 +309,19 @@ function ChatHistoryList({ onConversationDeleted }: { onConversationDeleted?: ()
     const { getToken, isAuthenticated } = useKindeAuth();
     const navigate = useNavigate();
     const { id: activeId } = useParams<{ id: string }>();
-    const [conversations, setConversations] = useState<Conversation[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
+
+    // Use the cached conversations hook
+    const {
+        conversations,
+        isLoading,
+        deleteConversation: removeConversation,
+        updateConversation: updateConv,
+    } = useCachedConversations({ enabled: isAuthenticated });
+
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [conversationToDelete, setConversationToDelete] = useState<Conversation | null>(null);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editTitle, setEditTitle] = useState("");
-
-    // Keep stable references to avoid re-triggering effects on KindeAuth updates
-    const authRef = useRef({ getToken, isAuthenticated });
-    useEffect(() => {
-        authRef.current = { getToken, isAuthenticated };
-    }, [getToken, isAuthenticated]);
-
-    const fetchConversations = useCallback(async (showLoading = true) => {
-        const { getToken: currentGetToken, isAuthenticated: currentIsAuthenticated } = authRef.current;
-        if (!currentIsAuthenticated) return;
-        try {
-            if (showLoading) {
-                setIsLoading(true);
-            }
-            const token = await currentGetToken();
-            if (!token) return;
-            const data = await listConversations(token, 40, 0);
-            setConversations(data.conversations || []);
-        } catch (err: any) {
-            // Silently fail — user may not have any conversations or backend may be unavailable
-            console.warn("Could not load chat history:", err.message);
-            setConversations([]);
-        } finally {
-            if (showLoading) {
-                setIsLoading(false);
-            }
-        }
-    }, []);
-
-    useEffect(() => {
-        if (isAuthenticated) {
-            fetchConversations(true);
-        }
-    }, [isAuthenticated, fetchConversations]);
-
-    // Listen for new messages so history updates after a chat
-    useEffect(() => {
-        const handleNewConversation = () => fetchConversations(false);
-        window.addEventListener("navigator_conversation_created", handleNewConversation);
-        return () => window.removeEventListener("navigator_conversation_created", handleNewConversation);
-    }, [fetchConversations]);
 
     const handleOpenConversation = (conv: Conversation) => {
         navigate(`/chat/${conv.id}`);
@@ -373,12 +340,12 @@ function ChatHistoryList({ onConversationDeleted }: { onConversationDeleted?: ()
             const token = await getToken();
             if (!token) return;
             await deleteConversation(convId, token);
-            setConversations(prev => prev.filter(c => c.id !== convId));
+            removeConversation(convId); // Use cache method to update state
             toast.success("Conversation deleted");
-            
+
             // Dispatch custom event to notify active views of the deletion
             window.dispatchEvent(new CustomEvent("navigator_conversation_deleted", { detail: { id: convId } }));
-            
+
             onConversationDeleted?.();
         } catch (err: any) {
             toast.error(err.message || "Failed to delete conversation");
@@ -410,10 +377,8 @@ function ChatHistoryList({ onConversationDeleted }: { onConversationDeleted?: ()
             const token = await getToken();
             if (!token) return;
 
-            // Optimistic UI update
-            setConversations(prev =>
-                prev.map(c => (c.id === convId ? { ...c, title: editTitle.trim() } : c))
-            );
+            // Optimistic UI update using cache method
+            updateConv(convId, { title: editTitle.trim() });
             setEditingId(null);
 
             await updateConversation(convId, { title: editTitle.trim() }, token);
@@ -423,11 +388,9 @@ function ChatHistoryList({ onConversationDeleted }: { onConversationDeleted?: ()
             window.dispatchEvent(new Event("navigator_conversation_created"));
         } catch (err: any) {
             toast.error(err.message || "Failed to rename conversation");
-            // Revert back on error
+            // Revert back on error using cache method
             if (conv) {
-                setConversations(prev =>
-                    prev.map(c => (c.id === convId ? { ...c, title: conv.title } : c))
-                );
+                updateConv(convId, { title: conv.title });
             }
         }
     };

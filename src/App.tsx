@@ -1,21 +1,44 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useKindeAuth } from "@kinde-oss/kinde-auth-react";
+import { lazy, Suspense } from "react";
 import AppLayout from "@/components/layout/AppLayout";
-import EmployeesPage from "@/pages/EmployeesPage";
-import PlaceholderPage from "./pages/PlaceholderPage";
-import KnowledgeBasePage from "./pages/KnowledgeBasePage";
-import CategoryPage from "./pages/CategoryPage";
-import Integration from "./pages/Integration";
-import NewChatPage from "./pages/NewChatPage";
-import LandingPage from "./pages/LandingPage";
+import LandingPage from "@/pages/LandingPage";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AuthInitializer from "@/components/auth/AuthInitializer";
 import { Toaster } from "@/components/ui/sonner";
+import { useTokenExpiration } from "@/hooks/useTokenExpiration";
 import type { JSX } from "react";
 
+// ✅ CODE SPLITTING: Lazy load all route pages
+// Each page is loaded only when user navigates to it
+const DashboardPage = lazy(() => import("@/pages/PlaceholderPage").then(m => ({ default: () => m.default({ title: "Dashboard" }) })));
+const EmployeesPage = lazy(() => import("@/pages/EmployeesPage"));
+const CategoryPage = lazy(() => import("@/pages/CategoryPage"));
+const KnowledgeBasePage = lazy(() => import("@/pages/KnowledgeBasePage"));
+const IntegrationPage = lazy(() => import("@/pages/Integration"));
+const SubscriptionPage = lazy(() => import("@/pages/PlaceholderPage").then(m => ({ default: () => m.default({ title: "Subscription" }) })));
+const BillingPage = lazy(() => import("@/pages/PlaceholderPage").then(m => ({ default: () => m.default({ title: "Billing" }) })));
+const ChatPage = lazy(() => import("@/pages/NewChatPage"));
+
+/**
+ * Loading fallback component shown while chunks are being loaded
+ */
+function PageLoader(): JSX.Element {
+    return (
+        <div className="flex items-center justify-center h-screen">
+            <div className="flex flex-col items-center gap-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+                <p className="text-sm text-gray-600">Loading...</p>
+            </div>
+        </div>
+    );
+}
 
 function AppRoutes(): JSX.Element {
     const { isAuthenticated } = useKindeAuth();
+
+    // ✅ TOKEN EXPIRATION: Monitor and refresh token
+    useTokenExpiration();
 
     return (
         <Routes>
@@ -36,47 +59,83 @@ function AppRoutes(): JSX.Element {
                 <Route element={<AppLayout />}>
                     <Route
                         path="/dashboard"
-                        element={<PlaceholderPage title="Dashboard" />}
+                        element={
+                            <Suspense fallback={<PageLoader />}>
+                                <DashboardPage />
+                            </Suspense>
+                        }
                     />
 
                     <Route
                         path="/employees"
-                        element={<EmployeesPage />}
+                        element={
+                            <Suspense fallback={<PageLoader />}>
+                                <EmployeesPage />
+                            </Suspense>
+                        }
                     />
 
                     <Route
                         path="/teams"
-                        element={<CategoryPage />}
+                        element={
+                            <Suspense fallback={<PageLoader />}>
+                                <CategoryPage />
+                            </Suspense>
+                        }
                     />
 
                     <Route
                         path="/knowledge-base"
-                        element={<KnowledgeBasePage />}
+                        element={
+                            <Suspense fallback={<PageLoader />}>
+                                <KnowledgeBasePage />
+                            </Suspense>
+                        }
                     />
 
                     <Route
                         path="/integration"
-                        element={<Integration />}
+                        element={
+                            <Suspense fallback={<PageLoader />}>
+                                <IntegrationPage />
+                            </Suspense>
+                        }
                     />
 
                     <Route
                         path="/subscription"
-                        element={<PlaceholderPage title="Subscription" />}
+                        element={
+                            <Suspense fallback={<PageLoader />}>
+                                <SubscriptionPage />
+                            </Suspense>
+                        }
                     />
 
                     <Route
                         path="/billing"
-                        element={<PlaceholderPage title="Billing" />}
+                        element={
+                            <Suspense fallback={<PageLoader />}>
+                                <BillingPage />
+                            </Suspense>
+                        }
                     />
 
                     <Route
                         path="/chat"
-                        element={<NewChatPage />}
+                        element={
+                            <Suspense fallback={<PageLoader />}>
+                                <ChatPage />
+                            </Suspense>
+                        }
                     />
 
                     <Route
                         path="/chat/:id"
-                        element={<NewChatPage />}
+                        element={
+                            <Suspense fallback={<PageLoader />}>
+                                <ChatPage />
+                            </Suspense>
+                        }
                     />
 
                     <Route
@@ -104,8 +163,8 @@ function App(): JSX.Element {
     return (
         <div className="App">
             <BrowserRouter>
-                    <AuthInitializer />
-                    <AppRoutes />
+                <AuthInitializer />
+                <AppRoutes />
             </BrowserRouter>
 
             <Toaster position="top-right" />

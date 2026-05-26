@@ -9,8 +9,8 @@ import { toast } from "sonner";
 import { useKindeAuth } from "@kinde-oss/kinde-auth-react";
 import { getFolder, uploadFiles, deleteFiles, updateFolder, getFile, getFileDownloadUrl, extractFileText, createOcrJob, retryOcrJob, getFileOcrJob } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { useRealTimeFileProcessing } from "@/hooks/useRealTimeFileProcessing";
 import type { KBEntry } from "@/types/knowledge-base";
-import { cacheWebSocket } from "@/utils/cacheWebSocket";
 
 interface KBDetailDrawerProps {
     open: boolean;
@@ -48,12 +48,30 @@ export default function KnowledgeBaseDetailDrawer({
     const [ocrJob, setOcrJob] = useState<any | null>(null);
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
-    
-    // Refs for WebSocket subscription handlers
-    const ocrJobIdRef = useRef<string | null>(null);
-    const fileIdRef = useRef<string | null>(null);
-    const tokenRef = useRef<string | null>(null);
-    const hasSubscribedRef = useRef<boolean>(false);
+
+    // REAL-TIME: Real-time file processing state via WebSocket (no manual polling)
+    useRealTimeFileProcessing({
+        folderId: entry?.type === "folder" ? entry?.id : null,
+        fileIds: entry?.type === "file" ? [entry?.id] : [],
+        enabled: open && !!entry?.id,
+        onStatusChange: (state) => {
+            const updatedJob = {
+                job_id: state.fileId,
+                status: state.status,
+                progress_percentage: state.progress,
+                progress_message: state.message,
+                error_message: state.error,
+            };
+            setOcrJob(updatedJob);
+
+            if (state.status === "completed" && entry?.id) {
+                fetchExtractedText(entry.id);
+            } else if (state.status === "failed") {
+                setOcrError(state.error || "OCR extraction failed.");
+                setIsOcrLoading(false);
+            }
+        },
+    });
 
     // Helpers
     const formatSize = (bytes: number) => {
@@ -76,61 +94,11 @@ export default function KnowledgeBaseDetailDrawer({
         }
     };
 
-    const handleOcrJobEvent = (data: any) => {
-        console.log("[DetailDrawer] Received OCR job WebSocket event:", data);
-        const eventJobId = data.resource_id;
-        const currentJobId = ocrJobIdRef.current;
-        const currentFileId = fileIdRef.current;
-
-        const isMatch = eventJobId === currentJobId || 
-                        data.metadata?.file_id === currentFileId;
-
-        if (!isMatch) return;
-
-        if (data.metadata) {
-            const updatedJob = {
-                job_id: eventJobId,
-                status: data.metadata.status || (data.event === "ocr:job_completed" ? "completed" : "processing"),
-                progress_percentage: data.metadata.progress_percentage ?? 100,
-                progress_message: data.metadata.progress_message || "",
-                error_message: data.metadata.error_message || null,
-            };
-
-            setOcrJob(updatedJob);
-
-            if (data.event === "ocr:job_completed" || data.metadata.status === "completed") {
-                if (currentFileId && tokenRef.current) {
-                    fetchExtractedText(currentFileId, tokenRef.current);
-                }
-                unsubscribeWebSocket();
-            } else if (data.metadata.status === "failed") {
-                setOcrError(data.metadata.error_message || "OCR extraction failed.");
-                setIsOcrLoading(false);
-                unsubscribeWebSocket();
-            }
-        }
-    };
-
-    const subscribeWebSocket = () => {
-        if (hasSubscribedRef.current) return;
-        cacheWebSocket.on("ocr:job_created", handleOcrJobEvent);
-        cacheWebSocket.on("ocr:job_updated", handleOcrJobEvent);
-        cacheWebSocket.on("ocr:job_completed", handleOcrJobEvent);
-        hasSubscribedRef.current = true;
-        console.log("[DetailDrawer] Subscribed to OCR WebSocket events");
-    };
-
-    const unsubscribeWebSocket = () => {
-        if (!hasSubscribedRef.current) return;
-        cacheWebSocket.off("ocr:job_created", handleOcrJobEvent);
-        cacheWebSocket.off("ocr:job_updated", handleOcrJobEvent);
-        cacheWebSocket.off("ocr:job_completed", handleOcrJobEvent);
-        hasSubscribedRef.current = false;
-        console.log("[DetailDrawer] Unsubscribed from OCR WebSocket events");
-    };
-
-    const fetchExtractedText = async (fileId: string, token: string) => {
+    const fetchExtractedText = async (fileId: string) => {
         try {
+            const token = await getToken();
+            if (!token) return;
+
             const ocrRes = await extractFileText(fileId, token);
             setOcrText(ocrRes.extracted_text || "");
         } catch (err: any) {
@@ -141,29 +109,27 @@ export default function KnowledgeBaseDetailDrawer({
         }
     };
 
-    const checkOrStartOcrJob = async (fileId: string, token: string) => {
+    const checkOrStartOcrJob = async (fileId: string) => {
         try {
-            fileIdRef.current = fileId;
-            tokenRef.current = token;
+            const token = await getToken();
+            if (!token) return;
 
             let job: any = null;
             try {
                 job = await getFileOcrJob(fileId, token);
             } catch (err: any) {
-                console.log("No OCR job found, creating a new one...", err);
                 job = await createOcrJob({ file_id: fileId, extraction_type: "standard" }, token);
             }
 
             setOcrJob(job);
-            ocrJobIdRef.current = job.job_id || job.id;
 
             if (job.status === "completed") {
-                await fetchExtractedText(fileId, token);
+                await fetchExtractedText(fileId);
             } else if (job.status === "failed") {
                 setOcrError(job.error_message || "OCR extraction failed.");
                 setIsOcrLoading(false);
             } else if (job.status === "pending" || job.status === "processing") {
-                subscribeWebSocket();
+                // Real-time updates now handled by useRealTimeFileProcessing hook
             } else {
                 setIsOcrLoading(false);
             }
@@ -214,7 +180,7 @@ export default function KnowledgeBaseDetailDrawer({
                 }
                 setIsOcrLoading(false);
             } else {
-                await checkOrStartOcrJob(entry.id, token);
+                await checkOrStartOcrJob(entry.id);
             }
         } catch (err: any) {
             console.error("Error fetching file details:", err);
@@ -234,26 +200,23 @@ export default function KnowledgeBaseDetailDrawer({
             if (!token) return;
 
             toast.loading("Retrying OCR extraction...", { id: "retry-ocr" });
-            unsubscribeWebSocket();
-            
+
             if (ocrJob?.job_id) {
                 const job = await retryOcrJob(ocrJob.job_id, token);
                 toast.success("OCR job retried successfully", { id: "retry-ocr" });
                 setOcrJob(job);
-                ocrJobIdRef.current = job.job_id || job.id;
-                subscribeWebSocket();
+                // Real-time updates now handled by useRealTimeFileProcessing hook
             } else {
                 toast.success("OCR job started", { id: "retry-ocr" });
-                await checkOrStartOcrJob(entry.id, token);
+                await checkOrStartOcrJob(entry.id);
             }
         } catch (err: any) {
-            console.error("Error retrying OCR job:", err);
-            toast.error(err.message || "Failed to retry OCR job", { id: "retry-ocr" });
+            console.error("Error retrying OCR:", err);
+            toast.error(err.message || "Failed to retry OCR", { id: "retry-ocr" });
             setIsOcrLoading(false);
         }
     };
 
-    // Handle export/download of original file
     const handleExport = async () => {
         if (!entry) return;
         try {
@@ -297,11 +260,6 @@ export default function KnowledgeBaseDetailDrawer({
 
     // Reset mode and fetch files on open/entry changes
     useEffect(() => {
-        unsubscribeWebSocket();
-        ocrJobIdRef.current = null;
-        fileIdRef.current = null;
-        tokenRef.current = null;
-        
         if (open && entry) {
             setMode("view");
             if (entry.type === "folder") {
@@ -323,7 +281,6 @@ export default function KnowledgeBaseDetailDrawer({
             setOcrError(null);
             setOcrJob(null);
         }
-        return () => unsubscribeWebSocket();
     }, [open, entry]);
 
     // Handle single file deletion (minus icon)
@@ -512,22 +469,22 @@ export default function KnowledgeBaseDetailDrawer({
                             </div>
 
                             {/* Right Column: Extracted Content / File Display (8 Cols) */}
-                             <div className="md:col-span-8 p-8 flex flex-col min-h-0 bg-white dark:bg-zinc-900">
-                                 {/* Title & Export Button */}
-                                 <div className="flex items-center justify-between gap-4 pb-2">
-                                     <h3 className="text-[15px] font-bold text-zinc-900 dark:text-zinc-100 truncate min-w-0" title={entry.name}>
-                                         {entry.name}
-                                     </h3>
-                                     <Button
-                                         variant="outline"
-                                         size="sm"
-                                         onClick={handleExport}
-                                         className="h-8 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 gap-1 rounded-lg text-xs font-semibold shadow-xs shrink-0"
-                                     >
-                                         <Download className="h-3.5 w-3.5" />
-                                         Export
-                                     </Button>
-                                 </div>
+                            <div className="md:col-span-8 p-8 flex flex-col min-h-0 bg-white dark:bg-zinc-900">
+                                {/* Title & Export Button */}
+                                <div className="flex items-center justify-between gap-4 pb-2">
+                                    <h3 className="text-[15px] font-bold text-zinc-900 dark:text-zinc-100 truncate min-w-0" title={entry.name}>
+                                        {entry.name}
+                                    </h3>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleExport}
+                                        className="h-8 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 gap-1 rounded-lg text-xs font-semibold shadow-xs shrink-0"
+                                    >
+                                        <Download className="h-3.5 w-3.5" />
+                                        Export
+                                    </Button>
+                                </div>
 
                                 {/* Extracted Content container */}
                                 <div className="flex-1 mt-4 rounded-2xl overflow-y-auto bg-zinc-50 dark:bg-zinc-950/25 p-8 border border-zinc-100 dark:border-zinc-800/50">

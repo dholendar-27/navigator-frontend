@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { WebSocketStatus } from "@/components/WebSocketStatus";
 
 import {
     Avatar,
@@ -61,11 +62,11 @@ export default function TopBar({
     const fullName = profile?.display_name || (user?.givenName ? `${user.givenName} ${user.familyName || ""}`.trim() : (isLoading ? "Loading..." : "User"));
     const initials = fullName
         ? fullName
-              .split(" ")
-              .map((n: string) => n[0])
-              .join("")
-              .slice(0, 2)
-              .toUpperCase()
+            .split(" ")
+            .map((n: string) => n[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase()
         : "U";
 
     return (
@@ -84,6 +85,9 @@ export default function TopBar({
             </Button>
 
             <div className="flex items-center gap-3" data-tour="topbar-actions">
+                {/* Real-Time WebSocket Status Indicator */}
+                <WebSocketStatus />
+
                 {/* Theme Toggle */}
                 <TooltipProvider delayDuration={200}>
                     <Tooltip>
@@ -205,15 +209,15 @@ export default function TopBar({
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator className="bg-zinc-100 my-1.5" />
 
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                             onClick={() => logout()}
                             className="text-red-600 focus:text-red-600 focus:bg-red-50/50 rounded-lg cursor-pointer px-2.5 py-2 text-sm"
                         >
-                            <svg 
-                                className="mr-2 h-4 w-4 inline-block" 
-                                fill="none" 
-                                viewBox="0 0 24 24" 
-                                stroke="currentColor" 
+                            <svg
+                                className="mr-2 h-4 w-4 inline-block"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
                                 strokeWidth="2"
                             >
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

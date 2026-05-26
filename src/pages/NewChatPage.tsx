@@ -88,7 +88,7 @@ interface ThinkingAccordionProps {
 
 function ThinkingAccordion({ isStreaming, thinkingSteps }: ThinkingAccordionProps) {
     const [isExpanded, setIsExpanded] = useState(isStreaming);
-    
+
     useEffect(() => {
         if (isStreaming) {
             setIsExpanded(true);
@@ -98,20 +98,20 @@ function ThinkingAccordion({ isStreaming, thinkingSteps }: ThinkingAccordionProp
     if (!thinkingSteps || thinkingSteps.length === 0) return null;
 
     const lastStep = thinkingSteps[thinkingSteps.length - 1];
-    
+
     // Status bullet color
     const dotClass = isStreaming
         ? "bg-blue-500 animate-pulse"
         : "bg-emerald-500";
-        
+
     // Header text
     let headerText = "";
     if (isStreaming) {
         headerText = lastStep?.message || "Thinking...";
     } else {
-        const hasSearch = thinkingSteps.some(s => 
-            s.step === "searching" || 
-            s.message.toLowerCase().includes("search") || 
+        const hasSearch = thinkingSteps.some(s =>
+            s.step === "searching" ||
+            s.message.toLowerCase().includes("search") ||
             s.message.toLowerCase().includes("brows")
         );
         if (hasSearch) {
@@ -126,7 +126,7 @@ function ThinkingAccordion({ isStreaming, thinkingSteps }: ThinkingAccordionProp
     return (
         <div className="w-full mb-3 select-none">
             {/* Header row */}
-            <div 
+            <div
                 onClick={() => setIsExpanded(!isExpanded)}
                 className="flex items-center justify-between py-1 cursor-pointer group hover:opacity-90 transition-opacity"
             >
@@ -147,7 +147,7 @@ function ThinkingAccordion({ isStreaming, thinkingSteps }: ThinkingAccordionProp
                         const messageLower = step.message.toLowerCase();
                         const isSearch = step.step === "searching" || messageLower.includes("search");
                         const isBrowsing = messageLower.includes("brows") || messageLower.includes("web");
-                        
+
                         return (
                             <div key={idx} className="flex items-center gap-2.5">
                                 {isSearch ? (
@@ -283,13 +283,13 @@ function formatInline(text: string, citations?: Citation[]): JSX.Element {
                 if (part.startsWith("*") && part.endsWith("*")) {
                     return <em key={i}>{formatInline(part.slice(1, -1), citations)}</em>;
                 }
-                
+
                 const citationMatch = part.match(/^\[(Source|Web) (\d+)\]$/);
                 if (citationMatch) {
                     const type = citationMatch[1] as "Source" | "Web";
                     const index = parseInt(citationMatch[2], 10);
                     const citation = getCitationForReference(type, index, citations);
-                    
+
                     if (citation) {
                         const isWeb = type === "Web";
                         return (
@@ -465,8 +465,8 @@ export default function NewChatPage(): JSX.Element {
         (user?.givenName
             ? `${user.givenName} ${user.familyName || ""}`.trim()
             : authLoading
-            ? "Loading..."
-            : "there");
+                ? "Loading..."
+                : "there");
 
     // ── Textarea resize helper ────────────────────────────────────────────────
 
@@ -579,6 +579,56 @@ export default function NewChatPage(): JSX.Element {
                             })
                         );
                     },
+                    onToolCall: (toolName, query) => {
+                        const toolLabel = toolName === "search_knowledge_base"
+                            ? "Searching knowledge base"
+                            : toolName === "search_web"
+                                ? "Searching the web"
+                                : `Calling ${toolName}`;
+
+                        setMessages((prev) =>
+                            prev.map((m) => {
+                                if (m.id !== streamingId) return m;
+                                const existing = m.thinkingSteps || [];
+                                return {
+                                    ...m,
+                                    thinkingSteps: [
+                                        ...existing,
+                                        {
+                                            step: "searching",
+                                            message: `${toolLabel} for: "${query.substring(0, 60)}${query.length > 60 ? "..." : ""}"`,
+                                            timestamp: new Date().toISOString()
+                                        },
+                                    ],
+                                };
+                            })
+                        );
+                    },
+                    onToolResult: (toolName, resultCount) => {
+                        const toolLabel = toolName === "search_knowledge_base"
+                            ? "Knowledge base search"
+                            : toolName === "search_web"
+                                ? "Web search"
+                                : toolName;
+
+                        setMessages((prev) =>
+                            prev.map((m) => {
+                                if (m.id !== streamingId) return m;
+                                const existing = m.thinkingSteps || [];
+                                return {
+                                    ...m,
+                                    thinkingSteps: [
+                                        ...existing,
+                                        {
+                                            step: "searching",
+                                            message: `${toolLabel} returned ${resultCount} result${resultCount !== 1 ? "s" : ""}`,
+                                            timestamp: new Date().toISOString()
+                                        },
+                                    ],
+                                };
+                            })
+                        );
+                    },
                     onToken: (token) => {
                         accumulatedContent += token;
                         const snapshot = accumulatedContent;
@@ -598,16 +648,16 @@ export default function NewChatPage(): JSX.Element {
                             prev.map((m) =>
                                 m.id === streamingId
                                     ? {
-                                          ...m,
-                                          id: data.message_id || streamingId,
-                                          content: accumulatedContent,
-                                          isStreaming: false,
-                                          sources: citations.length > 0 ? citations : undefined,
-                                          statusText:
-                                              citations.length > 0
-                                                  ? "Retrieved from documents"
-                                                  : undefined,
-                                      }
+                                        ...m,
+                                        id: data.message_id || streamingId,
+                                        content: accumulatedContent,
+                                        isStreaming: false,
+                                        sources: citations.length > 0 ? citations : undefined,
+                                        statusText:
+                                            citations.length > 0
+                                                ? "Retrieved from documents"
+                                                : undefined,
+                                    }
                                     : m
                             )
                         );
@@ -622,10 +672,31 @@ export default function NewChatPage(): JSX.Element {
                 controller.signal
             );
         } catch (error: any) {
-            if (error.name === "AbortError") return; // User cancelled — silent
+            if (error.name === "AbortError") {
+                // User cancelled — finalize partial message
+                setMessages((prev) =>
+                    prev.map((m) => (m.id === streamingId ? { ...m, isStreaming: false } : m))
+                );
+                return;
+            }
             console.error("Chat error:", error);
-            toast.error(error.message || "Failed to get a response. Please try again.");
-            setMessages((prev) => prev.filter((m) => m.id !== streamingId));
+
+            // Provide detailed error feedback
+            const errorMsg = error.message || "Failed to get a response. Please try again.";
+            toast.error(errorMsg);
+
+            // Replace streaming message with error notification
+            setMessages((prev) =>
+                prev.map((m) =>
+                    m.id === streamingId
+                        ? {
+                            ...m,
+                            content: `Error: ${errorMsg}`,
+                            isStreaming: false,
+                        }
+                        : m
+                )
+            );
         } finally {
             setIsResponding(false);
             abortControllerRef.current = null;
@@ -750,7 +821,7 @@ export default function NewChatPage(): JSX.Element {
                                     rows={1}
                                     className="flex-1 bg-transparent border-none outline-none focus:ring-0 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 resize-none min-h-[24px] max-h-[80px] leading-relaxed py-1.5"
                                 />
-                                
+
                                 <div className="flex items-center gap-2 shrink-0">
                                     {/* Attach */}
                                     <button
@@ -819,16 +890,21 @@ export default function NewChatPage(): JSX.Element {
                     </div>
                 ) : isLoadingMessages ? (
                     /* ── Loading Skeleton ─────────────────────────────── */
-                    <div className="max-w-2xl mx-auto px-4 py-8 space-y-8">
-                        {[1, 2, 3].map((i) => (
-                            <div key={i} className={`flex gap-3 items-start ${i % 2 === 0 ? "flex-row-reverse" : ""}`}>
-                                <div className="h-8 w-8 rounded-full bg-zinc-100 dark:bg-zinc-800 animate-pulse shrink-0" />
-                                <div className={`flex flex-col gap-2 ${i % 2 === 0 ? "items-end" : "items-start"} max-w-[75%]`}>
-                                    <div className="h-10 w-56 bg-zinc-100 dark:bg-zinc-800 rounded-2xl animate-pulse" />
-                                    <div className="h-3 w-32 bg-zinc-100 dark:bg-zinc-800 rounded animate-pulse" />
+                    <div className="max-w-2xl mx-auto px-4 pt-6 pb-6 space-y-8">
+                        {[1, 2, 3].map((i) => {
+                            const isUser = i % 2 === 0;
+                            return (
+                                <div key={i} className={`flex gap-3 items-start ${isUser ? "justify-end" : "justify-start"}`}>
+                                    {!isUser && (
+                                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 animate-pulse shrink-0 mt-1" />
+                                    )}
+                                    <div className={`flex flex-col gap-2 ${isUser ? "items-end" : "items-start"} max-w-[75%]`}>
+                                        <div className={`h-10 w-56 bg-zinc-100 dark:bg-zinc-800 rounded-2xl animate-pulse`} />
+                                        <div className="h-3 w-32 bg-zinc-100 dark:bg-zinc-800 rounded animate-pulse" />
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 ) : (
                     /* ── Messages Thread ──────────────────────────────── */
@@ -866,27 +942,33 @@ export default function NewChatPage(): JSX.Element {
                                             </div>
                                         ) : (
                                             /* Assistant bubble */
-                                            <div className="flex w-full justify-start">
-                                                <div className="flex flex-col items-start gap-2 max-w-full w-full">
-                                                    {/* Thinking step accordion */}
+                                            <div className="flex w-full justify-start gap-3">
+                                                {/* Avatar */}
+                                                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 shrink-0 flex items-center justify-center mt-1">
+                                                    <Cpu className="h-4 w-4 text-white" />
+                                                </div>
+                                                <div className="flex flex-col items-start gap-2 max-w-[75%]">
+                                                    {/* Thinking step accordion - with distinct styling */}
                                                     {m.thinkingSteps && m.thinkingSteps.length > 0 && (
-                                                        <ThinkingAccordion
-                                                            isStreaming={m.isStreaming ?? false}
-                                                            thinkingSteps={m.thinkingSteps}
-                                                        />
+                                                        <div className="w-full mb-2">
+                                                            <ThinkingAccordion
+                                                                isStreaming={m.isStreaming ?? false}
+                                                                thinkingSteps={m.thinkingSteps}
+                                                            />
+                                                        </div>
                                                     )}
 
                                                     {/* Thinking step label fallback — while streaming and no steps array yet */}
                                                     {m.isStreaming && (!m.thinkingSteps || m.thinkingSteps.length === 0) && (
-                                                        <div className="flex items-center gap-2 px-3 py-2 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-100 dark:border-zinc-800 rounded-xl text-xs text-zinc-500 dark:text-zinc-400">
+                                                        <div className="w-full mb-2 flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-xl text-xs text-blue-700 dark:text-blue-300">
                                                             <TypingDots />
                                                             <span>{thinkingLabel}</span>
                                                         </div>
                                                     )}
 
-                                                    {/* Message content (directly on canvas, no bubble card wrapper!) */}
+                                                    {/* Message content with distinct background */}
                                                     {(m.content || m.isStreaming) && (
-                                                        <div className="w-full text-zinc-800 dark:text-zinc-200 py-1">
+                                                        <div className="w-full text-zinc-800 dark:text-zinc-200 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50">
                                                             <MessageContent
                                                                 content={m.content}
                                                                 citations={m.sources}
@@ -897,7 +979,7 @@ export default function NewChatPage(): JSX.Element {
 
                                                     {/* Action buttons */}
                                                     {!m.isStreaming && m.content && (
-                                                        <div className="flex items-center gap-3 px-1 text-zinc-400 dark:text-zinc-500 text-xs select-none flex-wrap mt-1">
+                                                        <div className="flex items-center gap-3 px-0 text-zinc-400 dark:text-zinc-500 text-xs select-none flex-wrap mt-1">
                                                             <span className="text-[11px]">{timeStr}</span>
                                                             <TooltipProvider delayDuration={200}>
                                                                 <Tooltip>
