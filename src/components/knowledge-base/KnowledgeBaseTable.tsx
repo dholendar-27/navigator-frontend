@@ -155,33 +155,33 @@ export default function KnowledgeBaseTable({
 
     return (
         <div
-            className="overflow-hidden rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col h-full"
+            className="overflow-hidden rounded-2xl bg-white dark:bg-zinc-900 flex flex-col h-full"
             data-testid="kb-table"
         >
             <div className="w-full flex-1 flex flex-col min-h-0">
                 <div className="w-full flex-1 flex flex-col min-h-0">
                     {/* Header */}
-                    <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_56px] gap-2 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-800/80 px-5 py-3 text-sm text-zinc-600 dark:text-zinc-400 shrink-0 select-none">
-                        <div className="cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100" onClick={() => handleSort("name")}>
+                    <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_56px] gap-2 bg-[#60646B]/10 rounded-t-[10px] px-5 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400 shrink-0 select-none">
+                        <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100" onClick={() => handleSort("name")}>
                             Knowledge Base Name <SortIcon columnKey="name" />
                         </div>
-                        <div className="cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100" onClick={() => handleSort("folder")}>
+                        <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100" onClick={() => handleSort("folder")}>
                             {col2Label} <SortIcon columnKey="folder" />
                         </div>
-                        <div className="cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100" onClick={() => handleSort("owner")}>
+                        <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100" onClick={() => handleSort("owner")}>
                             {col3Label} <SortIcon columnKey="owner" />
                         </div>
                         <div />
                     </div>
 
                     {/* Scrollable Body */}
-                    <div className="flex-1 overflow-y-auto hover-scrollbar min-h-0 divide-y divide-zinc-50 dark:divide-zinc-800">
+                    <div className="flex-1 overflow-y-auto hover-scrollbar min-h-0">
                         {pageRows.map((kb) => (
                             <div
                                 key={kb.id}
                                 data-testid={`kb-row-${kb.id}`}
                                 onClick={() => onView(kb)}
-                                className="flex flex-col md:grid md:grid-cols-[2fr_1fr_1fr_56px] items-start md:items-center gap-3 md:gap-2 px-5 py-4 hover:bg-zinc-50/60 dark:hover:bg-zinc-800/60 cursor-pointer relative"
+                                className="flex flex-col md:grid md:grid-cols-[2fr_1fr_1fr_56px] items-start md:items-center gap-3 md:gap-2 px-5 py-4 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/40 cursor-pointer relative"
                             >
                                 {/* Actions on Mobile */}
                                 <div className="absolute top-5 right-5 md:hidden" onClick={(e) => e.stopPropagation()}>
@@ -335,15 +335,15 @@ export default function KnowledgeBaseTable({
             </div>
 
             {/* Pagination footer */}
-            <div className="flex items-center justify-end gap-6 px-5 py-3 text-sm text-zinc-600 dark:text-zinc-400 shrink-0 border-t border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+            <div className="flex items-center justify-end gap-5 px-5 py-3 text-sm text-zinc-500 dark:text-zinc-400 shrink-0 bg-white dark:bg-zinc-900 select-none">
                 <div className="flex items-center gap-2">
-                    <span>Rows per Page</span>
+                    <span className="text-sm text-zinc-400 dark:text-zinc-500">Rows per Page</span>
                     <Select
                         value={String(rowsPerPage)}
                         onValueChange={(v) => { setRowsPerPage(Number(v)); setPage(1); }}
                     >
                         <SelectTrigger
-                            className="h-8 w-[72px] rounded-md border-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
+                            className="h-8 w-[72px] rounded-lg border-0 bg-[#E7E7E0]/60 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-medium shadow-none focus:ring-0"
                             data-testid="kb-rows-per-page-select"
                         >
                             <SelectValue />
@@ -358,14 +358,14 @@ export default function KnowledgeBaseTable({
                     </Select>
                 </div>
 
-                <div data-testid="kb-pagination-range">
-                    {total === 0 ? "0" : `${startIdx + 1}-${endIdx}`} of {total}
+                <div data-testid="kb-pagination-range" className="text-sm text-zinc-400 dark:text-zinc-500 tabular-nums">
+                    {total === 0 ? "0" : `${startIdx + 1}–${endIdx}`} of {total}
                 </div>
 
                 <div className="flex items-center gap-1">
                     <button
                         type="button"
-                        className="rounded-md p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-40"
+                        className="flex items-center justify-center h-8 w-8 rounded-full text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 disabled:opacity-30 transition-colors"
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
                         disabled={page === 1}
                         data-testid="kb-prev-page-btn"
@@ -381,10 +381,10 @@ export default function KnowledgeBaseTable({
                             onClick={() => setPage(p)}
                             data-testid={`kb-page-${p}`}
                             className={cn(
-                                "h-8 w-8 rounded-md text-sm",
+                                "h-8 w-8 rounded-full text-sm font-medium transition-all",
                                 page === p
-                                    ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900"
-                                    : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                                    ? "bg-[#E7E7E0] dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200"
+                                    : "text-zinc-500 dark:text-zinc-400 hover:bg-[#E7E7E0]/60 dark:hover:bg-zinc-800"
                             )}
                         >
                             {p}
@@ -393,7 +393,7 @@ export default function KnowledgeBaseTable({
 
                     <button
                         type="button"
-                        className="rounded-md p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-40"
+                        className="flex items-center justify-center h-8 w-8 rounded-full text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 disabled:opacity-30 transition-colors"
                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                         disabled={page === totalPages}
                         data-testid="kb-next-page-btn"
@@ -401,33 +401,6 @@ export default function KnowledgeBaseTable({
                     >
                         <ChevronRight className="h-4 w-4" />
                     </button>
-
-                    <div className="flex items-center gap-1.5 ml-2 pl-2 border-l border-zinc-200 dark:border-zinc-700">
-                        <span className="text-zinc-500 dark:text-zinc-400 text-xs font-medium tracking-wide uppercase">Go to</span>
-                        <input
-                            type="number"
-                            min={1}
-                            max={totalPages}
-                            value={page}
-                            onChange={(e) => {
-                                const val = parseInt(e.target.value, 10);
-                                if (!isNaN(val)) {
-                                    if (val >= 1 && val <= totalPages) {
-                                        setPage(val);
-                                        e.target.style.borderColor = "";
-                                    } else {
-                                        e.target.style.borderColor = "red";
-                                        setTimeout(() => {
-                                            setPage(Math.min(Math.max(1, val), totalPages));
-                                            e.target.style.borderColor = "";
-                                        }, 800);
-                                    }
-                                }
-                            }}
-                            className="h-8 w-14 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-2 text-center text-sm text-zinc-700 dark:text-zinc-200 font-medium focus:border-zinc-900 dark:focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-400"
-                            aria-label="Go to page"
-                        />
-                    </div>
                 </div>
             </div>
 

@@ -21,22 +21,22 @@ export default function UnifiedEmptyState({
     return (
         <div
             className={cn(
-                "flex flex-1 min-h-[220px] w-full flex-col items-center justify-center rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 px-6 py-8 text-center my-2 shadow-sm transition-all",
+                "flex h-full w-full flex-col items-center justify-center rounded-[16px] bg-[#F6F7F2] dark:bg-zinc-900/40 px-6 py-12 text-center select-none",
                 className
             )}
             data-testid={testId}
         >
             {icon && (
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white dark:bg-zinc-800 shadow-md border border-zinc-100 dark:border-zinc-700 mb-5">
+                <div className="mb-4 text-[#60646B] dark:text-zinc-400">
                     {icon}
                 </div>
             )}
 
-            <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+            <h3 className="text-[15px] font-semibold text-zinc-800 dark:text-zinc-200">
                 {title}
             </h3>
 
-            <p className="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400 max-w-sm">
+            <p className="mt-2 text-[13px] text-zinc-500 dark:text-zinc-400 max-w-sm leading-relaxed">
                 {description}
             </p>
 

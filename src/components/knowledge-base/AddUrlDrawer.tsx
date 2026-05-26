@@ -68,6 +68,7 @@ export default function AddUrlDrawer({
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent
                 side="right"
+                hideClose
                 className="flex w-full flex-col gap-0 p-0 sm:max-w-[480px] bg-white dark:bg-zinc-900"
                 data-testid="add-url-drawer"
             >

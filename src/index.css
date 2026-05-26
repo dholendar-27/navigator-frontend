@@ -4,9 +4,9 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 72 100% 99%;  /* #FEFFFA */
     --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
+    --card: 0 0% 100%;          /* white — panels lift above the background */
     --card-foreground: 240 10% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
@@ -73,7 +73,16 @@
      hover:bg-zinc-50 variants are NOT affected
      ============================================ */
 
-  /* Page & layout backgrounds */
+  /* Light-mode: keep white panels crisp above the #FEFFFA background */
+  .bg-white {
+    background-color: #ffffff;
+  }
+
+  .bg-zinc-50 {
+    background-color: hsl(72 60% 97%);
+  }
+
+  /* Dark-mode overrides (keep existing behaviour) */
   .dark .bg-white {
     background-color: hsl(var(--card)) !important;
   }

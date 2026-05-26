@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { SkeletonTable } from "@/components/ui/skeleton-table";
+import { PageActionButton } from "@/components/ui/page-action-button";
 import {
     FolderPlus,
     FilePlus2,
@@ -11,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import FilterDropdown from "@/components/FilterDropdown";
 import KnowledgeBaseEmptyState from "@/components/knowledge-base/KnowledgeBaseEmptyState";
@@ -473,34 +475,45 @@ export default function KnowledgeBasePage() {
     // ── Render ─────────────────────────────────────────────────────────────────
 
     return (
-        <div className="px-8 py-6 flex flex-col h-full overflow-hidden" data-testid="knowledge-base-page" data-tour="knowledge-base-page">
+        <div className="p-4 sm:p-8 flex flex-col h-full w-full overflow-hidden" data-testid="knowledge-base-page" data-tour="knowledge-base-page">
 
             {/* Header / Breadcrumbs */}
             <div className="flex-shrink-0 flex flex-col gap-1">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center flex-wrap gap-2 text-2xl tracking-tight select-none">
-                        <button
-                            onClick={() => folderStack.length > 0 && navigateTo(-1)}
-                            disabled={folderStack.length === 0}
-                            className={
-                                folderStack.length === 0
-                                    ? "text-zinc-900 dark:text-zinc-100 font-bold cursor-default"
-                                    : "text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors font-medium cursor-pointer"
-                            }
-                        >
-                            Knowledge Base
-                        </button>
+                        <div className="flex items-center gap-2.5">
+                            <button
+                                onClick={() => folderStack.length > 0 && navigateTo(-1)}
+                                disabled={folderStack.length === 0}
+                                className={
+                                    folderStack.length === 0
+                                        ? "text-zinc-900 dark:text-zinc-100 font-bold cursor-default"
+                                        : "text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors font-medium cursor-pointer"
+                                }
+                            >
+                                Knowledge Base
+                            </button>
+                            {folderStack.length === 0 && !isLoading && (
+                                <Badge className="rounded-full bg-blue-50 dark:bg-blue-900/30 px-2.5 py-0.5 text-xs font-semibold text-blue-600 dark:text-blue-400 animate-fade-in">
+                                    {childFolders.length + childFiles.length}
+                                </Badge>
+                            )}
+                        </div>
 
                         {folderStack.map((item, idx) => {
                             const isLast = idx === folderStack.length - 1;
                             if (isLast) {
                                 return (
-                                    <div key={item.id} className="flex items-center gap-2">
+                                    <div key={item.id} className="flex items-center gap-2.5">
                                         <span className="text-zinc-300 dark:text-zinc-700 font-normal">/</span>
                                         <span className="text-zinc-900 dark:text-zinc-100 font-bold">
                                             {item.name}
                                         </span>
-
+                                        {!isLoading && (
+                                            <Badge className="rounded-full bg-blue-50 dark:bg-blue-900/30 px-2.5 py-0.5 text-xs font-semibold text-blue-600 dark:text-blue-400 animate-fade-in">
+                                                {childFolders.length + childFiles.length}
+                                            </Badge>
+                                        )}
                                     </div>
                                 );
                             }
@@ -538,45 +551,33 @@ export default function KnowledgeBasePage() {
             {/* Action toolbar — always visible */}
             <div className="flex-shrink-0 mt-6 flex flex-wrap items-center gap-3">
                 {/* Create Folder always available */}
-                <Button
-                    variant="outline"
+                <PageActionButton
+                    icon={<FolderPlus className="h-3.5 w-3.5" />}
+                    label="Create Folder"
                     onClick={() => setFolderOpen(true)}
-                    className="gap-2 rounded-lg border-zinc-200 dark:border-zinc-700 px-5 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 font-semibold"
                     data-testid="create-folder-btn"
-                >
-                    <FolderPlus className="h-4 w-4" />
-                    Create Folder
-                </Button>
+                />
 
-                <Button
-                    variant="outline"
+                <PageActionButton
+                    icon={<FilePlus2 className="h-3.5 w-3.5" />}
+                    label="Add Files"
                     onClick={() => setFilesOpen(true)}
-                    className="gap-2 rounded-lg border-zinc-200 dark:border-zinc-700 px-5 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 font-semibold"
                     data-testid="add-files-btn"
-                >
-                    <FilePlus2 className="h-4 w-4" />
-                    Add Files
-                </Button>
+                />
 
-                <Button
-                    variant="outline"
+                <PageActionButton
+                    icon={<Type className="h-3.5 w-3.5" />}
+                    label="Add Text"
                     onClick={() => setTextOpen(true)}
-                    className="gap-2 rounded-lg border-zinc-200 dark:border-zinc-700 px-5 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 font-semibold"
                     data-testid="add-text-btn"
-                >
-                    <Type className="h-4 w-4" />
-                    Add Text
-                </Button>
+                />
 
-                <Button
-                    variant="outline"
+                <PageActionButton
+                    icon={<Globe className="h-3.5 w-3.5" />}
+                    label="Add URL"
                     onClick={() => setUrlOpen(true)}
-                    className="gap-2 rounded-lg border-zinc-200 dark:border-zinc-700 px-5 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 font-semibold"
                     data-testid="add-url-btn"
-                >
-                    <Globe className="h-4 w-4" />
-                    Add URL
-                </Button>
+                />
             </div>
 
             {/* Search */}

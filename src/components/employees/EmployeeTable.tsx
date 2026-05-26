@@ -21,6 +21,8 @@ import {
     AvatarFallback,
 } from "@/components/ui/avatar";
 
+import { Checkbox } from "@/components/ui/checkbox";
+
 import {
     DropdownMenu,
     DropdownMenuTrigger,
@@ -130,7 +132,7 @@ function RowMenu({
                 <button
                     type="button"
                     data-testid={`row-menu-${employee.id}`}
-                    className="rounded-md p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
+                    className="rounded-md p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
                     aria-label="Row actions"
                 >
                     <MoreVertical className="h-4 w-4" />
@@ -139,15 +141,16 @@ function RowMenu({
 
             <DropdownMenuContent
                 align="end"
-                className="w-44"
+                className="w-44 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800"
             >
                 <DropdownMenuItem
                     data-testid={`view-details-${employee.id}`}
                     onClick={() =>
                         onView(employee)
                     }
+                    className="cursor-pointer"
                 >
-                    <Eye className="mr-2 h-4 w-4 text-zinc-600" />
+                    <Eye className="mr-2 h-4 w-4 text-zinc-600 dark:text-zinc-400" />
                     View Details
                 </DropdownMenuItem>
 
@@ -155,8 +158,9 @@ function RowMenu({
                     onClick={() =>
                         toast(`Edit ${employee.name}`)
                     }
+                    className="cursor-pointer"
                 >
-                    <Pencil className="mr-2 h-4 w-4 text-zinc-600" />
+                    <Pencil className="mr-2 h-4 w-4 text-zinc-600 dark:text-zinc-400" />
                     Edit
                 </DropdownMenuItem>
 
@@ -164,8 +168,9 @@ function RowMenu({
                     onClick={() =>
                         toast("Add to team")
                     }
+                    className="cursor-pointer"
                 >
-                    <FolderPlus className="mr-2 h-4 w-4 text-zinc-600" />
+                    <FolderPlus className="mr-2 h-4 w-4 text-zinc-600 dark:text-zinc-400" />
                     Add to Team
                 </DropdownMenuItem>
 
@@ -174,8 +179,9 @@ function RowMenu({
                         onClick={() =>
                             onResendInvite(employee.inviteId || employee.id)
                         }
+                        className="cursor-pointer"
                     >
-                        <RotateCw className="mr-2 h-4 w-4 text-zinc-600" />
+                        <RotateCw className="mr-2 h-4 w-4 text-zinc-600 dark:text-zinc-400" />
                         Resend Invite
                     </DropdownMenuItem>
                 )}
@@ -184,8 +190,9 @@ function RowMenu({
                     onClick={() =>
                         toast(`Archived ${employee.name}`)
                     }
+                    className="cursor-pointer"
                 >
-                    <Archive className="mr-2 h-4 w-4 text-zinc-600" />
+                    <Archive className="mr-2 h-4 w-4 text-zinc-600 dark:text-zinc-400" />
                     Archive
                 </DropdownMenuItem>
 
@@ -194,7 +201,7 @@ function RowMenu({
                         <DropdownMenuItem
                             data-testid={`delete-${employee.id}`}
                             onClick={() => onDelete(employee.id)}
-                            className="text-red-600 focus:text-red-600 cursor-pointer"
+                            className="text-red-600 focus:text-red-600 cursor-pointer focus:bg-red-50 dark:focus:bg-red-950/30"
                         >
                             <Trash2 className="mr-2 h-4 w-4 text-red-600" />
                             Delete
@@ -206,7 +213,7 @@ function RowMenu({
                             onClick={() =>
                                 onRevokeInvite(employee.inviteId || employee.id)
                             }
-                            className="text-red-600 focus:text-red-600 cursor-pointer"
+                            className="text-red-600 focus:text-red-600 cursor-pointer focus:bg-red-50 dark:focus:bg-red-950/30"
                         >
                             <Trash2 className="mr-2 h-4 w-4 text-red-600" />
                             Revoke Invite
@@ -229,6 +236,7 @@ export default function EmployeeTable({
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     const [confirmRevokeId, setConfirmRevokeId] = useState<string | null>(null);
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>(null);
+    const [selected, setSelected] = useState<Set<string>>(new Set());
 
     const [rowsPerPage, setRowsPerPage] =
         useState<number>(50);
@@ -288,28 +296,58 @@ export default function EmployeeTable({
         return <ArrowDown className="ml-1 h-3 w-3 inline" />;
     };
 
+    const toggleAll = (checked: boolean | "indeterminate"): void => {
+        if (checked) {
+            setSelected(new Set(pageRows.map((r) => r.id)));
+        } else {
+            setSelected(new Set());
+        }
+    };
+
+    const toggleOne = (id: string): void => {
+        setSelected((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    };
+
+    const allChecked =
+        pageRows.length > 0 && pageRows.every((r) => selected.has(r.id));
+
     return (
         <div
-            className="overflow-hidden rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col h-full"
+            className="overflow-hidden rounded-2xl bg-white dark:bg-zinc-900 flex flex-col h-full"
             data-testid="employees-table"
         >
             <div className="w-full flex-1 flex flex-col min-h-0">
                 <div className="w-full flex-1 flex flex-col min-h-0">
                     {/* Header */}
-                    <div className="hidden md:grid grid-cols-[2.5fr_1.5fr_1.5fr_1.5fr_56px] items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-800/80 px-5 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400 shrink-0 select-none">
-                        <div className="text-sm normal-case tracking-normal text-zinc-600 cursor-pointer hover:text-zinc-900" onClick={() => handleSort("name")}>
+                    <div className="hidden md:grid grid-cols-[48px_2.5fr_1.5fr_1.5fr_1.5fr_56px] items-center gap-2 bg-[#60646B]/10 rounded-t-[10px] px-5 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400 shrink-0 select-none">
+                        <div>
+                            <Checkbox
+                                checked={allChecked}
+                                onCheckedChange={toggleAll}
+                                data-testid="employee-select-all"
+                            />
+                        </div>
+                        <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100" onClick={() => handleSort("name")}>
                             Employee Name <SortIcon columnKey="name" />
                         </div>
 
-                        <div className="text-sm normal-case tracking-normal text-zinc-600 cursor-pointer hover:text-zinc-900" onClick={() => handleSort("kbFiles")}>
+                        <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100" onClick={() => handleSort("kbFiles")}>
                             No. Of KB Files <SortIcon columnKey="kbFiles" />
                         </div>
 
-                        <div className="text-sm normal-case tracking-normal text-zinc-600 cursor-pointer hover:text-zinc-900" onClick={() => handleSort("simpleInteraction")}>
+                        <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100" onClick={() => handleSort("simpleInteraction")}>
                             Simple Interaction <SortIcon columnKey="simpleInteraction" />
                         </div>
 
-                        <div className="text-sm normal-case tracking-normal text-zinc-600 cursor-pointer hover:text-zinc-900" onClick={() => handleSort("complexInteraction")}>
+                        <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100" onClick={() => handleSort("complexInteraction")}>
                             Complex Interaction <SortIcon columnKey="complexInteraction" />
                         </div>
 
@@ -322,11 +360,37 @@ export default function EmployeeTable({
                             <div
                                 key={emp.id}
                                 onClick={() => onView(emp)}
-                                className="flex flex-col md:grid md:grid-cols-[2.5fr_1.5fr_1.5fr_1.5fr_56px] items-start md:items-center gap-3 md:gap-2 border-b border-zinc-50 dark:border-zinc-800 px-5 py-4 transition-all hover:bg-zinc-50/80 dark:hover:bg-zinc-800/60 hover:shadow-2xs cursor-pointer group"
+                                className="flex flex-col md:grid md:grid-cols-[48px_2.5fr_1.5fr_1.5fr_1.5fr_56px] items-start md:items-center gap-3 md:gap-2 px-5 py-4 transition-all hover:bg-zinc-50/50 dark:hover:bg-zinc-800/40 cursor-pointer group"
                                 data-testid={`employee-row-${emp.id}`}
                             >
+                                <div className="absolute top-5 right-5 md:static md:block" onClick={(e) => e.stopPropagation()}>
+                                    <div className="hidden md:block">
+                                        <Checkbox
+                                            checked={selected.has(emp.id)}
+                                            onCheckedChange={() => toggleOne(emp.id)}
+                                            data-testid={`employee-select-row-${emp.id}`}
+                                        />
+                                    </div>
+                                    <div className="md:hidden">
+                                        <RowMenu
+                                            employee={emp}
+                                            onDelete={(id) => setConfirmDeleteId(id)}
+                                            onView={onView}
+                                            onResendInvite={onResendInvite}
+                                            onRevokeInvite={(id) => setConfirmRevokeId(id)}
+                                            currentUserEmail={currentUserEmail}
+                                        />
+                                    </div>
+                                </div>
 
                                 <div className="flex items-center gap-3 min-w-0 w-full md:w-auto flex-1">
+                                    <div className="md:hidden">
+                                        <Checkbox
+                                            checked={selected.has(emp.id)}
+                                            onCheckedChange={() => toggleOne(emp.id)}
+                                            data-testid={`employee-select-row-mobile-${emp.id}`}
+                                        />
+                                    </div>
                                     <div className="relative shrink-0">
                                         <Avatar className="h-9 w-9">
                                             <AvatarImage
@@ -352,7 +416,7 @@ export default function EmployeeTable({
                                         <TooltipProvider delayDuration={200}>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
-                                                    <div className="text-sm font-medium text-zinc-900 truncate group-hover:text-blue-600 transition-colors">
+                                                    <div className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate group-hover:text-blue-600 transition-colors">
                                                         {emp.name}
                                                     </div>
                                                 </TooltipTrigger>
@@ -365,7 +429,7 @@ export default function EmployeeTable({
                                         <TooltipProvider delayDuration={200}>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
-                                                    <div className="text-xs text-zinc-500 truncate mt-0.5">
+                                                    <div className="text-xs text-zinc-500 dark:text-zinc-400 truncate mt-0.5">
                                                         {emp.role}
                                                     </div>
                                                 </TooltipTrigger>
@@ -388,17 +452,17 @@ export default function EmployeeTable({
                                     </div>
                                 </div>
 
-                                <div className="flex justify-between w-full md:w-auto text-sm text-zinc-700 truncate">
+                                <div className="flex justify-between w-full md:w-auto text-sm text-zinc-700 dark:text-zinc-300 truncate">
                                     <span className="md:hidden text-zinc-500">No. Of KB Files:</span>
                                     {emp.kbFiles ?? "-"}
                                 </div>
 
-                                <div className="flex justify-between w-full md:w-auto text-sm text-zinc-700 truncate">
+                                <div className="flex justify-between w-full md:w-auto text-sm text-zinc-700 dark:text-zinc-300 truncate">
                                     <span className="md:hidden text-zinc-500">Simple Inter.:</span>
                                     {emp.simpleInteraction ?? "-"}
                                 </div>
 
-                                <div className="flex justify-between w-full md:w-auto text-sm text-zinc-700 truncate">
+                                <div className="flex justify-between w-full md:w-auto text-sm text-zinc-700 dark:text-zinc-300 truncate">
                                     <span className="md:hidden text-zinc-500">Complex Inter.:</span>
                                     {emp.complexInteraction ?? "-"}
                                 </div>
@@ -420,10 +484,10 @@ export default function EmployeeTable({
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-end gap-6 px-5 py-3 text-sm text-zinc-600 dark:text-zinc-400 shrink-0 border-t border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+            <div className="flex items-center justify-end gap-5 px-5 py-3 text-sm text-zinc-500 dark:text-zinc-400 shrink-0 bg-white dark:bg-zinc-900 select-none">
+                {/* Rows per page */}
                 <div className="flex items-center gap-2">
-                    <span>Rows per Page</span>
-
+                    <span className="text-sm text-zinc-400 dark:text-zinc-500">Rows per Page</span>
                     <Select
                         value={String(rowsPerPage)}
                         onValueChange={(v: string) => {
@@ -432,17 +496,17 @@ export default function EmployeeTable({
                         }}
                     >
                         <SelectTrigger
-                            className="h-8 w-[72px] rounded-md border-zinc-200"
+                            className="h-8 w-[72px] rounded-lg border-0 bg-[#E7E7E0]/60 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-medium shadow-none focus:ring-0"
                             data-testid="rows-per-page-select"
                         >
                             <SelectValue />
                         </SelectTrigger>
-
-                        <SelectContent>
+                        <SelectContent className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700">
                             {[10, 25, 50, 100].map((n) => (
                                 <SelectItem
                                     key={n}
                                     value={String(n)}
+                                    className="dark:text-zinc-200 dark:focus:bg-zinc-700"
                                 >
                                     {n}
                                 </SelectItem>
@@ -451,22 +515,17 @@ export default function EmployeeTable({
                     </Select>
                 </div>
 
-                <div data-testid="pagination-range">
-                    {total === 0
-                        ? "0"
-                        : `${startIdx + 1}-${endIdx}`}{" "}
-                    of {total}
+                {/* Range */}
+                <div data-testid="pagination-range" className="text-sm text-zinc-400 dark:text-zinc-500 tabular-nums">
+                    {total === 0 ? "0" : `${startIdx + 1}–${endIdx}`} of {total}
                 </div>
 
+                {/* Page buttons */}
                 <div className="flex items-center gap-1">
                     <button
                         type="button"
-                        className="rounded-md p-1.5 hover:bg-zinc-100 disabled:opacity-40"
-                        onClick={() =>
-                            setPage((p) =>
-                                Math.max(1, p - 1)
-                            )
-                        }
+                        className="flex items-center justify-center h-8 w-8 rounded-full text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 disabled:opacity-30 transition-colors"
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
                         disabled={page === 1}
                         data-testid="prev-page-btn"
                         aria-label="Previous page"
@@ -475,12 +534,7 @@ export default function EmployeeTable({
                     </button>
 
                     {Array.from(
-                        {
-                            length: Math.min(
-                                totalPages,
-                                4
-                            ),
-                        },
+                        { length: Math.min(totalPages, 4) },
                         (_, i) => i + 1
                     ).map((p) => (
                         <button
@@ -489,10 +543,10 @@ export default function EmployeeTable({
                             onClick={() => setPage(p)}
                             data-testid={`page-${p}`}
                             className={cn(
-                                "h-8 w-8 rounded-md text-sm",
+                                "h-8 w-8 rounded-full text-sm font-medium transition-all",
                                 page === p
-                                    ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900"
-                                    : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                                    ? "bg-[#E7E7E0] dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200"
+                                    : "text-zinc-500 dark:text-zinc-400 hover:bg-[#E7E7E0]/60 dark:hover:bg-zinc-800"
                             )}
                         >
                             {p}
@@ -501,50 +555,14 @@ export default function EmployeeTable({
 
                     <button
                         type="button"
-                        className="rounded-md p-1.5 hover:bg-zinc-100 disabled:opacity-40"
-                        onClick={() =>
-                            setPage((p) =>
-                                Math.min(
-                                    totalPages,
-                                    p + 1
-                                )
-                            )
-                        }
-                        disabled={
-                            page === totalPages
-                        }
+                        className="flex items-center justify-center h-8 w-8 rounded-full text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 disabled:opacity-30 transition-colors"
+                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={page === totalPages}
                         data-testid="next-page-btn"
                         aria-label="Next page"
                     >
                         <ChevronRight className="h-4 w-4" />
                     </button>
-
-                    <div className="flex items-center gap-1.5 ml-2 pl-2 border-l border-zinc-200">
-                        <span className="text-zinc-500 text-xs font-medium tracking-wide uppercase">Go to</span>
-                        <input
-                            type="number"
-                            min={1}
-                            max={totalPages}
-                            value={page}
-                            onChange={(e) => {
-                                const val = parseInt(e.target.value, 10);
-                                if (!isNaN(val)) {
-                                    if (val >= 1 && val <= totalPages) {
-                                        setPage(val);
-                                        e.target.style.borderColor = "";
-                                    } else {
-                                        e.target.style.borderColor = "red";
-                                        setTimeout(() => {
-                                            setPage(Math.min(Math.max(1, val), totalPages));
-                                            e.target.style.borderColor = "";
-                                        }, 800);
-                                    }
-                                }
-                            }}
-                            className="h-8 w-14 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-2 text-center text-sm text-zinc-700 dark:text-zinc-200 font-medium focus:border-zinc-900 dark:focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-400"
-                            aria-label="Go to page"
-                        />
-                    </div>
                 </div>
             </div>
 
@@ -557,7 +575,7 @@ export default function EmployeeTable({
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="mt-6 gap-2">
-                        <Button variant="outline" onClick={() => setConfirmDeleteId(null)} className="rounded-lg">
+                        <Button variant="outline" onClick={() => setConfirmDeleteId(null)} className="rounded-lg text-zinc-700 dark:text-zinc-300">
                             Cancel
                         </Button>
                         <Button
@@ -585,7 +603,7 @@ export default function EmployeeTable({
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="mt-6 gap-2">
-                        <Button variant="outline" onClick={() => setConfirmRevokeId(null)} className="rounded-lg">
+                        <Button variant="outline" onClick={() => setConfirmRevokeId(null)} className="rounded-lg text-zinc-700 dark:text-zinc-300">
                             Cancel
                         </Button>
                         <Button

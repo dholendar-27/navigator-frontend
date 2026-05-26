@@ -16,7 +16,7 @@ const EmployeesPage = lazy(() => import("@/pages/EmployeesPage"));
 const CategoryPage = lazy(() => import("@/pages/CategoryPage"));
 const KnowledgeBasePage = lazy(() => import("@/pages/KnowledgeBasePage"));
 const IntegrationPage = lazy(() => import("@/pages/Integration"));
-const SubscriptionPage = lazy(() => import("@/pages/PlaceholderPage").then(m => ({ default: () => m.default({ title: "Subscription" }) })));
+const SubscriptionPage = lazy(() => import("@/pages/SubscriptionPage"));
 const BillingPage = lazy(() => import("@/pages/PlaceholderPage").then(m => ({ default: () => m.default({ title: "Billing" }) })));
 const ChatPage = lazy(() => import("@/pages/NewChatPage"));
 
@@ -167,7 +167,7 @@ function App(): JSX.Element {
                 <AppRoutes />
             </BrowserRouter>
 
-            <Toaster position="top-right" />
+            <Toaster position="bottom-right" />
         </div>
     );
 }

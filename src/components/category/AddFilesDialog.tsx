@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { Search, ChevronLeft, ChevronRight, FileText } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, FileText, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -100,10 +101,10 @@ export default function AddFilesDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-[700px] w-[calc(100vw-32px)] sm:w-full p-0 bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 shadow-xl overflow-hidden flex flex-col max-h-[90vh] sm:max-h-[600px]">
+            <DialogContent className="max-w-[700px] w-[calc(100vw-32px)] sm:w-full p-0 bg-[#FEFFFA] dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 shadow-[0_8px_30px_#0000001A] overflow-hidden flex flex-col max-h-[90vh] sm:max-h-[600px]">
                 <DialogHeader className="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
                     <DialogTitle className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
-                        Add Files to Team
+                        Add Files to Category
                     </DialogTitle>
                 </DialogHeader>
 
@@ -123,27 +124,42 @@ export default function AddFilesDialog({
                             />
                         </div>
 
-                        {/* List Count Badge */}
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-                                Files list
-                            </span>
-                            <Badge variant="secondary" className="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 hover:bg-blue-50 rounded text-xs font-semibold px-2">
-                                {total}
-                            </Badge>
+                        {/* List Count & Selection Info Badge */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                                    Files list
+                                </span>
+                                <Badge variant="secondary" className="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 hover:bg-blue-50 rounded text-xs font-semibold px-2">
+                                    {total}
+                                </Badge>
+                            </div>
+                            {selectedIds.size > 0 && (
+                                <div className="flex items-center gap-1.5 rounded bg-zinc-100/80 dark:bg-zinc-800 px-2.5 py-0.5 text-xs text-zinc-600 dark:text-zinc-300 font-medium">
+                                    <span>{selectedIds.size} selected</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedIds(new Set())}
+                                        className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+                                        aria-label="Clear selection"
+                                    >
+                                        <X className="h-3.5 w-3.5" />
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
 
                     {/* Table Area */}
                     <div className="flex-1 overflow-auto flex flex-col px-6">
                         {/* Table Header */}
-                        <div className="sticky top-0 z-10 flex items-center gap-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-800 rounded-t-lg px-4 py-3 shrink-0">
+                        <div className="sticky top-0 z-10 flex items-center gap-4 bg-zinc-55/60 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-800 rounded-t-lg px-4 py-3 shrink-0">
                             <Checkbox
                                 checked={allSelectedOnPage}
                                 onCheckedChange={toggleAll}
                                 className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                             />
-                            <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
+                            <span className="text-xs font-semibold text-zinc-650 dark:text-zinc-300 uppercase tracking-wider">
                                 File Name
                             </span>
                         </div>
@@ -155,35 +171,46 @@ export default function AddFilesDialog({
                                     No files found.
                                 </div>
                             ) : (
-                                paginatedFiles.map((file) => (
-                                    <div key={file.id} className="flex items-center gap-4 px-4 py-3 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/50 transition-colors">
-                                        <Checkbox
-                                            checked={selectedIds.has(file.id)}
-                                            onCheckedChange={() => toggleFile(file.id)}
-                                            className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                                        />
-                                        <div className="flex items-center gap-3 min-w-0 flex-1">
-                                            <div className="h-9 w-9 shrink-0 bg-zinc-100 dark:bg-zinc-800 rounded-lg flex items-center justify-center border border-zinc-200/60 dark:border-zinc-700/60 text-zinc-500">
-                                                <FileText className="h-4 w-4" />
-                                            </div>
-                                            <div className="flex flex-col min-w-0">
-                                                <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
-                                                    {file.name}
-                                                </span>
-                                                <span className="text-xs text-zinc-500 dark:text-zinc-400 truncate font-mono mt-0.5">
-                                                    {file.size}
-                                                </span>
+                                paginatedFiles.map((file) => {
+                                    const isSelected = selectedIds.has(file.id);
+                                    return (
+                                        <div
+                                            key={file.id}
+                                            className={cn(
+                                                "flex items-center gap-4 px-4 py-3 transition-colors",
+                                                isSelected
+                                                    ? "bg-[#E7E7E04D] dark:bg-zinc-800/40 hover:bg-[#E7E7E04D] dark:hover:bg-zinc-800/40"
+                                                    : "bg-transparent hover:bg-zinc-50/50 dark:hover:bg-zinc-800/50"
+                                            )}
+                                        >
+                                            <Checkbox
+                                                checked={isSelected}
+                                                onCheckedChange={() => toggleFile(file.id)}
+                                                className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                                            />
+                                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                                                <div className="h-9 w-9 shrink-0 bg-zinc-100 dark:bg-zinc-800 rounded-lg flex items-center justify-center border border-zinc-200/60 dark:border-zinc-700/60 text-zinc-500">
+                                                    <FileText className="h-4 w-4" />
+                                                </div>
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                                                        {file.name}
+                                                    </span>
+                                                    <span className="text-xs text-zinc-550 dark:text-zinc-400 truncate font-mono mt-0.5">
+                                                        {file.size}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))
+                                    );
+                                })
                             )}
                         </div>
                     </div>
                 </div>
 
                 {/* Footer Controls (Pagination & Actions) */}
-                <div className="flex flex-col gap-3 px-6 py-4 border-t border-zinc-100 dark:border-zinc-800 shrink-0 bg-white dark:bg-zinc-950">
+                <div className="flex flex-col gap-3 px-6 py-4 border-t border-zinc-100 dark:border-zinc-800 shrink-0 bg-[#FEFFFA] dark:bg-zinc-950">
                     {/* Pagination Row */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-zinc-500 dark:text-zinc-400">
                         <div className="flex items-center gap-2">

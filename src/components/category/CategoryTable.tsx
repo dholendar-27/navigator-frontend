@@ -218,13 +218,13 @@ export default function CategoryTable({
 
     return (
         <div
-            className="overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col h-full"
+            className="overflow-hidden rounded-2xl bg-white dark:bg-zinc-900 flex flex-col h-full"
             data-testid="teams-table"
         >
             <div className="w-full flex-1 flex flex-col min-h-0">
                 <div className="w-full flex-1 flex flex-col min-h-0">
                     {/* Header */}
-                    <div className="hidden md:grid grid-cols-[48px_2.5fr_2fr_1.8fr_1.5fr_56px] items-center gap-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-800/80 px-6 py-4 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400 shrink-0 select-none">
+                    <div className="hidden md:grid grid-cols-[48px_2.5fr_2fr_1.8fr_1.5fr_56px] items-center gap-2 bg-[#60646B]/10 rounded-t-[10px] px-5 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400 shrink-0 select-none">
                         <div>
                             <Checkbox
                                 checked={allChecked}
@@ -254,7 +254,7 @@ export default function CategoryTable({
                                 key={cat.id}
                                 onClick={() => onView(cat)}
                                 className={cn(
-                                    "flex flex-col md:grid md:grid-cols-[48px_2.5fr_2fr_1.8fr_1.5fr_56px] items-start md:items-center gap-3 md:gap-4 border-b border-zinc-50 dark:border-zinc-800 px-6 py-5 transition-all hover:bg-zinc-50/50 dark:hover:bg-zinc-800/40 cursor-pointer group relative",
+                                    "flex flex-col md:grid md:grid-cols-[48px_2.5fr_2fr_1.8fr_1.5fr_56px] items-start md:items-center gap-3 md:gap-2 px-5 py-4 transition-all hover:bg-zinc-50/50 dark:hover:bg-zinc-800/40 cursor-pointer group relative",
                                     cat.isArchived && "opacity-60 bg-zinc-50/30 dark:bg-zinc-900/30"
                                 )}
                                 data-testid={`team-row-${cat.id}`}
@@ -340,9 +340,9 @@ export default function CategoryTable({
             </div>
 
             {/* Pagination Footer */}
-            <div className="flex items-center justify-end gap-6 px-5 py-3 text-sm text-zinc-600 dark:text-zinc-400 shrink-0 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 select-none">
+            <div className="flex items-center justify-end gap-5 px-5 py-3 text-sm text-zinc-500 dark:text-zinc-400 shrink-0 bg-white dark:bg-zinc-900 select-none">
                 <div className="flex items-center gap-2">
-                    <span>Rows per Page</span>
+                    <span className="text-sm text-zinc-400 dark:text-zinc-500">Rows per Page</span>
                     <Select
                         value={String(rowsPerPage)}
                         onValueChange={(v) => {
@@ -351,7 +351,7 @@ export default function CategoryTable({
                         }}
                     >
                         <SelectTrigger
-                            className="h-8 w-[72px] rounded-md border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
+                            className="h-8 w-[72px] rounded-lg border-0 bg-[#E7E7E0]/60 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-medium shadow-none focus:ring-0"
                             data-testid="rows-per-page-select"
                         >
                             <SelectValue />
@@ -366,14 +366,14 @@ export default function CategoryTable({
                     </Select>
                 </div>
 
-                <div data-testid="pagination-range" className="font-medium text-zinc-500 dark:text-zinc-400">
-                    {total === 0 ? "0" : `${startIdx + 1}-${endIdx}`} of {total}
+                <div data-testid="pagination-range" className="text-sm text-zinc-400 dark:text-zinc-500 tabular-nums">
+                    {total === 0 ? "0" : `${startIdx + 1}–${endIdx}`} of {total}
                 </div>
 
                 <div className="flex items-center gap-1">
                     <button
                         type="button"
-                        className="rounded-md p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-40 text-zinc-500 dark:text-zinc-400 transition-colors"
+                        className="flex items-center justify-center h-8 w-8 rounded-full text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 disabled:opacity-30 transition-colors"
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
                         disabled={page === 1}
                         data-testid="prev-page-btn"
@@ -389,10 +389,10 @@ export default function CategoryTable({
                             onClick={() => setPage(p)}
                             data-testid={`page-${p}`}
                             className={cn(
-                                "h-8 w-8 rounded-md text-sm font-semibold transition-all",
+                                "h-8 w-8 rounded-full text-sm font-medium transition-all",
                                 page === p
-                                    ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-sm"
-                                    : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                                    ? "bg-[#E7E7E0] dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200"
+                                    : "text-zinc-500 dark:text-zinc-400 hover:bg-[#E7E7E0]/60 dark:hover:bg-zinc-800"
                             )}
                         >
                             {p}
@@ -401,7 +401,7 @@ export default function CategoryTable({
 
                     <button
                         type="button"
-                        className="rounded-md p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-40 text-zinc-500 dark:text-zinc-400 transition-colors"
+                        className="flex items-center justify-center h-8 w-8 rounded-full text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 disabled:opacity-30 transition-colors"
                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                         disabled={page === totalPages}
                         data-testid="next-page-btn"
@@ -409,35 +409,6 @@ export default function CategoryTable({
                     >
                         <ChevronRight className="h-4 w-4" />
                     </button>
-
-                    <div className="flex items-center gap-1.5 ml-2 pl-2 border-l border-zinc-200 dark:border-zinc-700">
-                        <span className="text-zinc-500 text-xs font-semibold uppercase tracking-wider">
-                            Go to
-                        </span>
-                        <input
-                            type="number"
-                            min={1}
-                            max={totalPages}
-                            value={page}
-                            onChange={(e) => {
-                                const val = parseInt(e.target.value, 10);
-                                if (!isNaN(val)) {
-                                    if (val >= 1 && val <= totalPages) {
-                                        setPage(val);
-                                        e.target.style.borderColor = "";
-                                    } else {
-                                        e.target.style.borderColor = "red";
-                                        setTimeout(() => {
-                                            setPage(Math.min(Math.max(1, val), totalPages));
-                                            e.target.style.borderColor = "";
-                                        }, 800);
-                                    }
-                                }
-                            }}
-                            className="h-8 w-14 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-2 text-center text-sm text-zinc-700 dark:text-zinc-200 font-medium focus:border-zinc-900 dark:focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900"
-                            aria-label="Go to page"
-                        />
-                    </div>
                 </div>
             </div>
 

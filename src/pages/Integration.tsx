@@ -75,9 +75,8 @@ const Integration: React.FC<IntegrationProps> = ({ variant = "populated" }) => {
         <section
             data-testid="integration-screen"
             data-tour="integration-page"
-            className="flex flex-col h-full w-full overflow-hidden bg-[#FAFAF7] dark:bg-zinc-950"
+            className="p-4 sm:p-8 flex flex-col h-full w-full bg-transparent dark:bg-zinc-950 overflow-hidden"
         >
-            <div className="px-4 sm:px-8 py-6 md:px-12 md:py-10 flex flex-col h-full overflow-y-auto custom-scrollbar w-full min-w-0">
                 {/* Title row */}
                 <div className="flex flex-col gap-1 shrink-0">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -128,10 +127,10 @@ const Integration: React.FC<IntegrationProps> = ({ variant = "populated" }) => {
                 </div>
 
                 {/* Body */}
-                <div className="mt-6 flex-1 min-h-0">
+                <div className="mt-4 flex-1 min-h-0 overflow-y-auto hover-scrollbar pb-2">
                     {isEmpty || filtered.length === 0 ? (
                         <UnifiedEmptyState
-                            title={isEmpty ? "No Integrations Available" : `No results found for "${query}"`}
+                            title={isEmpty ? "No Data Found" : `No results found for "${query}"`}
                             description={isEmpty ? "No integrations have been added yet." : "Try adjusting your search terms."}
                             icon={<EmptyPlugIcon className="h-8 w-8 text-neutral-600" />}
                             testId="integration-empty-state"
@@ -150,7 +149,6 @@ const Integration: React.FC<IntegrationProps> = ({ variant = "populated" }) => {
                         </div>
                     )}
                 </div>
-            </div>
         </section>
     );
 };

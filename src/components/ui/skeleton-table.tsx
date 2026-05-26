@@ -80,12 +80,11 @@ export function SkeletonTable({
     return (
         <div
             ref={wrapperRef}
-            className="overflow-hidden rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col flex-1 shadow-sm"
+            className="overflow-hidden rounded-2xl bg-white dark:bg-zinc-900 flex flex-col flex-1"
         >
-            {/* Header */}
             <div
                 style={{ gridTemplateColumns: resolvedGridCols }}
-                className="grid items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-800/80 px-5 py-3 shrink-0"
+                className="grid items-center gap-2 bg-[#60646B]/10 rounded-t-[10px] px-5 py-3 shrink-0"
             >
                 {visibleHeaders.map((h, i) =>
                     typeof h === "string" ? (
@@ -102,7 +101,7 @@ export function SkeletonTable({
             </div>
 
             {/* Rows */}
-            <div className="divide-y divide-zinc-100 dark:divide-zinc-800 flex-1 overflow-hidden">
+            <div className="flex-1 overflow-hidden">
                 {Array.from({ length: rowCount }).map((_, i) => (
                     <div
                         key={i}
@@ -125,7 +124,7 @@ export function SkeletonTable({
 
             {/* Pagination placeholder */}
             {showFooter && (
-                <div className="flex items-center justify-end gap-4 px-5 py-3 border-t border-zinc-100 dark:border-zinc-800 shrink-0">
+                <div className="flex items-center justify-end gap-4 px-5 py-3 shrink-0">
                     <div className="h-4 w-24 bg-zinc-100 dark:bg-zinc-800 rounded animate-pulse" />
                     <div className="h-4 w-16 bg-zinc-100 dark:bg-zinc-800 rounded animate-pulse" />
                     <div className="flex gap-1">

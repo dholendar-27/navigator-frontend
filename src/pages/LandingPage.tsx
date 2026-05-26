@@ -6,14 +6,14 @@ export default function LandingPage() {
 
     if (isLoading) {
         return (
-            <div className="flex h-screen w-full items-center justify-center bg-white">
+            <div className="flex h-screen w-full items-center justify-center bg-[#FEFFFA]">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
             </div>
         );
     }
 
     return (
-        <div className="flex min-h-screen w-full flex-col bg-white">
+        <div className="flex min-h-screen w-full flex-col bg-[#FEFFFA]">
             {/* Header */}
             <header className="flex items-center justify-between px-8 py-6 border-b border-zinc-100">
                 <div className="flex items-center">

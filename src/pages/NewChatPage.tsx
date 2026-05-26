@@ -749,12 +749,12 @@ export default function NewChatPage(): JSX.Element {
 
     return (
         <div
-            className="flex flex-col h-full overflow-hidden bg-[#fafafa] dark:bg-zinc-950"
+            className="flex flex-col h-full overflow-hidden bg-[#FEFFFA] dark:bg-zinc-950"
             data-testid="new-chat-page"
             data-tour="chat-page"
         >
             {/* ── Fixed Top Bar: Agent Selector ─────────────────────────── */}
-            <div className="shrink-0 flex items-center justify-between px-6 py-3 bg-[#fafafa] dark:bg-zinc-950">
+            <div className="shrink-0 flex items-center justify-between px-6 py-3 bg-[#FEFFFA] dark:bg-zinc-950">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-50 dark:bg-zinc-800 rounded-full text-xs font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer select-none">
@@ -1044,7 +1044,7 @@ export default function NewChatPage(): JSX.Element {
 
             {/* ── Fixed Bottom Input Bar ────────────────────────────────── */}
             {!showEmptyState && (
-                <div className="shrink-0 px-4 pb-4 pt-2 bg-[#fafafa] dark:bg-zinc-950">
+                <div className="shrink-0 px-4 pb-4 pt-2 bg-[#FEFFFA] dark:bg-zinc-950">
                     <div
                         data-tour="chat-input"
                         className="max-w-2xl mx-auto bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm focus-within:shadow-md focus-within:border-zinc-300 dark:focus-within:border-zinc-700 transition-all p-3 flex flex-col gap-2"

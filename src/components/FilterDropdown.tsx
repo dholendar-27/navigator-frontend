@@ -29,13 +29,13 @@ export default function FilterDropdown({
     testId,
 }: FilterDropdownProps): JSX.Element {
     return (
-        <div className="group flex items-center gap-0 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600 transition-colors h-8 shadow-xs">
+        <div className="group flex items-center gap-0 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600 transition-colors h-6 shadow-sm">
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <button
                         type="button"
                         data-testid={testId}
-                        className="flex items-center gap-1 px-2.5 h-full text-xs text-zinc-700 dark:text-zinc-300 outline-none cursor-pointer"
+                        className="flex items-center gap-1 px-2.5 h-full text-xs text-zinc-600 dark:text-zinc-400 outline-none cursor-pointer"
                     >
                         <span className={cn("transition-colors", value ? "font-medium text-zinc-900 dark:text-zinc-100" : "text-zinc-600 dark:text-zinc-400")}>
                             {value || label}

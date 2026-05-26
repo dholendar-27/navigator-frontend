@@ -136,6 +136,7 @@ export default function AddEmployeeDrawer({
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent
                 side="right"
+                hideClose
                 className="flex w-full flex-col gap-0 p-0 sm:max-w-[480px]"
                 data-testid="add-employee-drawer"
             >

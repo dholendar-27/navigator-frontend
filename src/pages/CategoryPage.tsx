@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { Plus, Download, Upload, RefreshCw, Search, FolderClosed, X } from "lucide-react";
+import { PageActionButton } from "@/components/ui/page-action-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,7 @@ import CategoryDrawer from "@/components/category/CategoryDrawer";
 import FilterDropdown from "@/components/FilterDropdown";
 import { SkeletonTable } from "@/components/ui/skeleton-table";
 import { useCachedFiles } from "@/hooks/useCachedFiles";
+import UnifiedEmptyState from "@/components/ui/empty-state";
 
 function pLimit(concurrency: number) {
     return async function <T>(tasks: (() => Promise<T>)[]) {
@@ -546,8 +548,7 @@ export default function CategoryPage() {
     };
 
     return (
-        <div className="flex flex-col h-full overflow-hidden bg-zinc-50/20 dark:bg-zinc-950/20" data-testid="teams-page">
-            <div className="px-4 sm:px-8 py-6 flex flex-col h-full overflow-y-auto hover-scrollbar" data-tour="teams-page">
+        <div className="p-4 sm:p-8 flex flex-col h-full w-full bg-transparent dark:bg-zinc-950/20 overflow-hidden" data-testid="teams-page" data-tour="teams-page">
 
                 {/* Header */}
                 <div className="shrink-0 flex flex-col gap-1">
@@ -556,8 +557,8 @@ export default function CategoryPage() {
                             <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
                                 Teams
                             </h1>
-                            {!isEmpty && (
-                                <Badge className="rounded-full bg-blue-50 dark:bg-blue-955 px-2.5 py-0.5 text-xs font-semibold text-blue-600 dark:text-blue-400 animate-fade-in">
+                            {!isLoading && (
+                                <Badge className="rounded-full bg-blue-50 dark:bg-blue-900/30 px-2.5 py-0.5 text-xs font-semibold text-blue-600 dark:text-blue-400 animate-fade-in">
                                     {categories.length}
                                 </Badge>
                             )}
@@ -582,24 +583,22 @@ export default function CategoryPage() {
 
                 {/* Toolbar Buttons */}
                 <div className="mt-6 shrink-0 flex flex-wrap gap-3">
-                    <Button
+                    <PageActionButton
                         data-tour="add-team-btn"
-                        variant="outline"
-                        className="flex-1 sm:flex-none"
+                        icon={<Plus className="h-3.5 w-3.5" />}
+                        label="Add"
                         onClick={triggerAddMode}
-                    >
-                        <Plus className="h-4 w-4" />
-                        Add
-                    </Button>
+                    />
 
                     <TooltipProvider delayDuration={200}>
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <span>
-                                    <Button variant="outline" disabled className="flex-1 sm:flex-none opacity-50 cursor-not-allowed">
-                                        <Download className="h-4 w-4" />
-                                        Import
-                                    </Button>
+                                    <PageActionButton
+                                        icon={<Download className="h-3.5 w-3.5" />}
+                                        label="Import"
+                                        disabled
+                                    />
                                 </span>
                             </TooltipTrigger>
                             <TooltipContent side="top" className="text-xs">
@@ -612,10 +611,11 @@ export default function CategoryPage() {
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <span>
-                                    <Button variant="outline" disabled className="flex-1 sm:flex-none opacity-50 cursor-not-allowed">
-                                        <Upload className="h-4 w-4" />
-                                        Export
-                                    </Button>
+                                    <PageActionButton
+                                        icon={<Upload className="h-3.5 w-3.5" />}
+                                        label="Export"
+                                        disabled
+                                    />
                                 </span>
                             </TooltipTrigger>
                             <TooltipContent side="top" className="text-xs">
@@ -683,7 +683,7 @@ export default function CategoryPage() {
                 </div>
 
                 {/* Body Table Container */}
-                <div className="mt-6 flex-1 flex flex-col min-h-0 animate-fade-in">
+                <div className="mt-4 flex-1 flex flex-col min-h-0 animate-fade-in">
                     {isLoading ? (
                         <SkeletonTable
                             gridCols="[48px_2.5fr_2fr_1.8fr_1.5fr_56px]"
@@ -705,36 +705,21 @@ export default function CategoryPage() {
                             ]}
                         />
                     ) : isEmpty ? (
-                        /* Empty State */
-                        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center border border-dashed border-zinc-200 dark:border-zinc-700 rounded-2xl bg-zinc-50/20 dark:bg-zinc-900/10 min-h-[300px] mt-2">
-                            <div className="h-16 w-16 rounded-full bg-blue-55/80 dark:bg-blue-955 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4 shadow-xs">
-                                <FolderClosed className="h-8 w-8" />
-                            </div>
-                            <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
-                                No Teams Found
-                            </h3>
-                            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2 max-w-sm leading-relaxed">
-                                Get started by adding a team to link your organization employees and knowledge base folders.
-                            </p>
-                            <Button
-                                className="mt-5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-xs"
-                                onClick={triggerAddMode}
-                            >
-                                <Plus className="h-4 w-4 mr-2" /> Add Team
-                            </Button>
-                        </div>
+                        <UnifiedEmptyState
+                            title="No Data Found"
+                            description="No teams have been added yet."
+                            icon={<FolderClosed className="h-8 w-8 text-[#60646B] dark:text-zinc-400" />}
+                            testId="teams-empty-state"
+                        />
                     ) : isNoResults ? (
-                        /* Search No Results State */
-                        <div className="flex-1 flex flex-col items-center justify-center border border-dashed border-zinc-200 dark:border-zinc-700 rounded-2xl bg-zinc-50/20 dark:bg-zinc-900/10 min-h-[260px] text-center mt-2 px-6">
-                            <p className="text-sm font-semibold text-zinc-600 dark:text-zinc-400">
-                                No teams match your search {search ? `"${search}"` : "query"} or active filters.
-                            </p>
-                            <p className="mt-1.5 text-xs text-zinc-400 dark:text-zinc-500">
-                                Try adjusting your filters or clearing search parameters.
-                            </p>
+                        <UnifiedEmptyState
+                            title={search ? `No results found for "${search}"` : "No results found"}
+                            description="Try adjusting your filters or clearing search parameters."
+                            testId="teams-search-empty-state"
+                        >
                             <Button
                                 variant="link"
-                                className="mt-3 text-blue-600 font-semibold text-sm hover:underline"
+                                className="text-blue-600 font-semibold text-sm hover:underline p-0 h-auto"
                                 onClick={() => {
                                     setSearch("");
                                     setFilters({ type: "", creator: "", manager: "", kbFiles: "" });
@@ -742,7 +727,7 @@ export default function CategoryPage() {
                             >
                                 Clear All Search & Filters
                             </Button>
-                        </div>
+                        </UnifiedEmptyState>
                     ) : (
                         /* Render Interactive Table */
                         <CategoryTable
@@ -767,6 +752,5 @@ export default function CategoryPage() {
                     allFiles={allKBFiles}
                 />
             </div>
-        </div>
     );
 }

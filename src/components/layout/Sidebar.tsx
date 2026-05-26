@@ -69,8 +69,6 @@ const mainNav: NavItemType[] = [
     { to: "teams", label: "Teams", icon: ListTree },
     { to: "knowledge-base", label: "Knowledge Base", icon: FileStack },
     { to: "integration", label: "Integration", icon: Plug },
-    { to: "subscription", label: "Subscription", icon: CreditCard },
-    { to: "billing", label: "Billing", icon: Receipt },
 ];
 
 const chatNav: NavItemType[] = [
@@ -106,42 +104,42 @@ function ProgressCircle({ percentage, color }: { percentage: number; color: stri
 
 function UsageCardContent({ navigate, compact = false }: { navigate: any; compact?: boolean }) {
     if (!compact) return (
-        <div className="w-full bg-white rounded-2xl p-1 select-none">
+        <div className="w-full bg-white dark:bg-zinc-900 rounded-2xl p-1 select-none">
             {/* FULL VERSION - for collapsed popover */}
             <div className="space-y-4">
                 {/* Top orange banner */}
-                <div className="rounded-xl bg-[#fff7ed] p-3 border border-[#ffedd5]">
+                <div className="rounded-xl bg-[#fff7ed] dark:bg-amber-950/20 p-3 border border-[#ffedd5] dark:border-amber-900/30">
                     <div className="flex items-center gap-2">
                         <AlertTriangle className="h-5 w-5 text-[#ea580c] shrink-0" />
                         <span className="text-sm font-semibold text-[#ea580c]">
                             Approaching usage limits
                         </span>
                     </div>
-                    <div className="mt-1 ml-7 text-xs text-zinc-600">
-                        Current Plan: <span className="font-semibold text-zinc-900">Core</span>
+                    <div className="mt-1 ml-7 text-xs text-zinc-650 dark:text-zinc-400">
+                        Current Plan: <span className="font-semibold text-zinc-900 dark:text-zinc-100">Core</span>
                     </div>
                 </div>
 
                 {/* Circular progress rows */}
-                <div className="space-y-3 px-1 text-xs text-zinc-600 font-medium">
+                <div className="space-y-3 px-1 text-xs text-zinc-600 dark:text-zinc-400 font-medium">
                     <div className="flex items-center gap-2.5">
                         <ProgressCircle percentage={84} color="text-[#ea580c]" />
                         <div>
-                            Complex Tasks <span className="font-bold text-zinc-900">(84%)</span>
+                            Complex Tasks <span className="font-bold text-zinc-900 dark:text-zinc-100">(84%)</span>
                         </div>
                     </div>
-
+ 
                     <div className="grid grid-cols-2 gap-2 pt-0.5">
                         <div className="flex items-center gap-2">
                             <ProgressCircle percentage={32} color="text-blue-600" />
                             <div className="truncate">
-                                Core Tasks <span className="font-bold text-zinc-900">(32%)</span>
+                                Core Tasks <span className="font-bold text-zinc-900 dark:text-zinc-100">(32%)</span>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
                             <ProgressCircle percentage={50} color="text-blue-600" />
                             <div className="truncate">
-                                Pages <span className="font-bold text-zinc-900">(5)</span>
+                                Pages <span className="font-bold text-zinc-900 dark:text-zinc-100">(5)</span>
                             </div>
                         </div>
                     </div>
@@ -150,7 +148,7 @@ function UsageCardContent({ navigate, compact = false }: { navigate: any; compac
                         <button
                             type="button"
                             onClick={() => navigate("/subscription")}
-                            className="flex items-center gap-1 text-xs font-semibold text-zinc-600 hover:text-zinc-900 transition-colors cursor-pointer"
+                            className="flex items-center gap-1 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors cursor-pointer"
                         >
                             View Plans
                             <ArrowRight className="h-3.5 w-3.5" />
@@ -172,13 +170,13 @@ function UsageCardContent({ navigate, compact = false }: { navigate: any; compac
     // COMPACT version for expanded sidebar
     return (
         <div className="space-y-2">
-            <div className="rounded-xl border border-orange-200/80 bg-orange-50/80 p-2.5">
+            <div className="rounded-xl border border-orange-205 dark:border-orange-900/30 bg-orange-50/80 dark:bg-orange-950/20 p-2.5">
                 <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0">
                         <AlertTriangle className="h-4 w-4 text-orange-500 shrink-0" />
-                        <span className="text-xs font-semibold text-orange-800 truncate">Usage at 84%</span>
+                        <span className="text-xs font-semibold text-orange-800 dark:text-orange-400 truncate">Usage at 84%</span>
                     </div>
-                    <span className="text-[10px] bg-orange-100 text-orange-800 font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">Core Plan</span>
+                    <span className="text-[10px] bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-300 font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">Core Plan</span>
                 </div>
                 <div className="mt-2 flex items-center gap-3">
                     <div className="flex-1 bg-orange-200/60 h-1.5 rounded-full overflow-hidden">
@@ -249,8 +247,8 @@ function NavItem({
                 cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                     isActive
-                        ? "bg-zinc-100 text-zinc-900"
-                        : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
+                        ? "bg-[#E7E7E0] dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
+                        : "text-zinc-600 dark:text-zinc-400 hover:bg-[#E7E7E0] dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
                 )
             }
         >
@@ -537,7 +535,7 @@ export default function Sidebar({
     if (collapsed) {
         return (
             <aside
-                className="hidden lg:flex h-full w-[72px] flex-col items-center border-r border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 overflow-hidden shrink-0 select-none"
+                className="hidden lg:flex h-full w-[72px] flex-col items-center border-r border-zinc-200 dark:border-zinc-800 bg-[#E7E7E0]/40 dark:bg-zinc-900 overflow-hidden shrink-0 select-none"
                 data-testid="sidebar-collapsed"
             >
                 {/* Logo */}
@@ -562,8 +560,8 @@ export default function Sidebar({
                                                 cn(
                                                     "mx-auto flex items-center justify-center h-10 w-10 rounded-xl transition-all",
                                                     isActive
-                                                        ? "bg-white text-zinc-900 shadow-sm"
-                                                        : "text-zinc-500 hover:bg-white hover:text-zinc-800"
+                                                        ? "bg-[#E7E7E0] dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm"
+                                                        : "text-zinc-550 dark:text-zinc-400 hover:bg-[#E7E7E0] dark:hover:bg-zinc-800 hover:text-zinc-800 dark:hover:text-zinc-100"
                                                 )
                                             }
                                         >
@@ -591,7 +589,7 @@ export default function Sidebar({
                                                 type="button"
                                                 onClick={onSearchClick}
                                                 data-testid="nav-search-chats"
-                                                className="mx-auto flex items-center justify-center h-10 w-10 rounded-xl transition-all text-zinc-550 dark:text-zinc-400 hover:bg-white dark:hover:bg-zinc-800 hover:text-zinc-800 dark:hover:text-zinc-100 cursor-pointer"
+                                                className="mx-auto flex items-center justify-center h-10 w-10 rounded-xl transition-all text-zinc-550 dark:text-zinc-400 hover:bg-[#E7E7E0] dark:hover:bg-zinc-800 hover:text-zinc-800 dark:hover:text-zinc-100 cursor-pointer"
                                             >
                                                 <item.icon className="h-[18px] w-[18px]" />
                                             </button>
@@ -604,8 +602,8 @@ export default function Sidebar({
                                                     cn(
                                                         "mx-auto flex items-center justify-center h-10 w-10 rounded-xl transition-all",
                                                         isActive
-                                                            ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm border border-zinc-200/50 dark:border-zinc-700/50"
-                                                            : "text-zinc-550 dark:text-zinc-400 hover:bg-white dark:hover:bg-zinc-800 hover:text-zinc-800 dark:hover:text-zinc-100"
+                                                        ? "bg-[#E7E7E0] dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm border border-zinc-200/50 dark:border-zinc-700/50"
+                                                        : "text-zinc-550 dark:text-zinc-400 hover:bg-[#E7E7E0] dark:hover:bg-zinc-800 hover:text-zinc-800 dark:hover:text-zinc-100"
                                                     )
                                                 }
                                             >
@@ -622,23 +620,6 @@ export default function Sidebar({
                     </div>
                 </div>
 
-                {/* Bottom: usage alert */}
-                <div className="w-full flex items-center justify-center py-3 border-t border-zinc-200 shrink-0">
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <button
-                                type="button"
-                                className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-orange-500 hover:bg-orange-100 transition-colors cursor-pointer"
-                                aria-label="Usage limits alert"
-                            >
-                                <AlertTriangle className="h-[18px] w-[18px]" />
-                            </button>
-                        </PopoverTrigger>
-                        <PopoverContent side="right" align="end" sideOffset={16} className="w-72 p-2.5 rounded-2xl border border-zinc-100 shadow-2xl bg-white">
-                            <UsageCardContent navigate={navigate} />
-                        </PopoverContent>
-                    </Popover>
-                </div>
             </aside>
         );
     }
@@ -646,7 +627,7 @@ export default function Sidebar({
 
     return (
         <aside
-            className="fixed inset-y-0 left-0 z-40 flex h-full w-[260px] flex-col border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden shadow-2xl lg:static lg:shadow-none transition-transform duration-300 shrink-0 select-none"
+            className="fixed inset-y-0 left-0 z-40 flex h-full w-[260px] flex-col border-r border-zinc-200 dark:border-zinc-800 bg-[#E7E7E0]/40 dark:bg-zinc-900 overflow-hidden shadow-2xl lg:static lg:shadow-none transition-transform duration-300 shrink-0 select-none"
             data-testid="sidebar"
         >
             {/* Logo */}
@@ -684,7 +665,7 @@ export default function Sidebar({
                                 type="button"
                                 onClick={onSearchClick}
                                 data-testid="nav-search-chats"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 cursor-pointer text-left w-full"
+                                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-zinc-600 hover:bg-[#E7E7E0] hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 cursor-pointer text-left w-full"
                             >
                                 <div className="flex h-5 w-5 items-center justify-center shrink-0">
                                     <item.icon className="h-[18px] w-[18px] text-zinc-500 dark:text-zinc-400" />
@@ -705,8 +686,8 @@ export default function Sidebar({
                                     cn(
                                         "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                                         isActive
-                                            ? "bg-zinc-100 text-zinc-900"
-                                            : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
+                                            ? "bg-[#E7E7E0] dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
+                                            : "text-zinc-600 dark:text-zinc-400 hover:bg-[#E7E7E0] dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
                                     )
                                 }
                             >
@@ -737,10 +718,6 @@ export default function Sidebar({
                 <ChatHistoryList />
             </div>
 
-            {/* Usage Card & Upgrade */}
-            <div className="shrink-0 mt-2 px-3 pb-4 border-t border-zinc-100 pt-3 bg-white">
-                <UsageCardContent navigate={navigate} compact />
-            </div>
         </aside>
     );
 }

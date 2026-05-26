@@ -249,12 +249,12 @@ export default function CategoryDrawer({
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent
                 side="right"
-                className="flex w-full flex-col gap-0 p-0 sm:max-w-[1000px] bg-white dark:bg-zinc-900 border-l border-zinc-150 dark:border-zinc-800"
+                className="flex w-full flex-col gap-0 p-0 sm:max-w-[1000px] bg-[#FEFFFA] dark:bg-zinc-900"
                 hideClose
                 data-testid="team-drawer"
             >
                 {/* Header */}
-                <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 px-8 py-5 shrink-0 select-none">
+                <div className="flex items-center justify-between px-8 py-5 shrink-0 select-none">
                     <div className="flex items-center gap-3">
                         <button
                             type="button"
@@ -266,7 +266,7 @@ export default function CategoryDrawer({
                             <X className="h-5 w-5" />
                         </button>
                         <SheetTitle className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
-                            {mode === "add" ? "Add Team" : mode === "edit" ? "Edit Team" : "Team Details"}
+                            {mode === "add" ? "Add Category" : mode === "edit" ? "Edit Category" : "Category Details"}
                         </SheetTitle>
                     </div>
                 </div>
@@ -275,11 +275,11 @@ export default function CategoryDrawer({
                 <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
 
                     {/* LEFT PANEL: Form parameters */}
-                    <div className="w-full md:w-1/2 border-r border-zinc-150 dark:border-zinc-800 p-8 space-y-6 overflow-y-auto min-h-0 bg-white dark:bg-zinc-900">
+                    <div className="w-full md:w-1/2 border-r border-zinc-150 dark:border-zinc-800 p-8 space-y-6 overflow-y-auto min-h-0 bg-[#FEFFFA] dark:bg-zinc-900">
                         {/* Category Name */}
                         <div className="space-y-1.5">
                             <Label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-                                Team Name <span className="text-red-500 ml-0.5">*</span>
+                                Category Name <span className="text-red-500 ml-0.5">*</span>
                             </Label>
                             <Input
                                 value={name}
@@ -289,37 +289,42 @@ export default function CategoryDrawer({
                                 }}
                                 onBlur={() => handleBlur("name")}
                                 disabled={isReadOnly}
-                                placeholder="Enter team name"
+                                placeholder="Enter category name"
                                 className="h-11 rounded-lg border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                                 data-testid="team-name-input"
                             />
                             {touched.name && !isNameValid && (
                                 <div className="flex items-center gap-1.5 text-xs text-red-500 mt-1">
                                     <AlertCircle className="h-3.5 w-3.5" />
-                                    <span>Team name is required.</span>
+                                    <span>Category name is required.</span>
                                 </div>
                             )}
                         </div>
 
                         {/* Description */}
                         <div className="space-y-1.5">
-                            <div className="flex justify-between items-center">
-                                <Label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-                                    Description
-                                </Label>
-                                <span className="text-xs text-zinc-400 font-medium">
+                            <Label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                                Description
+                            </Label>
+                            <div className="relative">
+                                <Textarea
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value.slice(0, 500))}
+                                    disabled={isReadOnly}
+                                    placeholder="Enter category description"
+                                    rows={6}
+                                    className="rounded-lg border-zinc-200 dark:border-zinc-700 bg-[#FEFFFA] dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 resize-none leading-relaxed pr-16"
+                                    data-testid="category-description-input"
+                                />
+                                <span className={cn(
+                                    "absolute bottom-3 right-3 text-xs font-semibold bg-[#FEFFFA]/85 dark:bg-zinc-800/85 px-1.5 py-0.5 rounded select-none transition-colors",
+                                    description.length === 500
+                                        ? "text-red-650 dark:text-red-400 font-bold"
+                                        : "text-zinc-400 dark:text-zinc-500"
+                                )}>
                                     {description.length}/500
                                 </span>
                             </div>
-                            <Textarea
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value.slice(0, 500))}
-                                disabled={isReadOnly}
-                                placeholder="Enter team description"
-                                rows={6}
-                                className="rounded-lg border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 resize-none leading-relaxed"
-                                data-testid="category-description-input"
-                            />
                         </div>
 
                         {/* Manager */}
@@ -388,39 +393,10 @@ export default function CategoryDrawer({
                     </div>
 
                     {/* RIGHT PANEL: Files and Employees Tabs with Lists */}
-                    <div className="w-full md:w-1/2 flex flex-col bg-white dark:bg-zinc-900 min-h-0">
+                    <div className="w-full md:w-1/2 flex flex-col bg-[#FEFFFA] dark:bg-zinc-900 min-h-0">
                         {/* Tabs Bar */}
-                        <div className="flex items-center justify-between border-b border-zinc-150 dark:border-zinc-800 px-8 py-4 shrink-0 select-none bg-white dark:bg-zinc-900">
+                        <div className="flex items-center justify-between px-8 py-4 shrink-0 select-none bg-[#FEFFFA] dark:bg-zinc-900">
                             <div className="flex bg-zinc-100/80 dark:bg-zinc-800 p-0.5 rounded-lg border border-zinc-200/50 dark:border-zinc-700/50" role="tablist">
-                                <button
-                                    type="button"
-                                    id="tab-employees-btn"
-                                    role="tab"
-                                    aria-selected={activeTab === "employees"}
-                                    aria-controls="employees-panel"
-                                    onClick={() => setActiveTab("employees")}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "ArrowRight") {
-                                            setActiveTab("files");
-                                            document.getElementById("tab-files-btn")?.focus();
-                                        }
-                                    }}
-                                    className={cn(
-                                        "px-3 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5",
-                                        activeTab === "employees"
-                                            ? "bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 shadow-xs"
-                                            : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300 hover:bg-zinc-100/50"
-                                    )}
-                                    data-testid="tab-employees-btn"
-                                >
-                                    Employees
-                                    <span className={cn(
-                                        "px-1.5 py-0.5 rounded font-mono font-medium scale-90",
-                                        activeTab === "employees" ? "bg-blue-100 dark:bg-blue-900/60" : "bg-zinc-200 dark:bg-zinc-800"
-                                    )}>
-                                        {selectedEmployees.length}
-                                    </span>
-                                </button>
                                 <button
                                     type="button"
                                     id="tab-files-btn"
@@ -429,7 +405,7 @@ export default function CategoryDrawer({
                                     aria-controls="files-panel"
                                     onClick={() => setActiveTab("files")}
                                     onKeyDown={(e) => {
-                                        if (e.key === "ArrowLeft") {
+                                        if (e.key === "ArrowRight") {
                                             setActiveTab("employees");
                                             document.getElementById("tab-employees-btn")?.focus();
                                         }
@@ -448,6 +424,35 @@ export default function CategoryDrawer({
                                         activeTab === "files" ? "bg-blue-100 dark:bg-blue-900/60" : "bg-zinc-200 dark:bg-zinc-800"
                                     )}>
                                         {selectedFiles.length}
+                                    </span>
+                                </button>
+                                <button
+                                    type="button"
+                                    id="tab-employees-btn"
+                                    role="tab"
+                                    aria-selected={activeTab === "employees"}
+                                    aria-controls="employees-panel"
+                                    onClick={() => setActiveTab("employees")}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "ArrowLeft") {
+                                            setActiveTab("files");
+                                            document.getElementById("tab-files-btn")?.focus();
+                                        }
+                                    }}
+                                    className={cn(
+                                        "px-3 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5",
+                                        activeTab === "employees"
+                                            ? "bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 shadow-xs"
+                                            : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300 hover:bg-zinc-100/50"
+                                    )}
+                                    data-testid="tab-employees-btn"
+                                >
+                                    Employees
+                                    <span className={cn(
+                                        "px-1.5 py-0.5 rounded font-mono font-medium scale-90",
+                                        activeTab === "employees" ? "bg-blue-100 dark:bg-blue-900/60" : "bg-zinc-200 dark:bg-zinc-800"
+                                    )}>
+                                        {selectedEmployees.length}
                                     </span>
                                 </button>
                             </div>
@@ -481,7 +486,7 @@ export default function CategoryDrawer({
                         </div>
 
                         {/* Search Sub-Header inside Drawer tabs */}
-                        <div className="px-8 py-3 bg-white dark:bg-zinc-900 shrink-0">
+                        <div className="px-8 py-3 bg-[#FEFFFA] dark:bg-zinc-900 shrink-0">
                             <div className="relative">
                                 <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400 dark:text-zinc-500" />
                                 <Input
@@ -507,11 +512,11 @@ export default function CategoryDrawer({
                         </div>
 
                         {/* Active list container */}
-                        <div className="flex-1 overflow-y-auto bg-white dark:bg-zinc-900 min-h-0 flex flex-col" role="tabpanel" id={activeTab === "employees" ? "employees-panel" : "files-panel"} aria-labelledby={activeTab === "employees" ? "tab-employees-btn" : "tab-files-btn"}>
+                        <div className="flex-1 overflow-y-auto bg-[#FEFFFA] dark:bg-zinc-900 min-h-0 flex flex-col" role="tabpanel" id={activeTab === "employees" ? "employees-panel" : "files-panel"} aria-labelledby={activeTab === "employees" ? "tab-employees-btn" : "tab-files-btn"}>
                             {activeTab === "employees" ? (
                                 paginatedEmployees.length === 0 ? (
                                     /* Employees Empty State */
-                                    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white dark:bg-zinc-900">
+                                    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-[#FEFFFA] dark:bg-zinc-900">
                                         <div className="h-14 w-14 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 dark:text-zinc-500 mb-4 animate-pulse">
                                             <Users className="h-7 w-7" />
                                         </div>
@@ -524,7 +529,7 @@ export default function CategoryDrawer({
                                     </div>
                                 ) : (
                                     /* Employees Table List */
-                                    <div className="flex-1 bg-white dark:bg-zinc-900 flex flex-col justify-between">
+                                    <div className="flex-1 bg-[#FEFFFA] dark:bg-zinc-900 flex flex-col justify-between">
                                         <div className="w-full pb-4">
                                             <div className="flex items-center gap-3 px-4 py-3 bg-zinc-50/80 dark:bg-zinc-800/40 rounded-lg text-xs font-semibold text-zinc-600 dark:text-zinc-300 mx-8 mb-2">
                                                 {!isReadOnly && <Checkbox checked={false} disabled className="border-zinc-300 dark:border-zinc-600 shadow-none" />}
@@ -576,20 +581,20 @@ export default function CategoryDrawer({
                             ) : (
                                 paginatedFiles.length === 0 ? (
                                     /* Files Empty State */
-                                    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white dark:bg-zinc-900">
+                                    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-[#FEFFFA] dark:bg-zinc-900">
                                         <div className="h-14 w-14 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 dark:text-zinc-500 mb-4 animate-pulse">
                                             <FileText className="h-7 w-7" />
                                         </div>
                                         <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
                                             No Data Found
                                         </h3>
-                                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-[240px] leading-relaxed">
+                                        <p className="text-xs text-zinc-500 dark:text-zinc-405 mt-1 max-w-[240px] leading-relaxed">
                                             No files have been added yet.
                                         </p>
                                     </div>
                                 ) : (
                                     /* Files Table List */
-                                    <div className="flex-1 bg-white dark:bg-zinc-900 flex flex-col justify-between">
+                                    <div className="flex-1 bg-[#FEFFFA] dark:bg-zinc-900 flex flex-col justify-between">
                                         <div className="w-full pb-4">
                                             <div className="flex items-center gap-3 px-4 py-3 bg-zinc-50/80 dark:bg-zinc-800/40 rounded-lg text-xs font-semibold text-zinc-600 dark:text-zinc-300 mx-8 mb-2">
                                                 {!isReadOnly && <Checkbox checked={false} disabled className="border-zinc-300 dark:border-zinc-600 shadow-none" />}
@@ -637,7 +642,7 @@ export default function CategoryDrawer({
 
                         {/* Pagination Footer inside drawer tabs */}
                         {activeTab === "employees" && empTotal > 0 && (
-                            <div className="px-8 py-3 bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs text-zinc-500 select-none shrink-0">
+                            <div className="px-8 py-3 bg-[#FEFFFA] dark:bg-zinc-900 flex items-center justify-between text-xs text-zinc-555 select-none shrink-0">
                                 <div className="flex items-center gap-1">
                                     <span>Rows per Page:</span>
                                     <span className="font-semibold text-zinc-700 dark:text-zinc-300">50</span>
@@ -672,7 +677,7 @@ export default function CategoryDrawer({
                         )}
 
                         {activeTab === "files" && fileTotal > 0 && (
-                            <div className="px-8 py-3 bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs text-zinc-500 select-none shrink-0">
+                            <div className="px-8 py-3 bg-[#FEFFFA] dark:bg-zinc-900 flex items-center justify-between text-xs text-zinc-555 select-none shrink-0">
                                 <div className="flex items-center gap-1">
                                     <span>Rows per Page:</span>
                                     <span className="font-semibold text-zinc-700 dark:text-zinc-300">50</span>
@@ -710,7 +715,14 @@ export default function CategoryDrawer({
 
                 {/* Footer buttons */}
                 {!isReadOnly && (
-                    <div className="flex items-center justify-end gap-3 border-t border-zinc-150 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-8 py-4 shrink-0 select-none">
+                    <div className="flex items-center justify-end gap-3 bg-[#FEFFFA] dark:bg-zinc-900 px-8 py-4 shrink-0 select-none">
+                        <Button
+                            variant="ghost"
+                            onClick={() => onOpenChange(false)}
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 text-sm font-semibold h-10 px-4"
+                        >
+                            Cancel
+                        </Button>
                         <Button
                             disabled={!canSave || isSubmitting}
                             onClick={handleSave}

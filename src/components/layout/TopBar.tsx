@@ -4,10 +4,21 @@ import {
     Settings,
     Sun,
     Moon,
+    User,
+    CreditCard,
+    Languages,
+    Info,
+    Key,
+    HelpCircle,
+    Building2,
+    Receipt,
+    LogOut,
+    ChevronRight,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { WebSocketStatus } from "@/components/WebSocketStatus";
+import { toast } from "sonner";
 
 import {
     Avatar,
@@ -71,18 +82,20 @@ export default function TopBar({
 
     return (
         <header
-            className="flex h-[68px] w-full items-center justify-between border-b border-zinc-200 bg-white dark:bg-zinc-900 dark:border-zinc-800 px-5 shrink-0"
+            className="flex h-[68px] w-full items-center justify-between border-b border-zinc-200 bg-[#FEFFFA] dark:bg-zinc-900 dark:border-zinc-800 px-5 shrink-0"
             data-testid="topbar"
         >
-            <Button
-                variant="ghost"
-                size="icon"
-                onClick={onToggleSidebar}
-                data-testid="toggle-sidebar-btn"
-                aria-label="Toggle sidebar"
-            >
-                <PanelLeft className="h-5 w-5 text-zinc-700" />
-            </Button>
+            <div className="flex items-center gap-2">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onToggleSidebar}
+                    data-testid="toggle-sidebar-btn"
+                    aria-label="Toggle sidebar"
+                >
+                    <PanelLeft className="h-5 w-5 text-zinc-700" />
+                </Button>
+            </div>
 
             <div className="flex items-center gap-3" data-tour="topbar-actions">
                 {/* Real-Time WebSocket Status Indicator */}
@@ -164,7 +177,7 @@ export default function TopBar({
                     <DropdownMenuTrigger asChild>
                         <button
                             type="button"
-                            className="ml-1 flex items-center gap-2.5 outline-none hover:opacity-85 transition-opacity rounded-full p-0.5 cursor-pointer"
+                            className="ml-1 flex items-center justify-center outline-none bg-[#60646B1A] dark:bg-zinc-800/40 p-1 rounded-full cursor-pointer hover:opacity-85 transition-all"
                             data-testid="user-profile"
                             data-tour="profile"
                         >
@@ -180,49 +193,146 @@ export default function TopBar({
                                     {initials}
                                 </AvatarFallback>
                             </Avatar>
-
-                            <TooltipProvider delayDuration={200}>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <span className="hidden sm:inline text-sm font-medium text-zinc-900 pr-1.5 max-w-[120px] lg:max-w-[180px] truncate text-left">
-                                            {fullName}
-                                        </span>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="bottom" className="text-xs bg-zinc-900 text-white">
-                                        {fullName}
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
                         </button>
                     </DropdownMenuTrigger>
 
-                    <DropdownMenuContent align="end" className="w-56 mt-2 rounded-xl p-1.5 border border-zinc-100 shadow-lg bg-white">
-                        <DropdownMenuLabel className="font-normal px-2.5 py-2">
-                            <div className="flex flex-col space-y-1">
-                                <p className="text-sm font-medium leading-none text-zinc-900">
-                                    {fullName}
-                                </p>
-                                <p className="text-xs leading-none text-zinc-500 truncate">
-                                    {user?.email || ""}
-                                </p>
+                    <DropdownMenuContent
+                        align="end"
+                        sideOffset={2}
+                        className="w-[300px] rounded-[10px] p-[10px] border border-zinc-200/60 dark:border-zinc-800 shadow-lg bg-[#FEFFFA] dark:bg-zinc-900 space-y-3.5 focus:outline-none"
+                    >
+                        {/* Overall Usage Card Container */}
+                        <div className="rounded-[10px] bg-[#60646B14] dark:bg-zinc-800/40 p-3 border border-zinc-150/60 dark:border-zinc-800">
+                            <div className="flex items-center justify-between mb-3">
+                                <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">Overall Usage</span>
+                                <Button
+                                    size="sm"
+                                    onClick={() => navigate("/subscription")}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-semibold px-2.5 py-0.5 h-6 cursor-pointer"
+                                >
+                                    Upgrade
+                                </Button>
                             </div>
-                        </DropdownMenuLabel>
-                        <DropdownMenuSeparator className="bg-zinc-100 my-1.5" />
+                            <div className="space-y-2 text-xs">
+                                <div className="flex justify-between items-center text-zinc-500 dark:text-zinc-400">
+                                    <span>Plan</span>
+                                    <span className="font-semibold text-zinc-800 dark:text-zinc-200">Core</span>
+                                </div>
+                                <div className="flex justify-between items-center text-zinc-500 dark:text-zinc-400">
+                                    <span>Pages</span>
+                                    <span className="font-medium text-zinc-800 dark:text-zinc-200">180/500</span>
+                                </div>
+                                <div className="flex justify-between items-center text-zinc-500 dark:text-zinc-400">
+                                    <span>Simple Interactions</span>
+                                    <span className="font-medium text-zinc-800 dark:text-zinc-200">127/350</span>
+                                </div>
+                                <div className="flex justify-between items-center text-zinc-500 dark:text-zinc-400">
+                                    <span>Complex Interactions</span>
+                                    <span className="font-medium text-zinc-800 dark:text-zinc-200">63/100</span>
+                                </div>
+                            </div>
+                        </div>
 
+                        {/* Profile Section */}
+                        <div className="space-y-0.5">
+                            <div className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider px-2.5 pb-1">
+                                Profile
+                            </div>
+                            
+                            <DropdownMenuItem
+                                onClick={() => navigate("/profile")}
+                                className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs text-zinc-700 dark:text-zinc-300 hover:bg-[#60646B1A] dark:hover:bg-zinc-800 focus:bg-[#60646B1A] dark:focus:bg-zinc-800 cursor-pointer"
+                            >
+                                <User className="h-4 w-4 text-zinc-500" />
+                                <span className="font-medium">My Profile</span>
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                                onClick={() => navigate("/subscription")}
+                                className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs text-zinc-700 dark:text-zinc-300 hover:bg-[#60646B1A] dark:hover:bg-zinc-800 focus:bg-[#60646B1A] dark:focus:bg-zinc-800 cursor-pointer"
+                            >
+                                <CreditCard className="h-4 w-4 text-zinc-500" />
+                                <span className="font-medium">Subscription</span>
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                                onClick={() => toast.info("Language settings coming soon")}
+                                className="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs text-zinc-700 dark:text-zinc-300 hover:bg-[#60646B1A] dark:hover:bg-zinc-800 focus:bg-[#60646B1A] dark:focus:bg-zinc-800 cursor-pointer"
+                            >
+                                <div className="flex items-center gap-2.5">
+                                    <Languages className="h-4 w-4 text-zinc-500" />
+                                    <span className="font-medium">Language</span>
+                                </div>
+                                <ChevronRight className="h-3.5 w-3.5 text-zinc-400" />
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                                onClick={() => toast.info("About Navigator details")}
+                                className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs text-zinc-700 dark:text-zinc-300 hover:bg-[#60646B1A] dark:hover:bg-zinc-800 focus:bg-[#60646B1A] dark:focus:bg-zinc-800 cursor-pointer"
+                            >
+                                <Info className="h-4 w-4 text-zinc-500" />
+                                <span className="font-medium">About</span>
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                                onClick={() => toast.info("Password change flow coming soon")}
+                                className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs text-zinc-700 dark:text-zinc-300 hover:bg-[#60646B1A] dark:hover:bg-zinc-800 focus:bg-[#60646B1A] dark:focus:bg-zinc-800 cursor-pointer"
+                            >
+                                <Key className="h-4 w-4 text-zinc-500" />
+                                <span className="font-medium">Change Password</span>
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                                onClick={() => toast.info("Help center")}
+                                className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs text-zinc-700 dark:text-zinc-300 hover:bg-[#60646B1A] dark:hover:bg-zinc-800 focus:bg-[#60646B1A] dark:focus:bg-zinc-800 cursor-pointer"
+                            >
+                                <HelpCircle className="h-4 w-4 text-zinc-500" />
+                                <span className="font-medium">Help</span>
+                            </DropdownMenuItem>
+                        </div>
+
+                        <DropdownMenuSeparator className="bg-zinc-100 dark:bg-zinc-800 my-1" />
+
+                        {/* Organization Section */}
+                        <div className="space-y-0.5">
+                            <div className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider px-2.5 pb-1">
+                                Organization
+                            </div>
+
+                            <DropdownMenuItem
+                                onClick={() => toast.info("Organization Details")}
+                                className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs text-zinc-700 dark:text-zinc-300 hover:bg-[#60646B1A] dark:hover:bg-zinc-800 focus:bg-[#60646B1A] dark:focus:bg-zinc-800 cursor-pointer"
+                            >
+                                <Building2 className="h-4 w-4 text-zinc-500" />
+                                <span className="font-medium">Organization Details</span>
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                                onClick={() => navigate("/billing")}
+                                className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs text-zinc-700 dark:text-zinc-300 hover:bg-[#60646B1A] dark:hover:bg-zinc-800 focus:bg-[#60646B1A] dark:focus:bg-zinc-800 cursor-pointer"
+                            >
+                                <CreditCard className="h-4 w-4 text-zinc-500" />
+                                <span className="font-medium">Payment Method</span>
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                                onClick={() => navigate("/billing")}
+                                className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs text-zinc-700 dark:text-zinc-300 hover:bg-[#60646B1A] dark:hover:bg-zinc-800 focus:bg-[#60646B1A] dark:focus:bg-zinc-800 cursor-pointer"
+                            >
+                                <Receipt className="h-4 w-4 text-zinc-500" />
+                                <span className="font-medium">Billing</span>
+                            </DropdownMenuItem>
+                        </div>
+
+                        <DropdownMenuSeparator className="bg-zinc-100 dark:bg-zinc-800 my-1" />
+
+                        {/* Sign Out */}
                         <DropdownMenuItem
                             onClick={() => logout()}
-                            className="text-red-600 focus:text-red-600 focus:bg-red-50/50 rounded-lg cursor-pointer px-2.5 py-2 text-sm"
+                            className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs text-red-650 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50/50 dark:hover:bg-red-950/20 focus:bg-red-50/50 dark:focus:bg-red-950/20 cursor-pointer"
                         >
-                            <svg
-                                className="mr-2 h-4 w-4 inline-block"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                            >
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                            </svg>
-                            <span>Sign out</span>
+                            <LogOut className="h-4 w-4 shrink-0" />
+                            <span className="font-medium">Sign Out</span>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

@@ -6,7 +6,7 @@ interface PlaceholderPageProps {
 
 export default function PlaceholderPage({ title }: PlaceholderPageProps): JSX.Element {
   return (
-    <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-zinc-50/20 dark:bg-zinc-950/20">
+    <div className="flex flex-col items-center justify-center min-h-full p-4 sm:p-8 text-center bg-transparent dark:bg-zinc-950/20 shrink-0">
       <div className="w-16 h-16 mb-4 rounded-2xl bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center text-blue-600 dark:text-blue-400">
         <span className="text-2xl font-semibold">{title.charAt(0)}</span>
       </div>

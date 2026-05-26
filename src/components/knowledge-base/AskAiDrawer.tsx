@@ -201,9 +201,17 @@ export default function AskAiDrawer({ open, onOpenChange, folderId }: AskAiDrawe
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent side="right" className="sm:max-w-[520px] p-0 flex flex-col h-full border-l border-slate-200 bg-white">
+            <SheetContent side="right" hideClose className="sm:max-w-[520px] p-0 flex flex-col h-full border-l border-slate-200 bg-white">
                 {/* Header */}
-                <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white">
+                <div className="flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onOpenChange(false)}
+                        className="rounded-lg h-7 w-7 hover:bg-slate-100 text-slate-500 transition-colors -ml-1"
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
                     <div className="flex items-center gap-2.5">
                         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-sm">
                             <Sparkles className="h-4 w-4" />
@@ -215,14 +223,6 @@ export default function AskAiDrawer({ open, onOpenChange, folderId }: AskAiDrawe
                             </p>
                         </div>
                     </div>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onOpenChange(false)}
-                        className="rounded-lg h-7 w-7 hover:bg-slate-100 text-slate-500 transition-colors"
-                    >
-                        <X className="h-4 w-4" />
-                    </Button>
                 </div>
 
                 <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4 custom-scrollbar bg-white">

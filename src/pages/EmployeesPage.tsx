@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { Plus, Download, Upload, RefreshCw, Search, X } from "lucide-react";
+import { PageActionButton } from "@/components/ui/page-action-button";
 import {
     Tooltip,
     TooltipContent,
@@ -13,6 +14,7 @@ import { toast } from "sonner";
 import { type Employee } from "@/types/employee";
 import EmployeeTable from "@/components/employees/EmployeeTable";
 import EmptyState from "@/components/employees/EmptyState";
+import UnifiedEmptyState from "@/components/ui/empty-state";
 import AddEmployeeDrawer from "@/components/employees/AddEmployeeDrawer";
 import EmployeeDetailsDrawer from "@/components/employees/EmployeeDrawer";
 import FilterDropdown from "@/components/FilterDropdown";
@@ -334,8 +336,7 @@ export default function EmployeesPage() {
     };
 
     return (
-        <div className="flex flex-col h-full overflow-hidden" data-testid="employees-page">
-            <div className="px-4 sm:px-8 py-6 flex flex-col h-full overflow-y-auto" data-tour="employees-page">
+        <div className="p-4 sm:p-8 flex flex-col h-full w-full bg-transparent overflow-hidden" data-testid="employees-page" data-tour="employees-page">
                 {/* Header - Fixed */}
                 <div className="shrink-0 flex flex-col gap-1">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -344,8 +345,8 @@ export default function EmployeesPage() {
                                 Employees
                             </h1>
 
-                            {!isEmpty && (
-                                <Badge className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-600">
+                            {!isLoading && (
+                                <Badge className="rounded-full bg-blue-50 dark:bg-blue-900/30 px-2.5 py-0.5 text-xs font-semibold text-blue-600 dark:text-blue-400">
                                     {employees.length}
                                 </Badge>
                             )}
@@ -365,19 +366,22 @@ export default function EmployeesPage() {
 
                 {/* Actions - Fixed */}
                 <div className="mt-6 shrink-0 flex flex-wrap gap-3">
-                    <Button data-tour="add-employee-btn" variant="outline" className="flex-1 sm:flex-none" onClick={() => setDrawerOpen(true)}>
-                        <Plus className="h-4 w-4" />
-                        Add
-                    </Button>
+                    <PageActionButton
+                        data-tour="add-employee-btn"
+                        icon={<Plus className="h-3.5 w-3.5" />}
+                        label="Add"
+                        onClick={() => setDrawerOpen(true)}
+                    />
 
                     <TooltipProvider delayDuration={200}>
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <span>
-                                    <Button variant="outline" disabled className="flex-1 sm:flex-none opacity-50 cursor-not-allowed">
-                                        <Download className="h-4 w-4" />
-                                        Import
-                                    </Button>
+                                    <PageActionButton
+                                        icon={<Download className="h-3.5 w-3.5" />}
+                                        label="Import"
+                                        disabled
+                                    />
                                 </span>
                             </TooltipTrigger>
                             <TooltipContent side="top" className="text-xs">
@@ -390,10 +394,11 @@ export default function EmployeesPage() {
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <span>
-                                    <Button variant="outline" disabled className="flex-1 sm:flex-none opacity-50 cursor-not-allowed">
-                                        <Upload className="h-4 w-4" />
-                                        Export
-                                    </Button>
+                                    <PageActionButton
+                                        icon={<Upload className="h-3.5 w-3.5" />}
+                                        label="Export"
+                                        disabled
+                                    />
                                 </span>
                             </TooltipTrigger>
                             <TooltipContent side="top" className="text-xs">
@@ -466,7 +471,7 @@ export default function EmployeesPage() {
                 </div>
 
                 {/* Body - Pinned Layout */}
-                <div className="mt-6 flex-1 flex flex-col min-h-0">
+                <div className="mt-4 flex-1 flex flex-col min-h-0">
                     {isLoading ? (
                         <SkeletonTable
                             gridCols="[2.5fr_1.5fr_1.5fr_1.5fr_56px]"
@@ -497,20 +502,13 @@ export default function EmployeesPage() {
                             ]}
                         />
                     ) : isEmpty ? (
-                        <div className="flex-1 flex flex-col pt-4">
-                            <EmptyState onAddClick={() => setDrawerOpen(true)} />
-                        </div>
+                        <EmptyState />
                     ) : isNoResults ? (
-                        <div className="flex-1 flex flex-col pt-4">
-                            <div className="flex flex-1 min-h-[220px] w-full flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-700 bg-zinc-50/30 dark:bg-zinc-900/30 px-6 py-8 text-center my-2">
-                                <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                                    No results found {search ? `for "${search}"` : "with current filters"}
-                                </p>
-                                <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">
-                                    Try adjusting your filters or search terms.
-                                </p>
-                            </div>
-                        </div>
+                        <UnifiedEmptyState
+                            title={search ? `No results found for "${search}"` : "No results found"}
+                            description="Try adjusting your filters or search terms."
+                            testId="employees-search-empty-state"
+                        />
                     ) : (
                         <EmployeeTable
                             employees={filteredEmployees}
@@ -538,6 +536,5 @@ export default function EmployeesPage() {
                     employee={selectedEmployee}
                 />
             </div>
-        </div>
     );
 }

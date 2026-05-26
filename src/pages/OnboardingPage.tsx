@@ -118,9 +118,9 @@ export default function OnboardingPage({ onComplete }: OnboardingPageProps) {
     ];
 
     return (
-        <div className="min-h-screen w-full flex flex-col bg-white dark:bg-zinc-950 transition-colors duration-300 relative select-none">
+        <div className="min-h-screen w-full flex flex-col bg-[#FEFFFA] dark:bg-zinc-950 transition-colors duration-300 relative select-none">
             {/* Header / Top Bar */}
-            <header className="w-full border-b border-zinc-100 dark:border-zinc-800/80 bg-white dark:bg-zinc-950 px-6 md:px-12 py-4 shrink-0">
+            <header className="w-full border-b border-zinc-100 dark:border-zinc-800/80 bg-[#FEFFFA] dark:bg-zinc-950 px-6 md:px-12 py-4 shrink-0">
                 <div className="w-full max-w-7xl mx-auto flex items-center justify-between">
                     {/* Logo */}
                     <div className="flex items-center">
@@ -173,7 +173,11 @@ export default function OnboardingPage({ onComplete }: OnboardingPageProps) {
                                 </button>
                             </DropdownMenuTrigger>
 
-                            <DropdownMenuContent align="end" className="w-56 mt-2 rounded-xl p-1.5 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-lg text-zinc-900 dark:text-zinc-100">
+                            <DropdownMenuContent
+                                align="end"
+                                sideOffset={2}
+                                className="w-56 rounded-[10px] p-[10px] border border-zinc-200 dark:border-zinc-800 bg-[#60646B1A] dark:bg-zinc-900 shadow-lg text-zinc-900 dark:text-zinc-100 focus:outline-none backdrop-blur-md"
+                            >
                                 <DropdownMenuLabel className="font-normal px-2.5 py-2">
                                     <div className="flex flex-col space-y-1">
                                         <p className="text-sm font-medium leading-none text-zinc-900 dark:text-zinc-100">
