@@ -9,6 +9,7 @@ import {
     RefreshCw,
     Search,
     X,
+    Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,12 +18,32 @@ import { toast } from "sonner";
 import FilterDropdown from "@/components/FilterDropdown";
 import KnowledgeBaseEmptyState from "@/components/knowledge-base/KnowledgeBaseEmptyState";
 import KnowledgeBaseTable from "@/components/knowledge-base/KnowledgeBaseTable";
+import ColumnSettings from "@/components/ui/ColumnSettings";
+
+const KB_COLUMNS = [
+    { key: "name", label: "Knowledge Base Name" },
+    { key: "type", label: "Type" },
+    { key: "folder", label: "Size / Description" },
+    { key: "owner", label: "Creator" },
+    { key: "createdDate", label: "Created Date" },
+    { key: "ocr_status", label: "OCR Status" },
+];
+
+const DEFAULT_KB_COLUMNS = ["name", "folder", "owner"];
 import CreateFolderDrawer from "@/components/knowledge-base/CreateFolderDrawer";
 import AddFilesDrawer from "@/components/knowledge-base/AddFilesDrawer";
 import AddTextDrawer from "@/components/knowledge-base/AddTextDrawer";
 import AddUrlDrawer from "@/components/knowledge-base/AddUrlDrawer";
 
 import KnowledgeBaseDetailDrawer from "@/components/knowledge-base/KnowledgeBaseDetailDrawer";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from "@/components/ui/dialog";
 import { useKindeAuth } from "@kinde-oss/kinde-auth-react";
 import {
     getRootContents,
@@ -101,6 +122,33 @@ interface Filters {
 
 export default function KnowledgeBasePage() {
     const { getToken } = useKindeAuth();
+
+    const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
+        const saved = localStorage.getItem("kb_visible_columns");
+        return saved ? JSON.parse(saved) : DEFAULT_KB_COLUMNS;
+    });
+
+    useEffect(() => {
+        localStorage.setItem("kb_visible_columns", JSON.stringify(visibleColumns));
+    }, [visibleColumns]);
+
+    useEffect(() => {
+        const handleResize = () => {
+            const isBigger = window.innerWidth > 1440;
+            const max = isBigger ? 7 : 5;
+            if (visibleColumns.length > max) {
+                setVisibleColumns(prev => prev.slice(0, max));
+            }
+        };
+        window.addEventListener("resize", handleResize);
+        handleResize();
+        return () => window.removeEventListener("resize", handleResize);
+    }, [visibleColumns]);
+
+    // Selection states
+    const [selected, setSelected] = useState<Set<string>>(new Set());
+    const [confirmBatchDelete, setConfirmBatchDelete] = useState(false);
+    const [isBatchProcessing, setIsBatchProcessing] = useState(false);
 
     // Navigation stack — each item is { id, name }. Empty = root.
     const [folderStack, setFolderStack] = useState<BreadcrumbItem[]>([]);
@@ -276,6 +324,7 @@ export default function KnowledgeBasePage() {
     const navigateInto = (entry: KBEntry) => {
         setSearchInput("");  // ✅ Update to use searchInput instead of search
         setFilters({ creator: "", type: "", ocrStatus: "" });
+        setSelected(new Set());
         setFolderStack((prev) => {
             if (prev.length > 0 && prev[prev.length - 1].id === entry.id) {
                 return prev;
@@ -287,6 +336,7 @@ export default function KnowledgeBasePage() {
     const navigateTo = (index: number) => {
         setSearchInput("");  // ✅ Update to use searchInput instead of search
         setFilters({ creator: "", type: "", ocrStatus: "" });
+        setSelected(new Set());
         if (index < 0) {
             setFolderStack([]);
         } else {
@@ -463,6 +513,52 @@ export default function KnowledgeBasePage() {
         }
     };
 
+    const handleBatchDelete = async () => {
+        setIsBatchProcessing(true);
+        try {
+            const fileIds: string[] = [];
+            const folderIds: string[] = [];
+            selected.forEach(id => {
+                const entry = allEntries.find(e => e.id === id);
+                if (entry) {
+                    if (entry.type === "file") {
+                        fileIds.push(id);
+                    } else {
+                        folderIds.push(id);
+                    }
+                }
+            });
+
+            const token = await getToken();
+            if (!token) return;
+
+            const promises = [];
+            if (fileIds.length > 0) {
+                promises.push(deleteFiles(fileIds, token).then(res => {
+                    if (res.errors && res.errors.length > 0) {
+                        throw new Error(res.errors[0].error || "Failed to remove some documents");
+                    }
+                }));
+            }
+            folderIds.forEach(id => {
+                promises.push(deleteFolder(id, token));
+            });
+
+            await Promise.all(promises);
+            toast.success("Selected items deleted successfully");
+
+            setChildFolders(prev => prev.filter(f => !selected.has(f.id)));
+            setChildFiles(prev => prev.filter(f => !selected.has(f.id)));
+            setSelected(new Set());
+        } catch (error: any) {
+            console.error("Batch delete error", error);
+            toast.error(error.message || "Failed to delete selected items");
+        } finally {
+            setIsBatchProcessing(false);
+            setConfirmBatchDelete(false);
+        }
+    };
+
     const handleView = (entry: KBEntry) => {
         if (entry.type === "folder") {
             navigateInto(entry);
@@ -534,7 +630,7 @@ export default function KnowledgeBasePage() {
                     <div className="flex items-center gap-2">
                         <Button
                             variant="outline"
-                            className="gap-2 rounded-lg border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-semibold"
+                            className="gap-2 rounded-lg border-[#E7E7E0] bg-[#FEFFFA] hover:bg-[#F5F5F0] dark:border-zinc-700 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 font-semibold"
                             data-testid="kb-refresh-btn"
                             onClick={() => { fetchContents(currentFolderId); }}
                         >
@@ -588,7 +684,7 @@ export default function KnowledgeBasePage() {
                         value={searchInput}
                         onChange={(e) => setSearchInput(e.target.value)}
                         placeholder={currentFolderId ? "Search folders and files..." : "Search folders..."}
-                        className="h-10 rounded-lg border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 pl-11 pr-10 text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:ring-blue-500/20"
+                        className="h-10 rounded-lg border-[#E7E7E0] dark:border-zinc-700 bg-[#FEFFFA] dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 pl-11 pr-10 text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:ring-blue-500/20"
                         data-testid="kb-search-input"
                     />
                     {searchInput && (
@@ -604,32 +700,69 @@ export default function KnowledgeBasePage() {
                 </div>
             </div>
 
-            {/* Filters */}
-            <div className="flex-shrink-0 mt-4 flex flex-wrap items-center gap-2">
-                <FilterDropdown
-                    label="Type"
-                    value={filters.type}
-                    options={["Folder", "File"]}
-                    onChange={(v) => setFilters((f) => ({ ...f, type: v }))}
-                    testId="kb-filter-type"
-                />
+            {/* Filters or Batch Actions */}
+            {selected.size > 0 ? (
+                <div className="flex-shrink-0 mt-4 flex items-center justify-between gap-3 bg-transparent select-none animate-fade-in">
+                    <div className="flex items-center gap-3">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={isBatchProcessing}
+                            onClick={() => setConfirmBatchDelete(true)}
+                            className="h-10 border-[#E7E7E0] dark:border-zinc-700 text-red-650 hover:text-red-700 dark:text-red-400 bg-[#FEFFFA] dark:bg-zinc-900 hover:bg-red-50 dark:hover:bg-red-950/20 text-sm font-semibold rounded-lg shadow-sm"
+                        >
+                            <Trash2 className="h-4 w-4 mr-2 text-red-500" />
+                            Delete
+                        </Button>
+                    </div>
+                    {/* Right side selection badge */}
+                    <div className="flex items-center gap-2 px-3 py-2 border border-[#E7E7E0] dark:border-zinc-800 bg-[#FEFFFA] dark:bg-zinc-900 rounded-lg text-sm text-zinc-650 dark:text-zinc-300 font-medium shadow-xs">
+                        <span>{selected.size} selected</span>
+                        <button
+                            type="button"
+                            onClick={() => setSelected(new Set())}
+                            className="text-zinc-400 hover:text-zinc-650 dark:hover:text-zinc-200 transition-colors ml-1 cursor-pointer"
+                            aria-label="Clear selection"
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                <div className="flex-shrink-0 mt-4 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <FilterDropdown
+                            label="Type"
+                            value={filters.type}
+                            options={["Folder", "File"]}
+                            onChange={(v) => setFilters((f) => ({ ...f, type: v }))}
+                            testId="kb-filter-type"
+                        />
 
-                <FilterDropdown
-                    label="Creator"
-                    value={filters.creator}
-                    options={allCreators.length > 0 ? allCreators : ["Admin"]}
-                    onChange={(v) => setFilters((f) => ({ ...f, creator: v }))}
-                    testId="kb-filter-creator"
-                />
+                        <FilterDropdown
+                            label="Creator"
+                            value={filters.creator}
+                            options={allCreators.length > 0 ? allCreators : ["Admin"]}
+                            onChange={(v) => setFilters((f) => ({ ...f, creator: v }))}
+                            testId="kb-filter-creator"
+                        />
 
-                <FilterDropdown
-                    label="OCR Status"
-                    value={filters.ocrStatus}
-                    options={["Pending", "Processing", "Completed", "Failed"]}
-                    onChange={(v) => setFilters((f) => ({ ...f, ocrStatus: v }))}
-                    testId="kb-filter-ocr"
-                />
-            </div>
+                        <FilterDropdown
+                            label="OCR Status"
+                            value={filters.ocrStatus}
+                            options={["Pending", "Processing", "Completed", "Failed"]}
+                            onChange={(v) => setFilters((f) => ({ ...f, ocrStatus: v }))}
+                            testId="kb-filter-ocr"
+                        />
+                    </div>
+                    <ColumnSettings
+                        columns={KB_COLUMNS}
+                        visibleColumns={visibleColumns}
+                        onApply={setVisibleColumns}
+                        defaultColumns={DEFAULT_KB_COLUMNS}
+                    />
+                </div>
+            )}
 
             {/* Table */}
             <div className="mt-5 flex-1 min-h-0 flex flex-col">
@@ -669,6 +802,9 @@ export default function KnowledgeBasePage() {
                             setDetailOpen(true);
                         }}
                         isInsideFolder={!!currentFolderId}
+                        visibleColumns={visibleColumns}
+                        selected={selected}
+                        setSelected={setSelected}
                     />
                 )}
             </div>
@@ -716,6 +852,31 @@ export default function KnowledgeBasePage() {
                 entry={detailEntry}
                 onRefreshParent={() => fetchContents(currentFolderId)}
             />
+
+            {/* Batch Delete Confirmation Dialog */}
+            <Dialog open={confirmBatchDelete} onOpenChange={(open) => !open && setConfirmBatchDelete(false)}>
+                <DialogContent className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md border border-zinc-150 dark:border-zinc-800 shadow-xl p-6">
+                    <DialogHeader>
+                        <DialogTitle className="text-zinc-900 dark:text-zinc-100 font-semibold text-lg">Delete Selected Items</DialogTitle>
+                        <DialogDescription className="text-zinc-500 dark:text-zinc-400 text-sm mt-2">
+                            Are you sure you want to delete the {selected.size} selected items? This action cannot be undone and will permanently remove them from the knowledge base.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="mt-6 gap-2">
+                        <Button variant="outline" onClick={() => setConfirmBatchDelete(false)} disabled={isBatchProcessing} className="rounded-lg text-zinc-700 dark:text-zinc-300">
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            className="bg-red-650 hover:bg-red-700 text-white rounded-lg"
+                            disabled={isBatchProcessing}
+                            onClick={handleBatchDelete}
+                        >
+                            {isBatchProcessing ? "Deleting..." : "Confirm Delete"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

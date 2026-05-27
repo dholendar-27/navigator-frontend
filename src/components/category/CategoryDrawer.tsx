@@ -548,7 +548,7 @@ export default function CategoryDrawer({
                                                                         {emp.name[0]}
                                                                     </AvatarFallback>
                                                                 </Avatar>
-                                                                <div className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-500 border-2 border-white dark:border-zinc-900 rounded-full" />
+                                                                <div className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-zinc-700 dark:bg-zinc-300 border-2 border-white dark:border-zinc-900 rounded-full" />
                                                             </div>
                                                             <div className="flex flex-col min-w-0">
                                                                 <span className="text-xs font-medium text-zinc-800 dark:text-zinc-200 truncate">

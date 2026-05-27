@@ -231,18 +231,23 @@ class ApiClient {
     }
 
     private invalidateRelatedCaches(endpoint: string) {
-        /**
-         * IMPROVED: Selective cache invalidation strategy
-         * 
-         * BEFORE: Single file upload clears ALL folder + file caches (wasteful)
-         * AFTER: Upload to folder ABC only clears cache for folder ABC (selective)
-         * 
-         * Strategy:
-         * 1. Extract resource ID from endpoint (folder_id, file_id, etc.)
-         * 2. Only invalidate the specific resource that was modified
-         * 3. For files, also invalidate parent folder since file count changes
-         * 4. For folders, only invalidate that folder's contents
-         */
+        // Group operations (both specific and lists)
+        if (endpoint.includes("/groups")) {
+            cacheManager.invalidatePattern("groups");
+        }
+
+        // File operations (upload, delete, list, etc.)
+        if (endpoint.includes("/files")) {
+            cacheManager.invalidatePattern("files");
+            cacheManager.invalidatePattern("root-folder");
+            cacheManager.invalidatePattern("folders");
+        }
+
+        // Folder operations
+        if (endpoint.includes("/folders") || endpoint.includes("/api/root-folder/folders")) {
+            cacheManager.invalidatePattern("folders");
+            cacheManager.invalidatePattern("root-folder");
+        }
 
         // Extract folder ID from various endpoint patterns
         const folderIdMatch = endpoint.match(/\/folders\/([a-f0-9-]+)/i);
@@ -273,19 +278,8 @@ class ApiClient {
                 cacheManager.invalidatePattern("folders");
             }
         }
-        // Handle group operations (create, update, delete)
-        else if (endpoint.includes("/groups")) {
-            const groupIdMatch = endpoint.match(/\/groups\/([a-f0-9-]+)/i);
-            if (groupIdMatch) {
-                // Only invalidate this specific group's cache
-                cacheManager.invalidatePattern(`groups/${groupIdMatch[1]}`);
-            } else {
-                // List/create groups: invalidate groups pattern
-                cacheManager.invalidatePattern("groups");
-            }
-        }
         // Handle RBAC operations (assign/revoke)
-        else if (endpoint.includes("/rbac")) {
+        if (endpoint.includes("/rbac")) {
             const resourceMatch = endpoint.match(/\/rbac\/([a-z]+)\/([a-f0-9-]+)/i);
             if (resourceMatch) {
                 const resourceType = resourceMatch[1]; // "folder", "file", etc.
@@ -297,7 +291,7 @@ class ApiClient {
             }
         }
         // Handle auth/invite operations
-        else if (endpoint.includes("/invite") || endpoint.includes("/auth")) {
+        if (endpoint.includes("/invite") || endpoint.includes("/auth")) {
             const isEmployeeInvite = endpoint.includes("employee");
             if (isEmployeeInvite) {
                 // Only invalidate employees cache (not all auth)
@@ -310,7 +304,7 @@ class ApiClient {
             }
         }
         // Handle OCR operations
-        else if (endpoint.includes("/ocr")) {
+        if (endpoint.includes("/ocr")) {
             const fileIdMatch = endpoint.match(/\/ocr\/([a-f0-9-]+)/i);
             if (fileIdMatch) {
                 // Only invalidate this specific OCR result
@@ -320,7 +314,7 @@ class ApiClient {
             }
         }
         // Handle chat operations
-        else if (endpoint.includes("/chat")) {
+        if (endpoint.includes("/chat")) {
             const sessionIdMatch = endpoint.match(/\/chat\/([a-f0-9-]+)/i);
             if (sessionIdMatch) {
                 // Only invalidate this specific chat session's cache

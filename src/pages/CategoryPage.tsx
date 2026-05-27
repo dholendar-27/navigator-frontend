@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
-import { Plus, Download, Upload, RefreshCw, Search, FolderClosed, X } from "lucide-react";
+import { Plus, Download, Upload, RefreshCw, Search, FolderClosed, X, Trash2, Users, FileText } from "lucide-react";
 import { PageActionButton } from "@/components/ui/page-action-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,28 @@ import {
 
 import { type Category } from "@/types/category";
 import CategoryTable from "@/components/category/CategoryTable";
+import ColumnSettings from "@/components/ui/ColumnSettings";
+import AddEmployeesDialog from "@/components/category/AddEmployeesDialog";
+import AddFilesDialog from "@/components/category/AddFilesDialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogFooter,
+    DialogTitle,
+    DialogDescription,
+} from "@/components/ui/dialog";
+
+const TEAM_COLUMNS = [
+    { key: "name", label: "Team Name" },
+    { key: "managerName", label: "Manager" },
+    { key: "kbCount", label: "No. Of Knowledge Base" },
+    { key: "employeeCount", label: "No. Of Employees" },
+    { key: "createdBy", label: "Created By" },
+    { key: "createdDate", label: "Created Date" },
+];
+
+const DEFAULT_TEAM_COLUMNS = ["name", "managerName", "kbCount", "employeeCount"];
 import CategoryDrawer from "@/components/category/CategoryDrawer";
 import FilterDropdown from "@/components/FilterDropdown";
 import { SkeletonTable } from "@/components/ui/skeleton-table";
@@ -58,6 +80,34 @@ import {
 
 export default function CategoryPage() {
     const { getToken, isAuthenticated } = useKindeAuth();
+
+    const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
+        const saved = localStorage.getItem("team_visible_columns");
+        return saved ? JSON.parse(saved) : DEFAULT_TEAM_COLUMNS;
+    });
+
+    const [selected, setSelected] = useState<Set<string>>(new Set());
+    const [isBatchProcessing, setIsBatchProcessing] = useState(false);
+    const [confirmBatchDelete, setConfirmBatchDelete] = useState(false);
+    const [batchAddFilesOpen, setBatchAddFilesOpen] = useState(false);
+    const [batchAddEmployeesOpen, setBatchAddEmployeesOpen] = useState(false);
+
+    useEffect(() => {
+        localStorage.setItem("team_visible_columns", JSON.stringify(visibleColumns));
+    }, [visibleColumns]);
+
+    useEffect(() => {
+        const handleResize = () => {
+            const isBigger = window.innerWidth > 1440;
+            const max = isBigger ? 7 : 5;
+            if (visibleColumns.length > max) {
+                setVisibleColumns(prev => prev.slice(0, max));
+            }
+        };
+        window.addEventListener("resize", handleResize);
+        handleResize();
+        return () => window.removeEventListener("resize", handleResize);
+    }, [visibleColumns]);
 
     // Use cached files hook for root-level files
     const { files: cachedFiles } = useCachedFiles({ enabled: isAuthenticated });
@@ -300,6 +350,7 @@ export default function CategoryPage() {
     }, [isAuthenticated, loadAllKBFiles]);
 
     const handleRefresh = () => {
+        setSelected(new Set());
         loadCategories();
     };
 
@@ -585,6 +636,123 @@ export default function CategoryPage() {
         }
     };
 
+    const handleBatchDelete = async () => {
+        setIsBatchProcessing(true);
+        try {
+            const token = await getToken();
+            if (!token) return;
+
+            const promises = Array.from(selected).map((id) => deleteGroup(id, token));
+            await Promise.all(promises);
+
+            setCategories((prev) => prev.filter((c) => !selected.has(c.id)));
+            setSelected(new Set());
+            toast.success("Selected teams deleted successfully");
+        } catch (err) {
+            console.error("Batch delete error:", err);
+            toast.error("Failed to delete selected teams");
+        } finally {
+            setIsBatchProcessing(false);
+            setConfirmBatchDelete(false);
+        }
+    };
+
+    const handleBatchAddFiles = async (filesToAdd: any[]) => {
+        setIsBatchProcessing(true);
+        try {
+            const token = await getToken();
+            if (!token) return;
+
+            const fileIds = filesToAdd.map((f) => f.id);
+            const promises = Array.from(selected).map((teamId) =>
+                addGroupFiles(teamId, fileIds, token)
+            );
+            await Promise.all(promises);
+
+            setCategories((prev) =>
+                prev.map((c) => {
+                    if (selected.has(c.id)) {
+                        const existingFiles = c.files || [];
+                        const mergedFiles = [...existingFiles];
+                        filesToAdd.forEach((newFile) => {
+                            if (!mergedFiles.some((f) => f.id === newFile.id)) {
+                                mergedFiles.push({
+                                    id: newFile.id,
+                                    name: newFile.name,
+                                    size: newFile.size || "0 B",
+                                    mimeType: newFile.mimeType || "application/octet-stream"
+                                });
+                            }
+                        });
+                        return {
+                            ...c,
+                            files: mergedFiles,
+                            kbCount: mergedFiles.length,
+                        };
+                    }
+                    return c;
+                })
+            );
+
+            setSelected(new Set());
+            toast.success("Files added to selected teams successfully");
+        } catch (err) {
+            console.error("Batch add files error:", err);
+            toast.error("Failed to add files to selected teams");
+        } finally {
+            setIsBatchProcessing(false);
+            setBatchAddFilesOpen(false);
+        }
+    };
+
+    const handleBatchAddEmployees = async (employeesToAdd: any[]) => {
+        setIsBatchProcessing(true);
+        try {
+            const token = await getToken();
+            if (!token) return;
+
+            const employeeIds = employeesToAdd.map((e) => e.id);
+            const promises = Array.from(selected).map((teamId) =>
+                addGroupMembers(teamId, employeeIds, token)
+            );
+            await Promise.all(promises);
+
+            setCategories((prev) =>
+                prev.map((c) => {
+                    if (selected.has(c.id)) {
+                        const existingEmployees = c.employees || [];
+                        const mergedEmployees = [...existingEmployees];
+                        employeesToAdd.forEach((newEmp) => {
+                            if (!mergedEmployees.some((e) => e.id === newEmp.id)) {
+                                mergedEmployees.push({
+                                    id: newEmp.id,
+                                    name: newEmp.name,
+                                    role: newEmp.role || "Member",
+                                    avatar: newEmp.avatar || "",
+                                });
+                            }
+                        });
+                        return {
+                            ...c,
+                            employees: mergedEmployees,
+                            employeeCount: mergedEmployees.length,
+                        };
+                    }
+                    return c;
+                })
+            );
+
+            setSelected(new Set());
+            toast.success("Employees assigned to selected teams successfully");
+        } catch (err) {
+            console.error("Batch assign employees error:", err);
+            toast.error("Failed to assign employees to selected teams");
+        } finally {
+            setIsBatchProcessing(false);
+            setBatchAddEmployeesOpen(false);
+        }
+    };
+
     // Action Triggers
     const triggerAddMode = () => {
         setSelectedCategory(null);
@@ -633,7 +801,7 @@ export default function CategoryPage() {
                         <div className="flex items-center gap-2">
                             <Button
                                 variant="outline"
-                                className="w-full sm:w-auto"
+                                className="w-full sm:w-auto border-[#E7E7E0] bg-[#FEFFFA] hover:bg-[#F5F5F0] dark:border-zinc-700 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 font-semibold"
                                 onClick={handleRefresh}
                                 disabled={isLoading}
                             >
@@ -696,9 +864,12 @@ export default function CategoryPage() {
                     <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 dark:text-zinc-500" />
                     <Input
                         value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+                        onChange={(e) => {
+                            setSearch(e.target.value);
+                            setSelected(new Set());
+                        }}
                         placeholder="Search teams..."
-                        className="h-10 rounded-lg border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 pl-11 pr-10 text-sm placeholder:text-zinc-400 focus:ring-2 focus:ring-blue-500/20"
+                        className="h-10 rounded-lg border-[#E7E7E0] dark:border-zinc-700 bg-[#FEFFFA] dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 pl-11 pr-10 text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-550 focus:ring-blue-500/20"
                         data-testid="team-search-input"
                     />
                     {search && (
@@ -713,40 +884,97 @@ export default function CategoryPage() {
                     )}
                 </div>
 
-                {/* Filter Dropdowns */}
-                <div data-tour="team-filters" className="mt-4 shrink-0 flex flex-wrap gap-2 select-none">
-                    <FilterDropdown
-                        label="Type"
-                        value={filters.type}
-                        options={typeOptions}
-                        onChange={(v) => setFilters((f) => ({ ...f, type: v }))}
-                        testId="filter-type"
-                    />
+                {/* Filters or Batch Actions */}
+                {selected.size > 0 ? (
+                    <div className="mt-4 shrink-0 flex items-center justify-between gap-3 bg-transparent select-none animate-fade-in">
+                        <div className="flex items-center gap-3">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={isBatchProcessing}
+                                onClick={() => setConfirmBatchDelete(true)}
+                                className="h-10 border-[#E7E7E0] dark:border-zinc-700 text-red-650 hover:text-red-700 dark:text-red-400 bg-[#FEFFFA] dark:bg-zinc-900 hover:bg-red-50 dark:hover:bg-red-950/20 text-sm font-semibold rounded-lg shadow-sm"
+                            >
+                                <Trash2 className="h-4 w-4 mr-2 text-red-500" />
+                                Delete
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={isBatchProcessing}
+                                onClick={() => setBatchAddFilesOpen(true)}
+                                className="h-10 border-[#E7E7E0] dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 bg-[#FEFFFA] dark:bg-zinc-900 hover:bg-[#F5F5F0] dark:hover:bg-zinc-800 text-sm font-semibold rounded-lg shadow-sm"
+                            >
+                                <FileText className="h-4 w-4 mr-2 text-zinc-500" />
+                                Add Files
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={isBatchProcessing}
+                                onClick={() => setBatchAddEmployeesOpen(true)}
+                                className="h-10 border-[#E7E7E0] dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 bg-[#FEFFFA] dark:bg-zinc-900 hover:bg-[#F5F5F0] dark:hover:bg-zinc-800 text-sm font-semibold rounded-lg shadow-sm"
+                            >
+                                <Users className="h-4 w-4 mr-2 text-zinc-500" />
+                                Assign Employees
+                            </Button>
+                        </div>
+                        {/* Right side selection badge */}
+                        <div className="flex items-center gap-2 px-3 py-2 border border-[#E7E7E0] dark:border-zinc-800 bg-[#FEFFFA] dark:bg-zinc-900 rounded-lg text-sm text-zinc-650 dark:text-zinc-300 font-medium shadow-xs">
+                            <span>{selected.size} selected</span>
+                            <button
+                                type="button"
+                                onClick={() => setSelected(new Set())}
+                                className="text-zinc-400 hover:text-zinc-650 dark:hover:text-zinc-200 transition-colors ml-1 cursor-pointer"
+                                aria-label="Clear selection"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <div data-tour="team-filters" className="mt-4 shrink-0 flex flex-wrap items-center justify-between gap-2 select-none">
+                        <div className="flex flex-wrap gap-2">
+                            <FilterDropdown
+                                label="Type"
+                                value={filters.type}
+                                options={typeOptions}
+                                onChange={(v) => setFilters((f) => ({ ...f, type: v }))}
+                                testId="filter-type"
+                            />
 
-                    <FilterDropdown
-                        label="Creator"
-                        value={filters.creator}
-                        options={creatorOptions}
-                        onChange={(v) => setFilters((f) => ({ ...f, creator: v }))}
-                        testId="filter-creator"
-                    />
+                            <FilterDropdown
+                                label="Creator"
+                                value={filters.creator}
+                                options={creatorOptions}
+                                onChange={(v) => setFilters((f) => ({ ...f, creator: v }))}
+                                testId="filter-creator"
+                            />
 
-                    <FilterDropdown
-                        label="Manager"
-                        value={filters.manager}
-                        options={managerOptions}
-                        onChange={(v) => setFilters((f) => ({ ...f, manager: v }))}
-                        testId="filter-manager"
-                    />
+                            <FilterDropdown
+                                label="Manager"
+                                value={filters.manager}
+                                options={managerOptions}
+                                onChange={(v) => setFilters((f) => ({ ...f, manager: v }))}
+                                testId="filter-manager"
+                            />
 
-                    <FilterDropdown
-                        label="Knowledge Base"
-                        value={filters.kbFiles}
-                        options={kbFilesOptions}
-                        onChange={(v) => setFilters((f) => ({ ...f, kbFiles: v }))}
-                        testId="filter-kb-files"
-                    />
-                </div>
+                            <FilterDropdown
+                                label="Knowledge Base"
+                                value={filters.kbFiles}
+                                options={kbFilesOptions}
+                                onChange={(v) => setFilters((f) => ({ ...f, kbFiles: v }))}
+                                testId="filter-kb-files"
+                            />
+                        </div>
+                        <ColumnSettings
+                            columns={TEAM_COLUMNS}
+                            visibleColumns={visibleColumns}
+                            onApply={setVisibleColumns}
+                            defaultColumns={DEFAULT_TEAM_COLUMNS}
+                        />
+                    </div>
+                )}
 
                 {/* Body Table Container */}
                 <div className="mt-4 flex-1 flex flex-col min-h-0 animate-fade-in">
@@ -803,6 +1031,9 @@ export default function CategoryPage() {
                             onView={triggerViewMode}
                             onAddEmployees={triggerAddEmployeesMode}
                             onArchive={handleArchiveCategory}
+                            visibleColumns={visibleColumns}
+                            selected={selected}
+                            setSelected={setSelected}
                         />
                     )}
                 </div>
@@ -817,6 +1048,45 @@ export default function CategoryPage() {
                     allEmployees={employeesList}
                     allFiles={allKBFiles}
                 />
+
+                <AddEmployeesDialog
+                    open={batchAddEmployeesOpen}
+                    onOpenChange={setBatchAddEmployeesOpen}
+                    unselectedEmployees={employeesList}
+                    onAdd={handleBatchAddEmployees}
+                />
+
+                <AddFilesDialog
+                    open={batchAddFilesOpen}
+                    onOpenChange={setBatchAddFilesOpen}
+                    unselectedFiles={allKBFiles}
+                    onAdd={handleBatchAddFiles}
+                />
+
+                {/* Batch Delete Confirmation Dialog */}
+                <Dialog open={confirmBatchDelete} onOpenChange={(open) => !open && setConfirmBatchDelete(false)}>
+                    <DialogContent className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md border border-zinc-150 dark:border-zinc-800 shadow-xl p-6">
+                        <DialogHeader>
+                            <DialogTitle className="text-zinc-900 dark:text-zinc-100 font-semibold text-lg">Delete Selected Teams</DialogTitle>
+                            <DialogDescription className="text-zinc-500 dark:text-zinc-400 text-sm mt-2">
+                                Are you sure you want to delete the {selected.size} selected teams? This action cannot be undone and will permanently remove them.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter className="mt-6 gap-2">
+                            <Button variant="outline" onClick={() => setConfirmBatchDelete(false)} disabled={isBatchProcessing} className="rounded-lg text-zinc-700 dark:text-zinc-300">
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                className="bg-red-650 hover:bg-red-700 text-white rounded-lg"
+                                disabled={isBatchProcessing}
+                                onClick={handleBatchDelete}
+                            >
+                                {isBatchProcessing ? "Deleting..." : "Confirm Delete"}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
     );
 }

@@ -29,7 +29,7 @@ export default function FilterDropdown({
     testId,
 }: FilterDropdownProps): JSX.Element {
     return (
-        <div className="group flex items-center gap-0 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600 transition-colors h-6 shadow-sm">
+        <div className="group flex items-center gap-0 rounded-md border border-[#E7E7E0] dark:border-zinc-700 bg-[#FEFFFA] dark:bg-zinc-800 hover:bg-[#FEFFFA]/80 transition-colors h-6 shadow-sm">
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <button

@@ -194,7 +194,7 @@ export default function AddEmployeesDialog({
                                                         <AvatarFallback className="text-xs">{emp.name?.[0] ?? "?"}</AvatarFallback>
                                                     </Avatar>
                                                     {/* Status dot (green for active) */}
-                                                    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white dark:border-zinc-950 bg-green-500"></span>
+                                                    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white dark:border-zinc-950 bg-zinc-700 dark:bg-zinc-300"></span>
                                                 </div>
                                                 <div className="flex flex-col min-w-0">
                                                     <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">

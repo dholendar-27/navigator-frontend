@@ -16,6 +16,7 @@ import {
     ArrowUp,
     ArrowDown,
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
     DropdownMenu,
     DropdownMenuTrigger,
@@ -47,6 +48,9 @@ interface KnowledgeBaseTableProps {
     onView: (entry: KBEntry) => void;
     onViewFolderDetails?: (entry: KBEntry) => void;
     isInsideFolder?: boolean;
+    visibleColumns?: string[];
+    selected: Set<string>;
+    setSelected: React.Dispatch<React.SetStateAction<Set<string>>>;
 }
 
 function TypeIcon({ type }: { type: KBEntry["type"] }) {
@@ -97,17 +101,40 @@ function OcrStatusBadge({ status }: { status?: string | null }) {
     );
 }
 
+const COLUMN_WIDTHS: Record<string, string> = {
+    name: "2fr",
+    type: "0.8fr",
+    folder: "1fr",
+    owner: "1fr",
+    createdDate: "1.2fr",
+    ocr_status: "1fr",
+};
+
 export default function KnowledgeBaseTable({
     entries,
     onDelete,
     onView,
     onViewFolderDetails,
     isInsideFolder = false,
+    visibleColumns = ["name", "folder", "owner"],
+    selected,
+    setSelected,
 }: KnowledgeBaseTableProps) {
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     const [rowsPerPage, setRowsPerPage] = useState(50);
     const [page, setPage] = useState(1);
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>(null);
+
+    const computedGridCols = useMemo(() => {
+        const cols = ["48px"]; // Prepend checkbox space
+        visibleColumns.forEach((key: string) => {
+            if (COLUMN_WIDTHS[key]) {
+                cols.push(COLUMN_WIDTHS[key]);
+            }
+        });
+        cols.push("56px"); // actions
+        return cols.join(" ");
+    }, [visibleColumns]);
 
     const total = entries.length;
 
@@ -135,6 +162,29 @@ export default function KnowledgeBaseTable({
     const endIdx = Math.min(startIdx + rowsPerPage, total);
     const pageRows = useMemo(() => sortedEntries.slice(startIdx, endIdx), [sortedEntries, startIdx, endIdx]);
 
+    const toggleAll = (checked: boolean | "indeterminate"): void => {
+        if (checked) {
+            setSelected(new Set(pageRows.map((r) => r.id)));
+        } else {
+            setSelected(new Set());
+        }
+    };
+
+    const toggleOne = (id: string): void => {
+        setSelected((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    };
+
+    const allChecked =
+        pageRows.length > 0 && pageRows.every((r) => selected.has(r.id));
+
     const handleSort = (key: string) => {
         let direction: "asc" | "desc" = "asc";
         if (sortConfig && sortConfig.key === key && sortConfig.direction === "asc") {
@@ -161,16 +211,47 @@ export default function KnowledgeBaseTable({
             <div className="w-full flex-1 flex flex-col min-h-0">
                 <div className="w-full flex-1 flex flex-col min-h-0">
                     {/* Header */}
-                    <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_56px] gap-2 bg-[#60646B]/10 rounded-t-[10px] px-5 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400 shrink-0 select-none">
-                        <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100" onClick={() => handleSort("name")}>
-                            Knowledge Base Name <SortIcon columnKey="name" />
+                    <div
+                        style={{ gridTemplateColumns: computedGridCols }}
+                        className="hidden md:grid items-center gap-2 bg-[#60646B]/10 rounded-t-[10px] px-5 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400 shrink-0 select-none"
+                    >
+                        <div>
+                            <Checkbox
+                                checked={allChecked}
+                                onCheckedChange={toggleAll}
+                                data-testid="kb-select-all"
+                            />
                         </div>
-                        <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100" onClick={() => handleSort("folder")}>
-                            {col2Label} <SortIcon columnKey="folder" />
-                        </div>
-                        <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100" onClick={() => handleSort("owner")}>
-                            {col3Label} <SortIcon columnKey="owner" />
-                        </div>
+                        {visibleColumns.includes("name") && (
+                            <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100" onClick={() => handleSort("name")}>
+                                Knowledge Base Name <SortIcon columnKey="name" />
+                            </div>
+                        )}
+                        {visibleColumns.includes("type") && (
+                            <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100" onClick={() => handleSort("type")}>
+                                Type <SortIcon columnKey="type" />
+                            </div>
+                        )}
+                        {visibleColumns.includes("folder") && (
+                            <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100" onClick={() => handleSort("folder")}>
+                                {col2Label} <SortIcon columnKey="folder" />
+                            </div>
+                        )}
+                        {visibleColumns.includes("owner") && (
+                            <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100" onClick={() => handleSort("owner")}>
+                                {col3Label} <SortIcon columnKey="owner" />
+                            </div>
+                        )}
+                        {visibleColumns.includes("createdDate") && (
+                            <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100" onClick={() => handleSort("createdDate")}>
+                                Created Date <SortIcon columnKey="createdDate" />
+                            </div>
+                        )}
+                        {visibleColumns.includes("ocr_status") && (
+                            <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100" onClick={() => handleSort("ocr_status")}>
+                                OCR Status <SortIcon columnKey="ocr_status" />
+                            </div>
+                        )}
                         <div />
                     </div>
 
@@ -181,8 +262,18 @@ export default function KnowledgeBaseTable({
                                 key={kb.id}
                                 data-testid={`kb-row-${kb.id}`}
                                 onClick={() => onView(kb)}
-                                className="flex flex-col md:grid md:grid-cols-[2fr_1fr_1fr_56px] items-start md:items-center gap-3 md:gap-2 px-5 py-4 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/40 cursor-pointer relative"
+                                style={{ gridTemplateColumns: computedGridCols }}
+                                className="flex flex-col md:grid items-start md:items-center gap-3 md:gap-2 px-5 py-4 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/40 cursor-pointer relative"
                             >
+                                {/* Checkbox Column Desktop */}
+                                <div className="hidden md:block" onClick={(e) => e.stopPropagation()}>
+                                    <Checkbox
+                                        checked={selected.has(kb.id)}
+                                        onCheckedChange={() => toggleOne(kb.id)}
+                                        data-testid={`kb-select-row-${kb.id}`}
+                                    />
+                                </div>
+
                                 {/* Actions on Mobile */}
                                 <div className="absolute top-5 right-5 md:hidden" onClick={(e) => e.stopPropagation()}>
                                     <DropdownMenu>
@@ -223,14 +314,14 @@ export default function KnowledgeBaseTable({
                                             )}
 
                                             <DropdownMenuItem
-                                                className="text-red-600 focus:text-red-600 cursor-pointer dark:focus:bg-zinc-800"
+                                                className="text-red-650 focus:text-red-650 cursor-pointer dark:focus:bg-zinc-800"
                                                 data-testid={`kb-delete-${kb.id}`}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     setConfirmDeleteId(kb.id);
                                                 }}
                                             >
-                                                <Trash2 className="h-4 w-4 text-red-600" />
+                                                <Trash2 className="h-4 w-4 text-red-650" />
                                                 Delete
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
@@ -238,42 +329,85 @@ export default function KnowledgeBaseTable({
                                 </div>
 
                                 {/* Col 1: Icon + Name */}
-                                <div className="flex items-center gap-3 min-w-0">
-                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800">
-                                        <TypeIcon type={kb.type} />
-                                    </div>
-                                    <div className="truncate">
-                                        <div className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                                            {kb.name}
+                                {visibleColumns.includes("name") && (
+                                    <div className="flex items-center gap-3 min-w-0 w-full md:w-auto flex-1">
+                                        <div className="md:hidden" onClick={(e) => e.stopPropagation()}>
+                                            <Checkbox
+                                                checked={selected.has(kb.id)}
+                                                onCheckedChange={() => toggleOne(kb.id)}
+                                                data-testid={`kb-select-row-mobile-${kb.id}`}
+                                            />
                                         </div>
-                                        <div className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
-                                            {kb.createdDate}
+                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800">
+                                            <TypeIcon type={kb.type} />
+                                        </div>
+                                        <div className="truncate">
+                                            <div className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                                                {kb.name}
+                                            </div>
+                                            {!visibleColumns.includes("createdDate") && (
+                                                <div className="text-xs text-zinc-505 dark:text-zinc-400 truncate">
+                                                    {kb.createdDate}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
-                                </div>
+                                )}
+
+                                {/* Col: Type */}
+                                {visibleColumns.includes("type") && (
+                                    <div className="flex justify-between w-full md:w-auto text-sm text-zinc-700 dark:text-zinc-300 capitalize">
+                                        <span className="md:hidden text-zinc-505 font-medium mr-2">Type:</span>
+                                        <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-750 dark:text-zinc-300">
+                                            {kb.type}
+                                        </span>
+                                    </div>
+                                )}
 
                                 {/* Col 2: Size / Description */}
-                                <div className="flex w-full md:w-auto items-center justify-between md:justify-start gap-2 truncate">
-                                    <span className="md:hidden text-sm text-zinc-500 font-medium">{col2Label}:</span>
-                                    {kb.type === "file" ? (
-                                        <div className="flex items-center md:flex-col md:items-start gap-2 md:gap-0.5">
-                                            <span className="text-sm text-zinc-700 dark:text-zinc-300 truncate">
-                                                {kb.folder}
+                                {visibleColumns.includes("folder") && (
+                                    <div className="flex w-full md:w-auto items-center justify-between md:justify-start gap-2 truncate">
+                                        <span className="md:hidden text-sm text-zinc-505 font-medium">{col2Label}:</span>
+                                        {kb.type === "file" ? (
+                                            <div className="flex items-center md:flex-col md:items-start gap-2 md:gap-0.5">
+                                                <span className="text-sm text-zinc-700 dark:text-zinc-300 truncate">
+                                                    {kb.folder}
+                                                </span>
+                                                {!visibleColumns.includes("ocr_status") && (
+                                                    <OcrStatusBadge status={kb.ocr_status} />
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <span className="text-sm text-zinc-505 dark:text-zinc-400 truncate italic">
+                                                {kb.description || kb.folder || <span className="not-italic">—</span>}
                                             </span>
-                                            <OcrStatusBadge status={kb.ocr_status} />
-                                        </div>
-                                    ) : (
-                                        <span className="text-sm text-zinc-500 dark:text-zinc-400 truncate italic">
-                                            {kb.description || kb.folder || <span className="not-italic">—</span>}
-                                        </span>
-                                    )}
-                                </div>
+                                        )}
+                                    </div>
+                                )}
 
                                 {/* Col 3: Creator */}
-                                <div className="flex w-full md:w-auto justify-between md:justify-start text-sm text-zinc-700 dark:text-zinc-300 truncate">
-                                    <span className="md:hidden text-zinc-500 font-medium">{col3Label}:</span>
-                                    {kb.owner}
-                                </div>
+                                {visibleColumns.includes("owner") && (
+                                    <div className="flex w-full md:w-auto justify-between md:justify-start text-sm text-zinc-700 dark:text-zinc-300 truncate">
+                                        <span className="md:hidden text-zinc-505 font-medium">{col3Label}:</span>
+                                        {kb.owner}
+                                    </div>
+                                )}
+
+                                {/* Col: Created Date */}
+                                {visibleColumns.includes("createdDate") && (
+                                    <div className="flex justify-between w-full md:w-auto text-sm text-zinc-700 dark:text-zinc-300 truncate">
+                                        <span className="md:hidden text-zinc-505 font-medium mr-2">Created Date:</span>
+                                        {kb.createdDate}
+                                    </div>
+                                )}
+
+                                {/* Col: OCR Status */}
+                                {visibleColumns.includes("ocr_status") && (
+                                    <div className="flex justify-between w-full md:w-auto text-sm text-zinc-700 dark:text-zinc-300 truncate">
+                                        <span className="md:hidden text-zinc-505 font-medium mr-2">OCR Status:</span>
+                                        {kb.ocr_status ? <OcrStatusBadge status={kb.ocr_status} /> : <span className="text-zinc-505 dark:text-zinc-500">—</span>}
+                                    </div>
+                                )}
 
                                 {/* Col 4: Actions Desktop */}
                                 <div className="hidden md:flex justify-end" onClick={(e) => e.stopPropagation()}>

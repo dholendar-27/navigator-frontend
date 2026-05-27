@@ -60,6 +60,9 @@ type CategoryTableProps = {
     onView: (category: Category) => void;
     onAddEmployees: (category: Category) => void;
     onArchive: (id: string) => void;
+    visibleColumns?: string[];
+    selected: Set<string>;
+    setSelected: React.Dispatch<React.SetStateAction<Set<string>>>;
 };
 
 function RowMenu({
@@ -135,6 +138,15 @@ function RowMenu({
     );
 }
 
+const COLUMN_WIDTHS: Record<string, string> = {
+    name: "2.5fr",
+    managerName: "2fr",
+    kbCount: "1.8fr",
+    employeeCount: "1.5fr",
+    createdBy: "1.5fr",
+    createdDate: "1.5fr",
+};
+
 export default function CategoryTable({
     categories,
     onDelete,
@@ -142,12 +154,25 @@ export default function CategoryTable({
     onView,
     onAddEmployees,
     onArchive,
+    visibleColumns = ["name", "managerName", "kbCount", "employeeCount"],
+    selected,
+    setSelected,
 }: CategoryTableProps): JSX.Element {
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-    const [selected, setSelected] = useState<Set<string>>(new Set());
     const [rowsPerPage, setRowsPerPage] = useState<number>(50);
     const [page, setPage] = useState<number>(1);
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>(null);
+
+    const computedGridCols = useMemo(() => {
+        const cols = ["48px"]; // checkbox
+        visibleColumns.forEach((key: string) => {
+            if (COLUMN_WIDTHS[key]) {
+                cols.push(COLUMN_WIDTHS[key]);
+            }
+        });
+        cols.push("56px"); // actions
+        return cols.join(" ");
+    }, [visibleColumns]);
 
     const total = categories.length;
 
@@ -224,7 +249,10 @@ export default function CategoryTable({
             <div className="w-full flex-1 flex flex-col min-h-0">
                 <div className="w-full flex-1 flex flex-col min-h-0">
                     {/* Header */}
-                    <div className="hidden md:grid grid-cols-[48px_2.5fr_2fr_1.8fr_1.5fr_56px] items-center gap-2 bg-[#60646B]/10 rounded-t-[10px] px-5 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400 shrink-0 select-none">
+                    <div
+                        style={{ gridTemplateColumns: computedGridCols }}
+                        className="hidden md:grid items-center gap-2 bg-[#60646B]/10 rounded-t-[10px] px-5 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400 shrink-0 select-none"
+                    >
                         <div>
                             <Checkbox
                                 checked={allChecked}
@@ -232,18 +260,36 @@ export default function CategoryTable({
                                 data-testid="team-select-all"
                             />
                         </div>
-                        <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100" onClick={() => handleSort("name")}>
-                            Team Name <SortIcon columnKey="name" />
-                        </div>
-                        <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100" onClick={() => handleSort("managerName")}>
-                            Manager <SortIcon columnKey="managerName" />
-                        </div>
-                        <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100 whitespace-nowrap" onClick={() => handleSort("kbCount")}>
-                            No. Of Knowledge Base <SortIcon columnKey="kbCount" />
-                        </div>
-                        <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100 whitespace-nowrap" onClick={() => handleSort("employeeCount")}>
-                            No. Of Employees <SortIcon columnKey="employeeCount" />
-                        </div>
+                        {visibleColumns.includes("name") && (
+                            <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100" onClick={() => handleSort("name")}>
+                                Team Name <SortIcon columnKey="name" />
+                            </div>
+                        )}
+                        {visibleColumns.includes("managerName") && (
+                            <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100" onClick={() => handleSort("managerName")}>
+                                Manager <SortIcon columnKey="managerName" />
+                            </div>
+                        )}
+                        {visibleColumns.includes("kbCount") && (
+                            <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100 whitespace-nowrap" onClick={() => handleSort("kbCount")}>
+                                No. Of Knowledge Base <SortIcon columnKey="kbCount" />
+                            </div>
+                        )}
+                        {visibleColumns.includes("employeeCount") && (
+                            <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100 whitespace-nowrap" onClick={() => handleSort("employeeCount")}>
+                                No. Of Employees <SortIcon columnKey="employeeCount" />
+                            </div>
+                        )}
+                        {visibleColumns.includes("createdBy") && (
+                            <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100 whitespace-nowrap" onClick={() => handleSort("createdBy")}>
+                                Created By <SortIcon columnKey="createdBy" />
+                            </div>
+                        )}
+                        {visibleColumns.includes("createdDate") && (
+                            <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100 whitespace-nowrap" onClick={() => handleSort("createdDate")}>
+                                Created Date <SortIcon columnKey="createdDate" />
+                            </div>
+                        )}
                         <div />
                     </div>
 
@@ -253,8 +299,9 @@ export default function CategoryTable({
                             <div
                                 key={cat.id}
                                 onClick={() => onView(cat)}
+                                style={{ gridTemplateColumns: computedGridCols }}
                                 className={cn(
-                                    "flex flex-col md:grid md:grid-cols-[48px_2.5fr_2fr_1.8fr_1.5fr_56px] items-start md:items-center gap-3 md:gap-2 px-5 py-4 transition-all hover:bg-zinc-50/50 dark:hover:bg-zinc-800/40 cursor-pointer group relative",
+                                    "flex flex-col md:grid items-start md:items-center gap-3 md:gap-2 px-5 py-4 transition-all hover:bg-zinc-50/50 dark:hover:bg-zinc-800/40 cursor-pointer group relative",
                                     cat.isArchived && "opacity-60 bg-zinc-50/30 dark:bg-zinc-900/30"
                                 )}
                                 data-testid={`team-row-${cat.id}`}
@@ -279,49 +326,71 @@ export default function CategoryTable({
                                     </div>
                                 </div>
 
-                                <div className="truncate min-w-0 w-full md:w-auto flex items-center gap-3">
-                                    <div className="md:hidden">
-                                        <Checkbox
-                                            checked={selected.has(cat.id)}
-                                            onCheckedChange={() => toggleOne(cat.id)}
-                                            data-testid={`team-select-row-mobile-${cat.id}`}
-                                        />
-                                    </div>
-                                    <div className="truncate">
-                                        <TooltipProvider delayDuration={200}>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <div className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate group-hover:text-blue-600 transition-colors">
+                                {visibleColumns.includes("name") && (
+                                    <div className="truncate min-w-0 w-full md:w-auto flex items-center gap-3">
+                                        <div className="md:hidden">
+                                            <Checkbox
+                                                checked={selected.has(cat.id)}
+                                                onCheckedChange={() => toggleOne(cat.id)}
+                                                data-testid={`team-select-row-mobile-${cat.id}`}
+                                            />
+                                        </div>
+                                        <div className="truncate">
+                                            <TooltipProvider delayDuration={200}>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <div className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate group-hover:text-blue-600 transition-colors">
+                                                            {cat.name}
+                                                        </div>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent side="top" className="text-xs">
                                                         {cat.name}
-                                                    </div>
-                                                </TooltipTrigger>
-                                                <TooltipContent side="top" className="text-xs">
-                                                    {cat.name}
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                        {cat.isArchived && (
-                                            <span className="inline-flex mt-1 text-[10px] font-bold text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded uppercase">
-                                                Archived
-                                            </span>
-                                        )}
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                            {cat.isArchived && (
+                                                <span className="inline-flex mt-1 text-[10px] font-bold text-zinc-505 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded uppercase">
+                                                    Archived
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
-                                <div className="flex justify-between w-full md:block md:w-auto md:min-w-0 text-sm text-zinc-700 dark:text-zinc-300 truncate">
-                                    <span className="md:hidden text-zinc-500 font-medium mr-2">Manager:</span>
-                                    {cat.managerName || "-"}
-                                </div>
+                                {visibleColumns.includes("managerName") && (
+                                    <div className="flex justify-between w-full md:block md:w-auto md:min-w-0 text-sm text-zinc-700 dark:text-zinc-300 truncate">
+                                        <span className="md:hidden text-zinc-505 font-medium mr-2">Manager:</span>
+                                        {cat.managerName || "-"}
+                                    </div>
+                                )}
 
-                                <div className="flex justify-between w-full md:block md:w-auto md:min-w-0 text-sm text-zinc-700 dark:text-zinc-300 font-mono font-medium">
-                                    <span className="md:hidden text-zinc-500 font-sans mr-2">No. Of Knowledge Base:</span>
-                                    {cat.kbCount !== undefined ? String(cat.kbCount).padStart(2, "0") : "-"}
-                                </div>
+                                {visibleColumns.includes("kbCount") && (
+                                    <div className="flex justify-between w-full md:block md:w-auto md:min-w-0 text-sm text-zinc-700 dark:text-zinc-300 font-mono font-medium">
+                                        <span className="md:hidden text-zinc-505 font-sans mr-2">No. Of Knowledge Base:</span>
+                                        {cat.kbCount !== undefined ? String(cat.kbCount).padStart(2, "0") : "-"}
+                                    </div>
+                                )}
 
-                                <div className="flex justify-between w-full md:block md:w-auto md:min-w-0 text-sm text-zinc-700 dark:text-zinc-300 font-mono font-medium">
-                                    <span className="md:hidden text-zinc-500 font-sans mr-2">No. Of Employees:</span>
-                                    {cat.employeeCount !== undefined ? String(cat.employeeCount).padStart(2, "0") : "-"}
-                                </div>
+                                {visibleColumns.includes("employeeCount") && (
+                                    <div className="flex justify-between w-full md:block md:w-auto md:min-w-0 text-sm text-zinc-700 dark:text-zinc-300 font-mono font-medium">
+                                        <span className="md:hidden text-zinc-505 font-sans mr-2">No. Of Employees:</span>
+                                        {cat.employeeCount !== undefined ? String(cat.employeeCount).padStart(2, "0") : "-"}
+                                    </div>
+                                )}
+
+                                {visibleColumns.includes("createdBy") && (
+                                    <div className="flex justify-between w-full md:block md:w-auto md:min-w-0 text-sm text-zinc-700 dark:text-zinc-300 truncate">
+                                        <span className="md:hidden text-zinc-505 font-medium mr-2">Created By:</span>
+                                        {cat.createdBy || "-"}
+                                    </div>
+                                )}
+
+                                {visibleColumns.includes("createdDate") && (
+                                    <div className="flex justify-between w-full md:block md:w-auto md:min-w-0 text-sm text-zinc-700 dark:text-zinc-300 truncate">
+                                        <span className="md:hidden text-zinc-505 font-medium mr-2">Created Date:</span>
+                                        {cat.createdDate || "-"}
+                                    </div>
+                                )}
 
                                 <div className="hidden md:flex justify-end" onClick={(e) => e.stopPropagation()}>
                                     <RowMenu
