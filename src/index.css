@@ -263,3 +263,12 @@
   }
 }
 
+/* Safe-area bottom padding for side drawer sheets on mobile devices */
+@media (max-width: 1023px) {
+  [role="dialog"].inset-y-0.right-0 > div:last-child,
+  [role="dialog"].inset-y-0.left-0 > div:last-child {
+    padding-bottom: calc(16px + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+

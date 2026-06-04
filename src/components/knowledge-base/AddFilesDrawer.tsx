@@ -15,8 +15,8 @@ import { cn } from "@/lib/utils";
 import type { KBEntry } from "@/types/knowledge-base";
 
 const MAX_FILE_SIZE_MB = 50;
-const ALLOWED_EXTENSIONS = /\.(pdf|docx|pptx?|txt)$/i;
-const ALLOWED_ACCEPT = ".pdf,.docx,.ppt,.pptx,.txt";
+const ALLOWED_EXTENSIONS = /\.(pdf|docx|pptx|txt)$/i;
+const ALLOWED_ACCEPT = ".pdf,.docx,.pptx,.txt";
 
 function formatFileSize(bytes: number): string {
     if (bytes < 1024) return `${bytes} B`;

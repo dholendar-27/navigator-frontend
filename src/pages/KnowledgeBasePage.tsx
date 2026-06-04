@@ -501,6 +501,17 @@ export default function KnowledgeBasePage() {
     // ── Handlers ───────────────────────────────────────────────────────────────
 
     const handleCreateFolder = async (payload: CreateFolderPayload) => {
+        const nameExists = childFolders.some(
+            (f) => f.name.toLowerCase() === payload.name.toLowerCase()
+        );
+        if (nameExists) {
+            toast.error("A folder with this name already exists in this folder");
+            throw new Error("Folder name must be unique");
+        }
+        if (payload.name.length > 255) {
+            toast.error("Folder name cannot exceed 255 characters");
+            throw new Error("Folder name is too long");
+        }
         try {
             const token = await getToken();
             if (!token) return;
@@ -725,12 +736,12 @@ export default function KnowledgeBasePage() {
     // ── Render ─────────────────────────────────────────────────────────────────
 
     return (
-        <div className="p-3 sm:p-6 md:p-8 flex flex-col h-full w-full overflow-hidden" data-testid="knowledge-base-page" data-tour="knowledge-base-page">
+        <div className="p-3 sm:p-6 md:p-8 flex flex-col h-auto lg:h-full w-full lg:overflow-hidden" data-testid="knowledge-base-page" data-tour="knowledge-base-page">
 
             {/* Header / Breadcrumbs */}
             <div className="flex-shrink-0 flex flex-col gap-1">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-center flex-wrap gap-2 text-2xl tracking-tight select-none">
+                <div className="flex flex-row items-center justify-between gap-4">
+                    <div className="flex items-center flex-wrap gap-2 text-2xl tracking-tight select-none min-w-0 flex-1">
                         <div className="flex items-center gap-2.5">
                             <button
                                 onClick={() => folderStack.length > 0 && navigateTo(-1)}
@@ -754,9 +765,9 @@ export default function KnowledgeBasePage() {
                             const isLast = idx === folderStack.length - 1;
                             if (isLast) {
                                 return (
-                                    <div key={item.id} className="flex items-center gap-2.5">
+                                    <div key={item.id} className="flex items-center gap-2.5 min-w-0">
                                         <span className="text-zinc-300 dark:text-zinc-700 font-normal">/</span>
-                                        <span className="text-zinc-900 dark:text-zinc-100 font-bold">
+                                        <span className="text-zinc-900 dark:text-zinc-100 font-bold truncate max-w-[120px] sm:max-w-xs" title={item.name}>
                                             {item.name}
                                         </span>
                                         {!isLoading && (
@@ -768,11 +779,12 @@ export default function KnowledgeBasePage() {
                                 );
                             }
                             return (
-                                <div key={item.id} className="flex items-center gap-2">
+                                <div key={item.id} className="flex items-center gap-2 min-w-0">
                                     <span className="text-zinc-300 dark:text-zinc-700 font-normal">/</span>
                                     <button
                                         onClick={() => navigateTo(idx)}
-                                        className="text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors font-medium cursor-pointer"
+                                        className="text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors font-medium cursor-pointer truncate max-w-[120px] sm:max-w-xs"
+                                        title={item.name}
                                     >
                                         {item.name}
                                     </button>
@@ -863,7 +875,7 @@ export default function KnowledgeBasePage() {
                         value={searchInput}
                         onChange={(e) => setSearchInput(e.target.value)}
                         placeholder={currentFolderId ? "Search folders and files..." : "Search folders..."}
-                        className="h-10 rounded-lg border-[#E7E7E0] dark:border-zinc-700 bg-[#FEFFFA] dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 pl-11 pr-10 text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:ring-blue-500/20"
+                        className="h-10 rounded-lg border-[#E7E7E0] dark:border-zinc-700 bg-[#FEFFFA] dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 pl-11 pr-10 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:ring-blue-500/20"
                         data-testid="kb-search-input"
                     />
                     {searchInput && (

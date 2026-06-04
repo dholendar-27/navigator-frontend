@@ -352,9 +352,10 @@ export default function CategoryDrawer({
                             <Input
                                 value={name}
                                 onChange={(e) => {
-                                    setName(e.target.value);
+                                    setName(e.target.value.slice(0, 255));
                                     setTouched((p) => ({ ...p, name: true }));
                                 }}
+                                maxLength={255}
                                 onBlur={() => handleBlur("name")}
                                 disabled={isReadOnly}
                                 placeholder="Enter category name"
@@ -377,7 +378,7 @@ export default function CategoryDrawer({
                             <div className="relative">
                                 <Textarea
                                     value={description}
-                                    onChange={(e) => setDescription(e.target.value.slice(0, 500))}
+                                    onChange={(e) => setDescription(e.target.value.slice(0, 1000))}
                                     disabled={isReadOnly}
                                     placeholder="Enter category description"
                                     rows={6}
@@ -386,11 +387,11 @@ export default function CategoryDrawer({
                                 />
                                 <span className={cn(
                                     "absolute bottom-3 right-3 text-xs font-semibold bg-[#FEFFFA]/85 dark:bg-zinc-800/85 px-1.5 py-0.5 rounded select-none transition-colors",
-                                    description.length === 500
+                                    description.length === 1000
                                         ? "text-red-650 dark:text-red-400 font-bold"
                                         : "text-zinc-400 dark:text-zinc-500"
                                 )}>
-                                    {description.length}/500
+                                    {description.length}/1000
                                 </span>
                             </div>
                         </div>

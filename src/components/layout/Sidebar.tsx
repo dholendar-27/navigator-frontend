@@ -632,7 +632,7 @@ export default function Sidebar({
                     Chat History
                 </div>
 
-                <div className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-2 py-1 hover-scrollbar min-h-0">
+                <div className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-2 py-1 hover-scrollbar min-h-0 pb-[calc(10px+env(safe-area-inset-bottom))] lg:pb-1">
                     <ChatHistoryList />
                 </div>
             </aside>

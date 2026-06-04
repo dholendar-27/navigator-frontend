@@ -51,6 +51,7 @@ export default function OnboardingPage({ onComplete }: OnboardingPageProps) {
     // ── STEP 1: Company Setup Data ──────────────────────────────────────────
     const [orgName, setOrgName] = useState("");
     const [address, setAddress] = useState("");
+    const [addressLine2, setAddressLine2] = useState("");
     const [city, setCity] = useState("");
     const [stateProvince, setStateProvince] = useState("");
     const [country, setCountry] = useState("US");
@@ -63,6 +64,11 @@ export default function OnboardingPage({ onComplete }: OnboardingPageProps) {
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
+            const fileExt = file.name.split('.').pop()?.toLowerCase();
+            if (!fileExt || !["jpeg", "jpg", "png"].includes(fileExt)) {
+                toast.error("Invalid file format. Only JPEG, JPG, and PNG are allowed.");
+                return;
+            }
             if (file.size > 5 * 1024 * 1024) {
                 toast.error("File size exceeds 5MB limit");
                 return;
@@ -78,8 +84,32 @@ export default function OnboardingPage({ onComplete }: OnboardingPageProps) {
             toast.error("Organization Name is required");
             return;
         }
+        if (orgName.trim().length > 255) {
+            toast.error("Organization Name cannot exceed 255 characters");
+            return;
+        }
         if (!address.trim() || !city.trim() || !stateProvince.trim() || !postalCode.trim()) {
             toast.error("Complete billing address details are required");
+            return;
+        }
+        if (address.trim().length > 255) {
+            toast.error("Address Line 1 cannot exceed 255 characters");
+            return;
+        }
+        if (addressLine2.trim().length > 255) {
+            toast.error("Address Line 2 cannot exceed 255 characters");
+            return;
+        }
+        if (city.trim().length > 100) {
+            toast.error("City cannot exceed 100 characters");
+            return;
+        }
+        if (stateProvince.trim().length > 100) {
+            toast.error("State or Province cannot exceed 100 characters");
+            return;
+        }
+        if (postalCode.trim().length > 20) {
+            toast.error("Postal Code cannot exceed 20 characters");
             return;
         }
 
@@ -107,6 +137,7 @@ export default function OnboardingPage({ onComplete }: OnboardingPageProps) {
                 logo_url: uploadedLogoUrl,
                 billing_address: {
                     line1: address,
+                    line2: addressLine2 || undefined,
                     city: city,
                     state: stateProvince,
                     postal_code: postalCode,
@@ -300,7 +331,8 @@ export default function OnboardingPage({ onComplete }: OnboardingPageProps) {
                                 <Input
                                     type="text"
                                     value={orgName}
-                                    onChange={(e) => setOrgName(e.target.value)}
+                                    onChange={(e) => setOrgName(e.target.value.slice(0, 255))}
+                                    maxLength={255}
                                     placeholder="Enter your organization name"
                                     className="h-11 rounded-lg border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
                                 />
@@ -308,48 +340,81 @@ export default function OnboardingPage({ onComplete }: OnboardingPageProps) {
                         </div>
 
                         {/* Address Fields */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="md:col-span-1 space-y-1.5">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-1.5">
                                 <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-                                    Address <span className="text-red-500 ml-0.5">*</span>
+                                    Address Line 1 <span className="text-red-500 ml-0.5">*</span>
                                 </label>
                                 <Input
                                     type="text"
                                     value={address}
-                                    onChange={(e) => setAddress(e.target.value)}
-                                    placeholder="Enter organization address"
+                                    onChange={(e) => setAddress(e.target.value.slice(0, 255))}
+                                    maxLength={255}
+                                    placeholder="Enter address line 1"
                                     className="h-11 rounded-lg border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
                                 />
                             </div>
 
-                            <div className="md:col-span-1 space-y-1.5">
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                                    Address Line 2 <span className="text-xs text-zinc-400 dark:text-zinc-500 font-normal">(optional)</span>
+                                </label>
+                                <Input
+                                    type="text"
+                                    value={addressLine2}
+                                    onChange={(e) => setAddressLine2(e.target.value.slice(0, 255))}
+                                    maxLength={255}
+                                    placeholder="Enter address line 2"
+                                    className="h-11 rounded-lg border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="space-y-1.5">
                                 <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
                                     City <span className="text-red-500 ml-0.5">*</span>
                                 </label>
                                 <Input
                                     type="text"
                                     value={city}
-                                    onChange={(e) => setCity(e.target.value)}
+                                    onChange={(e) => setCity(e.target.value.slice(0, 100))}
+                                    maxLength={100}
                                     placeholder="Enter city"
                                     className="h-11 rounded-lg border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
                                 />
                             </div>
 
-                            <div className="md:col-span-1 space-y-1.5">
+                            <div className="space-y-1.5">
                                 <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
                                     State or Province <span className="text-red-500 ml-0.5">*</span>
                                 </label>
                                 <Input
                                     type="text"
                                     value={stateProvince}
-                                    onChange={(e) => setStateProvince(e.target.value)}
+                                    onChange={(e) => setStateProvince(e.target.value.slice(0, 100))}
+                                    maxLength={100}
                                     placeholder="Enter state or province"
+                                    className="h-11 rounded-lg border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
+                                />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                                    Postal Code <span className="text-red-500 ml-0.5">*</span>
+                                </label>
+                                <Input
+                                    type="text"
+                                    value={postalCode}
+                                    onChange={(e) => setPostalCode(e.target.value.slice(0, 20))}
+                                    maxLength={20}
+                                    placeholder="Enter postal code"
                                     className="h-11 rounded-lg border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
                                 />
                             </div>
                         </div>
 
-                        {/* Country & Postal */}
+                        {/* Country */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="md:col-span-1 space-y-1.5">
                                 <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
@@ -371,19 +436,6 @@ export default function OnboardingPage({ onComplete }: OnboardingPageProps) {
                                         <SelectItem value="IN">India</SelectItem>
                                     </SelectContent>
                                 </Select>
-                            </div>
-
-                            <div className="md:col-span-1 space-y-1.5">
-                                <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-                                    Postal Code <span className="text-red-500 ml-0.5">*</span>
-                                </label>
-                                <Input
-                                    type="text"
-                                    value={postalCode}
-                                    onChange={(e) => setPostalCode(e.target.value)}
-                                    placeholder="Enter postal code"
-                                    className="h-11 rounded-lg border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
-                                />
                             </div>
                         </div>
 

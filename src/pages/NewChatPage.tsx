@@ -20,6 +20,8 @@ import {
     Folder,
     Search,
     Navigation,
+    Trash2,
+    RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -35,10 +37,21 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogFooter,
+    DialogTitle,
+    DialogDescription,
+} from "@/components/ui/dialog";
+import {
     sendChatQueryStream,
     createConversation,
     getConversation,
     updateConversation,
+    clearConversationMessages,
+    deleteConversation,
+    truncateConversation,
     type ChatMessage,
     type Citation,
     type Conversation,
@@ -548,7 +561,12 @@ export default function NewChatPage(): JSX.Element {
     const [greeting, setGreeting] = useState("Good Morning");
     const [selectedModel, setSelectedModel] = useState("Auto");
     const [conversationId, setConversationId] = useState<string | null>(null);
+    const [conversationTitle, setConversationTitle] = useState("Untitled");
     const [thinkingLabel, setThinkingLabel] = useState("Thinking...");
+
+    const [showClearConfirm, setShowClearConfirm] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -608,6 +626,7 @@ export default function NewChatPage(): JSX.Element {
                 });
             setMessages(mapped);
             setConversationId(conv.id);
+            setConversationTitle(conv.title || "Untitled");
         } catch (err: any) {
             toast.error(err.message || "Failed to load conversation");
         } finally {
@@ -617,6 +636,7 @@ export default function NewChatPage(): JSX.Element {
 
     const startNewChat = useCallback(() => {
         setConversationId(null);
+        setConversationTitle("Untitled");
         setMessages([]);
         setInputVal("");
         if (textareaRef.current) {
@@ -682,6 +702,23 @@ export default function NewChatPage(): JSX.Element {
         window.addEventListener("navigator_load_history", load);
         return () => window.removeEventListener("navigator_load_history", load);
     }, [startNewChat]);
+
+    useEffect(() => {
+        const handleCreated = async () => {
+            if (conversationId && !isResponding) {
+                try {
+                    const token = await getToken();
+                    if (!token) return;
+                    const conv = await getConversation(conversationId, token);
+                    setConversationTitle(conv.title || "Untitled");
+                } catch (e) {
+                    console.error("Failed to sync conversation title", e);
+                }
+            }
+        };
+        window.addEventListener("navigator_conversation_created", handleCreated);
+        return () => window.removeEventListener("navigator_conversation_created", handleCreated);
+    }, [conversationId, isResponding, getToken]);
 
     // ── Profile / greeting ────────────────────────────────────────────────────
 
@@ -925,6 +962,7 @@ export default function NewChatPage(): JSX.Element {
                         if (isNewConversation && convId) {
                             const title = text.trim().slice(0, 60);
                             updateConversation(convId, { title }, token).then(() => {
+                                setConversationTitle(title);
                                 window.dispatchEvent(new Event("navigator_conversation_created"));
                             }).catch(err => {
                                 console.error("Failed to update conversation title:", err);
@@ -1033,6 +1071,55 @@ export default function NewChatPage(): JSX.Element {
         await handleSendMessage(userMsg.content, truncateId);
     };
 
+    // ── Clear / Delete / Truncate actions ─────────────────────────────────────
+
+    const handleClearHistory = async () => {
+        if (!conversationId) return;
+        try {
+            const token = await getToken();
+            if (!token) return;
+            await clearConversationMessages(conversationId, token);
+            setMessages([]);
+            toast.success("Chat history cleared");
+            setShowClearConfirm(false);
+            window.dispatchEvent(new Event("navigator_conversation_created"));
+        } catch (err: any) {
+            toast.error(err.message || "Failed to clear chat history");
+        }
+    };
+
+    const handleDeleteActiveConversation = async () => {
+        if (!conversationId) return;
+        try {
+            const token = await getToken();
+            if (!token) return;
+            await deleteConversation(conversationId, token);
+            toast.success("Conversation deleted");
+            setShowDeleteConfirm(false);
+            window.dispatchEvent(new CustomEvent("navigator_conversation_deleted", { detail: { id: conversationId } }));
+        } catch (err: any) {
+            toast.error(err.message || "Failed to delete conversation");
+        }
+    };
+
+    const handleTruncateMessage = async (messageId: string) => {
+        if (!conversationId) return;
+        const targetIdx = messages.findIndex((m) => m.id === messageId);
+        if (targetIdx === -1) return;
+
+        try {
+            const token = await getToken();
+            if (!token) return;
+            await truncateConversation(conversationId, messageId, true, token);
+            toast.success("Messages deleted");
+            setMessages((prev) => prev.slice(0, targetIdx));
+            setMessageToDelete(null);
+            window.dispatchEvent(new Event("navigator_conversation_created"));
+        } catch (err: any) {
+            toast.error(err.message || "Failed to delete message");
+        }
+    };
+
     // ── Copy ──────────────────────────────────────────────────────────────────
 
     const handleCopy = (content: string) => {
@@ -1060,7 +1147,31 @@ export default function NewChatPage(): JSX.Element {
             data-testid="new-chat-page"
             data-tour="chat-page"
         >
-
+            {conversationId && (
+                <div className="sticky top-0 z-20 flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-[#FEFFFA]/90 dark:bg-zinc-950/90 backdrop-blur-md px-6 py-3.5 shrink-0">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-150 truncate">
+                            {conversationTitle}
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setShowClearConfirm(true)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 rounded-lg text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 transition-colors cursor-pointer"
+                        >
+                            <RefreshCw className="h-3.5 w-3.5" />
+                            <span>Clear History</span>
+                        </button>
+                        <button
+                            onClick={() => setShowDeleteConfirm(true)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 dark:bg-red-950/20 dark:hover:bg-red-950/40 dark:text-red-400 rounded-lg text-xs font-semibold border border-red-200/50 dark:border-red-900/30 transition-colors cursor-pointer"
+                        >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            <span>Delete Chat</span>
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* ── Scrollable Messages Area ──────────────────────────────── */}
             <div
@@ -1087,7 +1198,7 @@ export default function NewChatPage(): JSX.Element {
 
                         {/* Centered Input Box */}
                         <div className="w-full max-w-4xl mb-6 md:mb-10">
-                            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-full shadow-md focus-within:shadow-lg focus-within:border-zinc-300 dark:focus-within:border-zinc-700 transition-all p-2 pl-5 pr-2 flex items-center gap-2">
+                            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl sm:rounded-full shadow-md focus-within:shadow-lg focus-within:border-zinc-300 dark:focus-within:border-zinc-700 transition-all p-2.5 sm:p-2 pl-4 sm:pl-5 pr-2.5 sm:pr-2 flex flex-col sm:flex-row sm:items-center gap-2">
                                 <textarea
                                     value={inputVal}
                                     onChange={(e) => {
@@ -1101,10 +1212,10 @@ export default function NewChatPage(): JSX.Element {
                                     }}
                                     placeholder="What do you want to do?"
                                     rows={1}
-                                    className="flex-1 bg-transparent border-none outline-none focus:ring-0 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 resize-none min-h-[24px] max-h-[80px] leading-relaxed py-1.5"
+                                    className="w-full sm:flex-1 bg-transparent border-none outline-none focus:ring-0 text-base sm:text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 resize-none min-h-[24px] max-h-[80px] leading-relaxed py-1.5"
                                 />
 
-                                <div className="flex items-center gap-2 shrink-0">
+                                <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 w-full sm:w-auto pt-2 sm:pt-0 border-t border-zinc-100 dark:border-zinc-800 sm:border-none">
                                     {/* Model selector */}
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
@@ -1205,10 +1316,18 @@ export default function NewChatPage(): JSX.Element {
                                                     <div className="flex items-center gap-3 pr-1 text-zinc-400 dark:text-zinc-500 text-[11px] select-none">
                                                         <span>{timeStr}</span>
                                                         <button
-                                                            className="hover:text-zinc-600 transition-colors"
+                                                            className="hover:text-zinc-650 dark:hover:text-zinc-350 transition-colors cursor-pointer"
                                                             onClick={() => handleCopy(m.content)}
+                                                            title="Copy message"
                                                         >
                                                             <Copy className="h-3 w-3" />
+                                                        </button>
+                                                        <button
+                                                            className="hover:text-red-650 dark:hover:text-red-400 transition-colors cursor-pointer"
+                                                            onClick={() => setMessageToDelete(m.id)}
+                                                            title="Delete from here"
+                                                        >
+                                                            <Trash2 className="h-3 w-3" />
                                                         </button>
                                                     </div>
                                                 </div>
@@ -1286,6 +1405,17 @@ export default function NewChatPage(): JSX.Element {
                                                                     </TooltipTrigger>
                                                                     <TooltipContent side="top">Share message</TooltipContent>
                                                                 </Tooltip>
+                                                                <Tooltip>
+                                                                    <TooltipTrigger asChild>
+                                                                        <button 
+                                                                            onClick={() => setMessageToDelete(m.id)}
+                                                                            className="flex items-center gap-1.5 text-zinc-450 hover:text-red-650 dark:hover:text-red-400 transition-colors cursor-pointer"
+                                                                        >
+                                                                            <Trash2 className="h-4 w-4" /> Delete
+                                                                        </button>
+                                                                    </TooltipTrigger>
+                                                                    <TooltipContent side="top">Delete message and all subsequent messages</TooltipContent>
+                                                                </Tooltip>
                                                             </TooltipProvider>
 
                                                             {/* Sources stacked pill */}
@@ -1308,7 +1438,7 @@ export default function NewChatPage(): JSX.Element {
 
             {/* ── Fixed Bottom Input Bar ────────────────────────────────── */}
             {!showEmptyState && (
-                <div className="shrink-0 px-3 sm:px-6 pb-3 sm:pb-5 pt-2 bg-[#FEFFFA] dark:bg-zinc-950">
+                <div className="shrink-0 px-3 sm:px-6 pb-[calc(12px+env(safe-area-inset-bottom))] sm:pb-5 pt-2 bg-[#FEFFFA] dark:bg-zinc-950">
                     <div
                         data-tour="chat-input"
                         className="max-w-4xl mx-auto bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm focus-within:shadow-md focus-within:border-zinc-300 dark:focus-within:border-zinc-700 transition-all p-2.5 sm:p-3.5 flex flex-col gap-1.5 sm:gap-2"
@@ -1329,7 +1459,7 @@ export default function NewChatPage(): JSX.Element {
                             placeholder={isResponding ? "Agent is responding..." : "Message agent... (Shift+Enter for new line)"}
                             rows={1}
                             disabled={isResponding}
-                            className="w-full bg-transparent border-none outline-none focus:ring-0 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 resize-none min-h-[28px] max-h-[200px] leading-relaxed disabled:opacity-60"
+                            className="w-full bg-transparent border-none outline-none focus:ring-0 text-base sm:text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 resize-none min-h-[28px] max-h-[200px] leading-relaxed disabled:opacity-60"
                         />
 
                         {/* Bottom row: model selector + attach + send */}
@@ -1378,10 +1508,88 @@ export default function NewChatPage(): JSX.Element {
                     </div>
 
                     <p className="text-center text-[11px] text-zinc-400 dark:text-zinc-500 mt-2 select-none">
-                        Navigator may make mistakes. Verify important information.
-                    </p>
-                </div>
-            )}
-        </div>
-    );
-}
+                                                        Navigator may make mistakes. Verify important information.
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {/* Clear History Confirmation Dialog */}
+                                            <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
+                                                <DialogContent className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md border border-zinc-150 dark:border-zinc-800 shadow-xl p-6">
+                                                    <DialogHeader>
+                                                        <DialogTitle className="text-zinc-900 dark:text-zinc-100 font-semibold text-lg">Clear Chat History</DialogTitle>
+                                                        <DialogDescription className="text-zinc-500 dark:text-zinc-400 text-sm mt-2">
+                                                            Are you sure you want to clear all messages in this conversation? This action is irreversible and cannot be undone.
+                                                        </DialogDescription>
+                                                    </DialogHeader>
+                                                    <DialogFooter className="mt-6 gap-2 flex justify-end">
+                                                        <button
+                                                            onClick={() => setShowClearConfirm(false)}
+                                                            className="px-4 py-2 bg-zinc-100 dark:bg-zinc-850 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-lg text-sm font-semibold transition-colors cursor-pointer"
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                        <button
+                                                            onClick={handleClearHistory}
+                                                            className="px-4 py-2 bg-red-650 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors cursor-pointer"
+                                                        >
+                                                            Clear History
+                                                        </button>
+                                                    </DialogFooter>
+                                                </DialogContent>
+                                            </Dialog>
+
+                                            {/* Delete Chat Confirmation Dialog */}
+                                            <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+                                                <DialogContent className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md border border-zinc-150 dark:border-zinc-800 shadow-xl p-6">
+                                                    <DialogHeader>
+                                                        <DialogTitle className="text-zinc-900 dark:text-zinc-100 font-semibold text-lg">Delete Conversation</DialogTitle>
+                                                        <DialogDescription className="text-zinc-500 dark:text-zinc-400 text-sm mt-2">
+                                                            Are you sure you want to delete this conversation? This will permanently delete the conversation and all of its messages. This action is irreversible.
+                                                        </DialogDescription>
+                                                    </DialogHeader>
+                                                    <DialogFooter className="mt-6 gap-2 flex justify-end">
+                                                        <button
+                                                            onClick={() => setShowDeleteConfirm(false)}
+                                                            className="px-4 py-2 bg-zinc-100 dark:bg-zinc-850 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-lg text-sm font-semibold transition-colors cursor-pointer"
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                        <button
+                                                            onClick={handleDeleteActiveConversation}
+                                                            className="px-4 py-2 bg-red-650 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors cursor-pointer"
+                                                        >
+                                                            Delete Chat
+                                                        </button>
+                                                    </DialogFooter>
+                                                </DialogContent>
+                                            </Dialog>
+
+                                            {/* Delete Message Confirmation Dialog */}
+                                            <Dialog open={messageToDelete !== null} onOpenChange={(open) => !open && setMessageToDelete(null)}>
+                                                <DialogContent className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md border border-zinc-150 dark:border-zinc-800 shadow-xl p-6">
+                                                    <DialogHeader>
+                                                        <DialogTitle className="text-zinc-900 dark:text-zinc-100 font-semibold text-lg">Delete Message</DialogTitle>
+                                                        <DialogDescription className="text-zinc-500 dark:text-zinc-400 text-sm mt-2">
+                                                            Are you sure you want to delete this message? This will delete this message and all subsequent messages in this chat. This action is irreversible.
+                                                        </DialogDescription>
+                                                    </DialogHeader>
+                                                    <DialogFooter className="mt-6 gap-2 flex justify-end">
+                                                        <button
+                                                            onClick={() => setMessageToDelete(null)}
+                                                            className="px-4 py-2 bg-zinc-100 dark:bg-zinc-850 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-lg text-sm font-semibold transition-colors cursor-pointer"
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                        <button
+                                                            onClick={() => messageToDelete && handleTruncateMessage(messageToDelete)}
+                                                            className="px-4 py-2 bg-red-650 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors cursor-pointer"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </DialogFooter>
+                                                </DialogContent>
+                                            </Dialog>
+                                        </div>
+                                    );
+                                }

@@ -70,10 +70,9 @@ export default function EditEmployeeDrawer({
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const isFirstNameValid = firstName.trim() !== "";
-    const isLastNameValid = lastName.trim() !== "";
     const isEmailValid = emailRegex.test(email.trim());
 
-    const canSave = isFirstNameValid && isLastNameValid && isEmailValid;
+    const canSave = isFirstNameValid && isEmailValid;
 
     // Filter roles to only allow admin, editor, member
     const displayRoles = roles.length > 0
@@ -179,7 +178,7 @@ export default function EditEmployeeDrawer({
                                     onChange={(e) => setFirstName(e.target.value)}
                                     onBlur={() => setTouched(t => ({ ...t, firstName: true }))}
                                     placeholder="First Name"
-                                    className="h-10 rounded-lg border-zinc-200 text-sm font-medium"
+                                    className="h-10 rounded-lg border-zinc-200 text-base md:text-sm font-medium"
                                 />
                                 {touched.firstName && !isFirstNameValid && (
                                     <div className="text-red-500 text-[10px] flex items-center gap-1 mt-0.5">
@@ -192,7 +191,7 @@ export default function EditEmployeeDrawer({
                             {/* Last Name */}
                             <div className="space-y-1.5">
                                 <Label htmlFor="edit-last-name" className="text-xs font-medium text-zinc-500">
-                                    Last Name <span className="text-red-500">*</span>
+                                    Last Name <span className="text-xs text-zinc-450 font-normal">(optional)</span>
                                 </Label>
                                 <Input
                                     id="edit-last-name"
@@ -200,14 +199,8 @@ export default function EditEmployeeDrawer({
                                     onChange={(e) => setLastName(e.target.value)}
                                     onBlur={() => setTouched(t => ({ ...t, lastName: true }))}
                                     placeholder="Last Name"
-                                    className="h-10 rounded-lg border-zinc-200 text-sm font-medium"
+                                    className="h-10 rounded-lg border-zinc-200 text-base md:text-sm font-medium"
                                 />
-                                {touched.lastName && !isLastNameValid && (
-                                    <div className="text-red-500 text-[10px] flex items-center gap-1 mt-0.5">
-                                        <AlertCircle className="h-3 w-3" />
-                                        <span>Required</span>
-                                    </div>
-                                )}
                             </div>
                         </div>
 
@@ -223,7 +216,7 @@ export default function EditEmployeeDrawer({
                                 onChange={(e) => setEmail(e.target.value)}
                                 onBlur={() => setTouched(t => ({ ...t, email: true }))}
                                 placeholder="Email address"
-                                className="h-10 rounded-lg border-zinc-200 text-sm font-medium"
+                                className="h-10 rounded-lg border-zinc-200 text-base md:text-sm font-medium"
                             />
                             {touched.email && !isEmailValid && (
                                 <div className="text-red-500 text-[10px] flex items-center gap-1 mt-0.5">
@@ -237,7 +230,7 @@ export default function EditEmployeeDrawer({
                         <div className="space-y-1.5">
                             <Label className="text-xs font-medium text-zinc-500">Role</Label>
                             <Select value={roleName} onValueChange={setRoleName}>
-                                <SelectTrigger className="h-10 rounded-lg border-zinc-200 text-sm font-medium">
+                                <SelectTrigger className="h-10 rounded-lg border-zinc-200 text-base md:text-sm font-medium">
                                     <SelectValue placeholder="Select role" />
                                 </SelectTrigger>
                                 <SelectContent>

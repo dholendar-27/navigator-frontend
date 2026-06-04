@@ -80,7 +80,8 @@ export default function CreateFolderDrawer({
                         <Input
                             id="folder-name"
                             value={name}
-                            onChange={(e) => setName(e.target.value)}
+                            onChange={(e) => setName(e.target.value.slice(0, 255))}
+                            maxLength={255}
                             placeholder="Enter knowledge base folder name"
                             data-testid="folder-name-input"
                             disabled={isSubmitting}

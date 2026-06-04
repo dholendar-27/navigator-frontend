@@ -486,7 +486,7 @@ export default function KnowledgeBaseDetailDrawer({
                     {entry.type === "file" ? (
                         <>
                             {/* Left Column: File Metadata (4 Cols) */}
-                            <div className="md:col-span-4 p-8 border-r border-zinc-100 dark:border-zinc-800 space-y-5 flex flex-col justify-start bg-white dark:bg-zinc-900">
+                            <div className="md:col-span-4 p-8 border-b md:border-b-0 md:border-r border-zinc-100 dark:border-zinc-800 space-y-5 flex flex-col justify-start bg-white dark:bg-zinc-900">
                                 {/* Document ID */}
                                 <div className="flex flex-col">
                                     <span className="text-[12px] text-zinc-400 dark:text-zinc-500 font-medium">
@@ -586,7 +586,7 @@ export default function KnowledgeBaseDetailDrawer({
                             </div>
 
                             {/* Right Column: Extracted Content / File Display (8 Cols) */}
-                            <div className="md:col-span-8 p-8 flex flex-col min-h-0 bg-white dark:bg-zinc-900">
+                            <div className="md:col-span-8 p-8 pb-[calc(2rem+env(safe-area-inset-bottom))] md:pb-8 flex flex-col min-h-0 bg-white dark:bg-zinc-900">
                                 {/* Title & Export Button */}
                                 <div className="flex items-center justify-between gap-4 pb-2">
                                     <h3 className="text-[15px] font-bold text-zinc-900 dark:text-zinc-100 truncate min-w-0" title={entry.name}>
@@ -664,7 +664,7 @@ export default function KnowledgeBaseDetailDrawer({
                     ) : (
                         <>
                             {/* Left Column: Form Details (4 Cols) */}
-                            <div className="md:col-span-4 p-8 border-r border-zinc-100 dark:border-zinc-800 space-y-6 flex flex-col justify-between">
+                            <div className="md:col-span-4 p-8 border-b md:border-b-0 md:border-r border-zinc-100 dark:border-zinc-800 space-y-6 flex flex-col justify-between">
                                 <div className="space-y-6">
                                     {/* Folder Name */}
                                     <div className="space-y-2">
@@ -719,7 +719,7 @@ export default function KnowledgeBaseDetailDrawer({
                             </div>
 
                             {/* Right Column: Files & Documents List (8 Cols) */}
-                            <div className="md:col-span-8 p-8 flex flex-col min-h-0 bg-white dark:bg-zinc-900">
+                            <div className="md:col-span-8 p-8 pb-[calc(2rem+env(safe-area-inset-bottom))] md:pb-8 flex flex-col min-h-0 bg-white dark:bg-zinc-900">
 
                                 {/* Title & "+ Add" Action */}
                                 <div className="flex items-center justify-between border-b border-zinc-100 pb-4">

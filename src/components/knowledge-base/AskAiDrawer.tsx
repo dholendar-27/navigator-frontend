@@ -356,7 +356,7 @@ export default function AskAiDrawer({ open, onOpenChange, folderId }: AskAiDrawe
                                 }
                             }}
                             placeholder="Ask a question..."
-                            className="flex-1 resize-none rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all max-h-24"
+                            className="flex-1 resize-none rounded-xl border border-slate-300 bg-white px-3 py-2 text-base md:text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all max-h-24"
                         />
                         <Button
                             onClick={handleSend}

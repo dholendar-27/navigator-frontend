@@ -86,11 +86,10 @@ export default function AddEmployeeDrawer({
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const isFirstNameValid = form.firstName.trim() !== "";
-    const isLastNameValid = form.lastName.trim() !== "";
     const isEmailValid = emailRegex.test(form.email.trim());
     const isRoleValid = form.roleId !== "";
 
-    const canSave = isFirstNameValid && isLastNameValid && isEmailValid && isRoleValid;
+    const canSave = isFirstNameValid && isEmailValid && isRoleValid;
 
     const submit = async (): Promise<void> => {
         if (!canSave || isSubmitting) return;
@@ -107,7 +106,7 @@ export default function AddEmployeeDrawer({
             const response = await createInvite({
                 email: form.email,
                 first_name: form.firstName,
-                last_name: form.lastName || null,
+                last_name: form.lastName.trim() || null,
                 role_name: roles.find(r => r.id === form.roleId)?.name || "member",
             }, token);
 
@@ -191,7 +190,7 @@ export default function AddEmployeeDrawer({
                             htmlFor="emp-last-name"
                             className="text-sm font-medium text-zinc-700"
                         >
-                            Last Name <span className="text-red-500 ml-0.5">*</span>
+                            Last Name <span className="text-xs text-zinc-400 font-normal">(optional)</span>
                         </Label>
 
                         <Input
@@ -203,12 +202,6 @@ export default function AddEmployeeDrawer({
                             data-testid="emp-last-name-input"
                             className="h-11 rounded-lg border-zinc-200"
                         />
-                        {touched.lastName && !isLastNameValid && (
-                            <div className="flex items-center gap-1.5 text-xs text-red-500 mt-1">
-                                <AlertCircle className="h-3.5 w-3.5" />
-                                <span>Last name is required.</span>
-                            </div>
-                        )}
                     </div>
 
                     {/* Email */}
@@ -262,16 +255,17 @@ export default function AddEmployeeDrawer({
                             </SelectTrigger>
 
                             <SelectContent>
-                                {roles.map((r) => {
-                                    const displayRole = r.name === "super_admin" 
-                                        ? "Super Admin" 
-                                        : r.name.charAt(0).toUpperCase() + r.name.slice(1);
-                                    return (
-                                        <SelectItem key={r.id} value={r.id}>
-                                            {displayRole}
-                                        </SelectItem>
-                                    );
-                                })}
+                                {roles
+                                    .filter((r) => ["admin", "editor", "member"].includes(r.name.toLowerCase()))
+                                    .map((r) => {
+                                        const displayRole = r.name.charAt(0).toUpperCase() + r.name.slice(1);
+                                        return (
+                                            <SelectItem key={r.id} value={r.id}>
+                                                {displayRole}
+                                            </SelectItem>
+                                        );
+                                    })
+                                }
                             </SelectContent>
                         </Select>
                         {touched.roleId && !isRoleValid && (

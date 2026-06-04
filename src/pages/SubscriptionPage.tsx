@@ -209,7 +209,7 @@ export default function SubscriptionPage(): JSX.Element {
                 </div>
 
                 {/* History Navigation Buttons */}
-                <div className="flex items-center gap-1.5">
+                <div className="hidden md:flex items-center gap-1.5">
                     <button
                         onClick={() => scroll("left")}
                         className="flex h-8 w-8 items-center justify-center rounded-full border border-[#E7E7E0] dark:border-zinc-800 bg-[#FEFFFA] dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer"
@@ -230,7 +230,7 @@ export default function SubscriptionPage(): JSX.Element {
             {/* Plans Horizontal Scroll Layout (Scrollbar Hidden) */}
             <div
                 ref={scrollContainerRef}
-                className="flex-1 flex flex-row gap-6 pt-2 overflow-x-auto pb-6 select-none max-w-full items-start scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                className="flex-1 flex flex-col md:flex-row gap-6 pt-2 select-none max-w-full items-center md:items-start md:overflow-x-auto pb-6 scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             >
                 {plans.map((plan) => {
                     const price = billingCycle === "monthly" ? plan.monthlyBase : plan.yearlyBase;
@@ -240,7 +240,7 @@ export default function SubscriptionPage(): JSX.Element {
                     return (
                         <div
                             key={plan.name}
-                            className="relative flex flex-col rounded-[16px] border border-[#E7E7E0] dark:border-zinc-800 bg-[#FEFFFA] dark:bg-zinc-900/80 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.05)] w-[335px] shrink-0 gap-4"
+                            className="relative flex flex-col rounded-[16px] border border-[#E7E7E0] dark:border-zinc-800 bg-[#FEFFFA] dark:bg-zinc-900/80 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.05)] w-full max-w-[340px] md:w-[335px] shrink-0 gap-4"
                         >
                             {/* Recommendation Badge */}
                             {plan.recommended && (

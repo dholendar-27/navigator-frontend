@@ -800,7 +800,7 @@ export default function CategoryPage() {
     };
 
     return (
-        <div className="p-3 sm:p-6 md:p-8 flex flex-col h-full w-full bg-transparent dark:bg-zinc-950/20 overflow-hidden" data-testid="teams-page" data-tour="teams-page">
+        <div className="p-3 sm:p-6 md:p-8 flex flex-col h-auto lg:h-full w-full bg-transparent dark:bg-zinc-950/20 lg:overflow-hidden" data-testid="teams-page" data-tour="teams-page">
 
             {/* Header */}
             <div className="flex flex-col gap-1 shrink-0">
@@ -859,7 +859,7 @@ export default function CategoryPage() {
                         setSelected(new Set());
                     }}
                     placeholder="Search teams..."
-                    className="h-10 rounded-lg border-[#E7E7E0] dark:border-zinc-700 bg-[#FEFFFA] dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 pl-11 pr-10 text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-550 focus:ring-blue-500/20"
+                    className="h-10 rounded-lg border-[#E7E7E0] dark:border-zinc-700 bg-[#FEFFFA] dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 pl-11 pr-10 placeholder:text-zinc-400 dark:placeholder:text-zinc-550 focus:ring-blue-500/20"
                     data-testid="team-search-input"
                 />
                 {search && (
@@ -1068,7 +1068,7 @@ export default function CategoryPage() {
                     <DialogHeader>
                         <DialogTitle className="text-zinc-900 dark:text-zinc-100 font-semibold text-lg">Delete Selected Teams</DialogTitle>
                         <DialogDescription className="text-zinc-500 dark:text-zinc-400 text-sm mt-2">
-                            Are you sure you want to delete the {selected.size} selected teams? This action cannot be undone and will permanently remove them.
+                            Are you sure you want to delete the {selected.size} selected teams? This action is irreversible and cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="mt-6 gap-2">

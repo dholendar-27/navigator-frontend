@@ -351,7 +351,7 @@ export default function KnowledgeBaseTable({
 
                                 {/* Col 1: Icon + Name */}
                                 {visibleColumns.includes("name") && (
-                                    <div className="flex items-center gap-3 min-w-0 w-full md:w-auto flex-1">
+                                    <div className="flex items-center gap-3 min-w-0 w-full md:w-auto flex-1 pr-12 md:pr-0">
                                         <div className="md:hidden" onClick={(e) => e.stopPropagation()}>
                                             <Checkbox
                                                 checked={selected.has(kb.id)}

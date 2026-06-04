@@ -210,30 +210,30 @@ export default function TopBar({
                     <DropdownMenuTrigger asChild>
                         <button
                             type="button"
-                            className="relative rounded-full p-2 hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-200"
+                            className="relative rounded-full p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-200 dark:focus:ring-zinc-700 transition-colors"
                             data-testid="notification-btn"
                             aria-label="Notifications"
                             data-tour="notifications"
                         >
-                            <Bell className="h-5 w-5 text-zinc-700" />
+                            <Bell className="h-5 w-5 text-zinc-700 dark:text-zinc-300" />
                             <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-orange-500 animate-pulse" />
                         </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-80 p-2 rounded-xl border border-zinc-100 shadow-xl bg-white mt-2">
-                        <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-100 mb-1">
-                            <span className="text-sm font-semibold text-zinc-900">Notifications</span>
-                            <span className="text-xs bg-blue-50 text-blue-600 font-medium px-2 py-0.5 rounded-full">2 New</span>
+                    <DropdownMenuContent align="end" className="w-80 p-2 rounded-xl border border-zinc-100 dark:border-zinc-800 shadow-xl bg-white dark:bg-zinc-900 mt-2">
+                        <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-100 dark:border-zinc-800 mb-1">
+                            <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Notifications</span>
+                            <span className="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium px-2 py-0.5 rounded-full">2 New</span>
                         </div>
                         <div className="space-y-1">
-                            <div className="p-2.5 rounded-lg hover:bg-zinc-50 transition-colors">
-                                <p className="text-xs font-semibold text-zinc-900">Usage Limit Alert</p>
-                                <p className="text-xs text-zinc-500 mt-0.5">Your complex tasks usage reached 84% of your plan limit.</p>
-                                <span className="text-[10px] text-zinc-400 mt-1 block">10m ago</span>
+                            <div className="p-2.5 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
+                                <p className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">Usage Limit Alert</p>
+                                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Your complex tasks usage reached 84% of your plan limit.</p>
+                                <span className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1 block">10m ago</span>
                             </div>
-                            <div className="p-2.5 rounded-lg hover:bg-zinc-50 transition-colors">
-                                <p className="text-xs font-semibold text-zinc-900">Knowledge Base Updated</p>
-                                <p className="text-xs text-zinc-500 mt-0.5">Oliver Roberts uploaded 3 new policy documents.</p>
-                                <span className="text-[10px] text-zinc-400 mt-1 block">2h ago</span>
+                            <div className="p-2.5 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
+                                <p className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">Knowledge Base Updated</p>
+                                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Oliver Roberts uploaded 3 new policy documents.</p>
+                                <span className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1 block">2h ago</span>
                             </div>
                         </div>
                     </DropdownMenuContent>
@@ -243,12 +243,12 @@ export default function TopBar({
                 <button
                     type="button"
                     onClick={() => navigate("/billing")}
-                    className="rounded-full p-2 hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-200 cursor-pointer"
+                    className="hidden sm:block rounded-full p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-200 dark:focus:ring-zinc-700 transition-colors cursor-pointer"
                     data-testid="settings-btn"
                     aria-label="Settings"
                     data-tour="settings"
                 >
-                    <Settings className="h-5 w-5 text-zinc-700" />
+                    <Settings className="h-5 w-5 text-zinc-700 dark:text-zinc-300" />
                 </button>
 
                 {/* User Profile with Dropdown Menu */}
