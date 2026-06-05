@@ -558,7 +558,6 @@ export default function NewChatPage(): JSX.Element {
     const [greeting, setGreeting] = useState("Good Morning");
     const [selectedModel, setSelectedModel] = useState("Auto");
     const [conversationId, setConversationId] = useState<string | null>(null);
-    const [conversationTitle, setConversationTitle] = useState("Untitled");
     const [thinkingLabel, setThinkingLabel] = useState("Thinking...");
 
     const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
@@ -621,7 +620,6 @@ export default function NewChatPage(): JSX.Element {
                 });
             setMessages(mapped);
             setConversationId(conv.id);
-            setConversationTitle(conv.title || "Untitled");
         } catch (err: any) {
             toast.error(err.message || "Failed to load conversation");
         } finally {
@@ -631,7 +629,6 @@ export default function NewChatPage(): JSX.Element {
 
     const startNewChat = useCallback(() => {
         setConversationId(null);
-        setConversationTitle("Untitled");
         setMessages([]);
         setInputVal("");
         if (textareaRef.current) {
@@ -704,8 +701,7 @@ export default function NewChatPage(): JSX.Element {
                 try {
                     const token = await getToken();
                     if (!token) return;
-                    const conv = await getConversation(conversationId, token);
-                    setConversationTitle(conv.title || "Untitled");
+                    // const conv = await getConversation(conversationId, token);
                 } catch (e) {
                     console.error("Failed to sync conversation title", e);
                 }
@@ -957,7 +953,6 @@ export default function NewChatPage(): JSX.Element {
                         if (isNewConversation && convId) {
                             const title = text.trim().slice(0, 60);
                             updateConversation(convId, { title }, token).then(() => {
-                                setConversationTitle(title);
                                 window.dispatchEvent(new Event("navigator_conversation_created"));
                             }).catch(err => {
                                 console.error("Failed to update conversation title:", err);

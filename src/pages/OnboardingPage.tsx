@@ -39,7 +39,7 @@ const countries = (() => {
         return instance.getAll();
     }
     return [];
-})();
+})() as Array<{ code: string; dial_code: string; flag: string; name: string }>;
 
 
 
@@ -134,8 +134,12 @@ export default function OnboardingPage({ onComplete }: OnboardingPageProps) {
         });
 
         if (!validation.success) {
-            const firstError = validation.error.errors[0]?.message || "Invalid organization details";
-            toast.error(firstError);
+            // Get the first error from fieldErrors
+            const fieldErrorEntries = Object.entries(validation.error.flatten().fieldErrors);
+            const firstError = fieldErrorEntries.length > 0 
+                ? fieldErrorEntries[0][1]?.[0] 
+                : "Invalid organization details";
+            toast.error(firstError || "Invalid organization details");
             return;
         }
 

@@ -69,7 +69,7 @@ export default function CategoryDrawer({
     const [empPage, setEmpPage] = useState(1);
     const [filePage, setFilePage] = useState(1);
     const [rowsPerPage] = useState(50);
-    const [touched, setTouched] = useState<{ name?: boolean; managerId?: boolean }>({});
+    const [touched, setTouched] = useState<{ name?: boolean; managerId?: boolean; description?: boolean }>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Reset drawer state on open/close or category changes

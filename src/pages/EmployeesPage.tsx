@@ -482,7 +482,7 @@ export default function EmployeesPage() {
                             <Button
                                 variant="outline"
                                 className="gap-2 rounded-lg border-[#E7E7E0] bg-[#FEFFFA] hover:bg-[#F5F5F0] dark:border-zinc-700 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 font-semibold"
-                                onClick={fetchEmployees}
+                                onClick={() => fetchEmployees()}
                                 disabled={isLoading}
                             >
                                 <RefreshCw className={cn("h-4 w-4 text-zinc-500 dark:text-zinc-400", isLoading && "animate-spin")} />

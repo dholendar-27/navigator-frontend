@@ -11,9 +11,7 @@ import {
     Key,
     HelpCircle,
     Building2,
-    Receipt,
     LogOut,
-    ChevronRight,
     X,
     UserPlus,
     UserMinus,
@@ -50,12 +48,6 @@ import {
     DropdownMenuSubContent,
     DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/contexts/ThemeContext";
 
