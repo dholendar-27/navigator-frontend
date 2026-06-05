@@ -573,7 +573,7 @@ export default function TopBar({
                 {/* Settings */}
                 <button
                     type="button"
-                    onClick={() => navigate("/billing")}
+                    onClick={() => navigate("/profile")}
                     className="hidden sm:block rounded-full p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-200 dark:focus:ring-zinc-700 transition-colors cursor-pointer"
                     data-testid="settings-btn"
                     aria-label="Settings"
@@ -868,22 +868,6 @@ export default function TopBar({
                             >
                                 <Building2 className="h-4 w-4 text-zinc-500" />
                                 <span className="font-medium">Organization Details</span>
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem
-                                onClick={() => navigate("/billing")}
-                                className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs text-zinc-700 dark:text-zinc-300 hover:bg-[#60646B1A] dark:hover:bg-zinc-800 focus:bg-[#60646B1A] dark:focus:bg-zinc-800 cursor-pointer"
-                            >
-                                <CreditCard className="h-4 w-4 text-zinc-500" />
-                                <span className="font-medium">Payment Method</span>
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem
-                                onClick={() => navigate("/billing")}
-                                className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs text-zinc-700 dark:text-zinc-300 hover:bg-[#60646B1A] dark:hover:bg-zinc-800 focus:bg-[#60646B1A] dark:focus:bg-zinc-800 cursor-pointer"
-                            >
-                                <Receipt className="h-4 w-4 text-zinc-500" />
-                                <span className="font-medium">Billing</span>
                             </DropdownMenuItem>
                         </div>
 

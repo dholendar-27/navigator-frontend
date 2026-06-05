@@ -102,7 +102,7 @@ function OtpInput({
                     className={`h-12 w-11 rounded-lg border text-center text-lg font-semibold outline-none transition-all
                         focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800
                         ${digit
-                            ? "border-blue-500 bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300"
+                            ? "border-blue-500 bg-blue-500/10 text-blue-600 dark:text-blue-400"
                             : "border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 text-zinc-800 dark:text-zinc-200"
                         }`}
                     aria-label={`OTP digit ${idx + 1}`}
@@ -267,31 +267,36 @@ export default function ChangePasswordDrawer({
 
                 {/* ── STEP 1: Request OTP ─────────────────────────────────── */}
                 {step === "request" && (
-                    <div className="flex flex-1 flex-col gap-0">
-                        <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
-                            {/* Explanation */}
-                            <div className="rounded-xl border border-blue-100 dark:border-blue-900/40 bg-blue-50 dark:bg-blue-950/20 p-4 flex gap-3">
-                                <Mail className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
-                                <div>
-                                    <p className="text-sm font-medium text-blue-800 dark:text-blue-300">
-                                        Email verification required
-                                    </p>
-                                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 leading-relaxed">
-                                        To keep your account secure, we'll send a 6-digit verification
-                                        code to&nbsp;
-                                        <span className="font-semibold">{user?.email ?? "your email"}</span>.
-                                        Enter the code along with your new password to complete the change.
-                                    </p>
-                                </div>
+                    <div className="flex flex-1 flex-col gap-0 bg-background">
+                        <div className="flex-1 flex flex-col justify-center items-center px-8 py-12 text-center space-y-6">
+                            {/* Security Illustration/Icon */}
+                            <div className="relative flex items-center justify-center w-20 h-20 rounded-full bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/60 dark:border-zinc-700/60 shadow-sm">
+                                <div className="absolute inset-0 rounded-full bg-blue-500/5 animate-pulse" />
+                                <Mail className="h-9 w-9 text-blue-600 dark:text-blue-400" />
                             </div>
 
-                            {/* Email display */}
-                            <div className="space-y-1.5">
-                                <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                    Verification will be sent to
-                                </Label>
-                                <div className="flex h-11 items-center rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 px-3 text-sm text-zinc-600 dark:text-zinc-400 select-none">
-                                    {user?.email ?? "—"}
+                            {/* Heading & description */}
+                            <div className="space-y-2 max-w-sm">
+                                <h3 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+                                    Security Verification
+                                </h3>
+                                <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                                    To keep your account secure, we need to verify your identity before changing your password.
+                                </p>
+                            </div>
+
+                            {/* Email Display Card */}
+                            <div className="w-full max-w-sm rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/30 p-4 flex items-center gap-3.5 text-left transition-all hover:bg-zinc-50 dark:hover:bg-zinc-900/50">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                                    <Mail className="h-5 w-5" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                                        Verification Email
+                                    </p>
+                                    <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200 truncate mt-0.5">
+                                        {user?.email ?? "—"}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -328,12 +333,12 @@ export default function ChangePasswordDrawer({
 
                 {/* ── STEP 2: Verify OTP + New Password ──────────────────── */}
                 {step === "verify" && (
-                    <div className="flex flex-1 flex-col gap-0">
+                    <div className="flex flex-1 flex-col gap-0 bg-background">
                         <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
                             {/* Sent confirmation banner */}
-                            <div className="rounded-xl border border-emerald-100 dark:border-emerald-900/40 bg-emerald-50 dark:bg-emerald-950/20 p-3 flex items-center gap-2.5">
-                                <CheckCircle2 className="h-4.5 w-4.5 text-emerald-500 shrink-0" />
-                                <p className="text-xs text-emerald-700 dark:text-emerald-400">
+                            <div className="rounded-xl border border-emerald-500/20 dark:border-emerald-500/10 bg-emerald-500/10 dark:bg-emerald-500/5 p-3 flex items-center gap-2.5">
+                                <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                <p className="text-xs text-emerald-800 dark:text-emerald-400">
                                     Code sent to&nbsp;
                                     <span className="font-semibold">{sentEmail}</span>.
                                     Check your inbox (and spam folder).
@@ -358,12 +363,15 @@ export default function ChangePasswordDrawer({
                                         type="button"
                                         onClick={handleSendOtp}
                                         disabled={sendingOtp}
-                                        className="text-blue-500 hover:underline disabled:opacity-50"
+                                        className="text-blue-500 hover:text-blue-600 dark:text-blue-400 font-medium hover:underline disabled:opacity-50 transition-colors"
                                     >
                                         {sendingOtp ? "Sending…" : "Resend code"}
                                     </button>
                                 </p>
                             </div>
+
+                            {/* Divider */}
+                            <div className="h-px bg-zinc-100 dark:bg-zinc-800 my-2" />
 
                             {/* New Password */}
                             <div className="space-y-1.5">
@@ -383,7 +391,7 @@ export default function ChangePasswordDrawer({
                                         autoComplete="new-password"
                                         onChange={(e) => updateField("newPassword", e.target.value)}
                                         onBlur={() => setTouched((p) => ({ ...p, newPassword: true }))}
-                                        className="h-11 rounded-lg border-zinc-200 dark:border-zinc-700 pr-10"
+                                        className="h-11 rounded-lg border-zinc-200 dark:border-zinc-700 pr-10 focus-visible:ring-blue-500"
                                     />
                                     <button
                                         type="button"
@@ -415,9 +423,9 @@ export default function ChangePasswordDrawer({
                                         autoComplete="new-password"
                                         onChange={(e) => updateField("confirmPassword", e.target.value)}
                                         onBlur={() => setTouched((p) => ({ ...p, confirmPassword: true }))}
-                                        className={`h-11 rounded-lg pr-10 ${
+                                        className={`h-11 rounded-lg pr-10 focus-visible:ring-blue-500 ${
                                             confirmMismatch
-                                                ? "border-red-400 dark:border-red-600"
+                                                ? "border-red-400 dark:border-red-600 focus-visible:ring-red-500"
                                                 : "border-zinc-200 dark:border-zinc-700"
                                         }`}
                                     />
@@ -439,12 +447,52 @@ export default function ChangePasswordDrawer({
                                 )}
                             </div>
 
-                            {/* Reset button */}
+                            {/* Requirements checklist */}
+                            <div className="space-y-2 pt-2 bg-zinc-50/50 dark:bg-zinc-900/30 rounded-xl p-3.5 border border-zinc-100 dark:border-zinc-800/60">
+                                <p className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2">
+                                    Password Requirements
+                                </p>
+                                {requirements.map((req) => {
+                                    const met = req.test(form.newPassword);
+                                    const showReq = touched.newPassword || form.newPassword.length > 0;
+                                    return (
+                                        <div key={req.label} className="flex items-center gap-2.5">
+                                            <div
+                                                className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full border transition-all duration-200 ${
+                                                    showReq && met
+                                                        ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                                        : "border-zinc-300 dark:border-zinc-600 bg-transparent text-transparent"
+                                                }`}
+                                            >
+                                                <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 10 10" stroke="currentColor" strokeWidth={2.5}>
+                                                    <polyline points="1.5,5 4,7.5 8.5,2.5" />
+                                                </svg>
+                                            </div>
+                                            <span className={`text-xs transition-colors duration-200 ${showReq && met ? "text-zinc-700 dark:text-zinc-200 font-medium" : "text-zinc-500 dark:text-zinc-400"}`}>
+                                                {req.label}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="flex items-center justify-end gap-3 border-t border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-4">
                             <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={() => handleOpenChange(false)}
+                                className="rounded-lg text-sm text-zinc-600 dark:text-zinc-400"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="button"
                                 onClick={handleSubmit}
                                 disabled={!canSubmit}
                                 data-testid="change-password-submit-btn"
-                                className="w-full h-11 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
+                                className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium flex items-center justify-center gap-2 disabled:opacity-50 transition-colors px-5 h-10 min-w-[140px]"
                             >
                                 {isSubmitting ? (
                                     <>
@@ -455,34 +503,6 @@ export default function ChangePasswordDrawer({
                                     "Reset Password"
                                 )}
                             </Button>
-
-                            {/* Requirements checklist */}
-                            <div className="space-y-2 pt-1">
-                                {requirements.map((req) => {
-                                    const met = req.test(form.newPassword);
-                                    const show = touched.newPassword || form.newPassword.length > 0;
-                                    return (
-                                        <div key={req.label} className="flex items-center gap-2.5">
-                                            <div
-                                                className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors duration-200 ${
-                                                    show && met
-                                                        ? "border-blue-500 bg-blue-500"
-                                                        : "border-zinc-300 dark:border-zinc-600 bg-transparent"
-                                                }`}
-                                            >
-                                                {show && met && (
-                                                    <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 10 10" stroke="currentColor" strokeWidth={2.5}>
-                                                        <polyline points="1.5,5 4,7.5 8.5,2.5" />
-                                                    </svg>
-                                                )}
-                                            </div>
-                                            <span className={`text-xs transition-colors duration-200 ${show && met ? "text-zinc-700 dark:text-zinc-300" : "text-zinc-500 dark:text-zinc-400"}`}>
-                                                {req.label}
-                                            </span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
                         </div>
                     </div>
                 )}

@@ -60,7 +60,12 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ['"Inter Display"', '"Inter"', 'sans-serif'],
+        sans: [
+          '"Inter Display", "Inter", sans-serif',
+          {
+            fontFeatureSettings: '"cv01", "cv10", "calt", "liga"',
+          }
+        ],
       },
       fontWeight: {
         bold: "500",

@@ -52,7 +52,7 @@
 @layer base {
   * {
     border-color: hsl(var(--border));
-    font-feature-settings: "cv01" 1, "cv10" 1, "calt" 1, "liga" 1;
+    font-feature-settings: "cv01" 1, "cv10" 1, "calt" 1, "liga" 1 !important;
   }
 
   body {

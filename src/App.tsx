@@ -13,13 +13,12 @@ import type { JSX } from "react";
 
 // ✅ CODE SPLITTING: Lazy load all route pages
 // Each page is loaded only when user navigates to it
-const DashboardPage = lazy(() => import("@/pages/PlaceholderPage").then(m => ({ default: () => m.default({ title: "Dashboard" }) })));
+const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 const EmployeesPage = lazy(() => import("@/pages/EmployeesPage"));
 const CategoryPage = lazy(() => import("@/pages/CategoryPage"));
 const KnowledgeBasePage = lazy(() => import("@/pages/KnowledgeBasePage"));
 const IntegrationPage = lazy(() => import("@/pages/Integration"));
 const SubscriptionPage = lazy(() => import("@/pages/SubscriptionPage"));
-const BillingPage = lazy(() => import("@/pages/PlaceholderPage").then(m => ({ default: () => m.default({ title: "Billing" }) })));
 const ChatPage = lazy(() => import("@/pages/NewChatPage"));
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
 const InviteAcceptancePage = lazy(() => import("@/pages/InviteAcceptancePage"));
@@ -136,16 +135,7 @@ function AppRoutes(): JSX.Element {
                         }
                     />
 
-                    <Route
-                        path="/billing"
-                        element={
-                            <Suspense fallback={<PageLoader />}>
-                                <PermissionRoute permission={PERMISSIONS.BILLING_VIEW}>
-                                    <BillingPage />
-                                </PermissionRoute>
-                            </Suspense>
-                        }
-                    />
+
 
                     <Route
                         path="/chat"
