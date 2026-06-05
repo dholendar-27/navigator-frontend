@@ -21,7 +21,6 @@ import {
     Search,
     Navigation,
     Trash2,
-    RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -49,8 +48,6 @@ import {
     createConversation,
     getConversation,
     updateConversation,
-    clearConversationMessages,
-    deleteConversation,
     truncateConversation,
     type ChatMessage,
     type Citation,
@@ -126,12 +123,12 @@ function ThinkingAccordion({ isStreaming, thinkingSteps }: ThinkingAccordionProp
     } else {
         const hasSearch = thinkingSteps.some(s =>
             s.step === "searching" ||
-            s.message.toLowerCase().includes("search") ||
-            s.message.toLowerCase().includes("brows")
+            (s.message || "").toLowerCase().includes("search") ||
+            (s.message || "").toLowerCase().includes("brows")
         );
         if (hasSearch) {
             headerText = "Finished browsing the web and documents";
-        } else if (lastStep?.message.startsWith("Drafting")) {
+        } else if (lastStep?.message && lastStep.message.startsWith("Drafting")) {
             headerText = lastStep.message.replace("Drafting", "Drafted");
         } else {
             headerText = lastStep?.message || "Completed thinking steps";
@@ -166,7 +163,7 @@ function ThinkingAccordion({ isStreaming, thinkingSteps }: ThinkingAccordionProp
             {isExpanded && (
                 <div className="mt-3.5 space-y-2.5 text-xs text-zinc-650 dark:text-zinc-300 pl-1.5">
                     {thinkingSteps.map((step, idx) => {
-                        const messageLower = step.message.toLowerCase();
+                        const messageLower = (step.message || "").toLowerCase();
                         const isSearch = step.step === "searching" || messageLower.includes("search");
                         const isBrowsing = messageLower.includes("brows") || messageLower.includes("web");
 
@@ -527,7 +524,7 @@ function formatInline(text: string, citations?: Citation[]): JSX.Element {
                     const firstPart = content.split(",")[0].trim();
 
                     const foundCitation = citations?.find(c => {
-                        const fname = c.filename.toLowerCase();
+                        const fname = (c.filename || "").toLowerCase();
                         const contentLower = content.toLowerCase();
                         const firstPartLower = firstPart.toLowerCase();
 
@@ -564,8 +561,6 @@ export default function NewChatPage(): JSX.Element {
     const [conversationTitle, setConversationTitle] = useState("Untitled");
     const [thinkingLabel, setThinkingLabel] = useState("Thinking...");
 
-    const [showClearConfirm, setShowClearConfirm] = useState(false);
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -1073,35 +1068,6 @@ export default function NewChatPage(): JSX.Element {
 
     // ── Clear / Delete / Truncate actions ─────────────────────────────────────
 
-    const handleClearHistory = async () => {
-        if (!conversationId) return;
-        try {
-            const token = await getToken();
-            if (!token) return;
-            await clearConversationMessages(conversationId, token);
-            setMessages([]);
-            toast.success("Chat history cleared");
-            setShowClearConfirm(false);
-            window.dispatchEvent(new Event("navigator_conversation_created"));
-        } catch (err: any) {
-            toast.error(err.message || "Failed to clear chat history");
-        }
-    };
-
-    const handleDeleteActiveConversation = async () => {
-        if (!conversationId) return;
-        try {
-            const token = await getToken();
-            if (!token) return;
-            await deleteConversation(conversationId, token);
-            toast.success("Conversation deleted");
-            setShowDeleteConfirm(false);
-            window.dispatchEvent(new CustomEvent("navigator_conversation_deleted", { detail: { id: conversationId } }));
-        } catch (err: any) {
-            toast.error(err.message || "Failed to delete conversation");
-        }
-    };
-
     const handleTruncateMessage = async (messageId: string) => {
         if (!conversationId) return;
         const targetIdx = messages.findIndex((m) => m.id === messageId);
@@ -1147,31 +1113,7 @@ export default function NewChatPage(): JSX.Element {
             data-testid="new-chat-page"
             data-tour="chat-page"
         >
-            {conversationId && (
-                <div className="sticky top-0 z-20 flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-[#FEFFFA]/90 dark:bg-zinc-950/90 backdrop-blur-md px-6 py-3.5 shrink-0">
-                    <div className="flex items-center gap-3 min-w-0">
-                        <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-150 truncate">
-                            {conversationTitle}
-                        </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setShowClearConfirm(true)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 rounded-lg text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 transition-colors cursor-pointer"
-                        >
-                            <RefreshCw className="h-3.5 w-3.5" />
-                            <span>Clear History</span>
-                        </button>
-                        <button
-                            onClick={() => setShowDeleteConfirm(true)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 dark:bg-red-950/20 dark:hover:bg-red-950/40 dark:text-red-400 rounded-lg text-xs font-semibold border border-red-200/50 dark:border-red-900/30 transition-colors cursor-pointer"
-                        >
-                            <Trash2 className="h-3.5 w-3.5" />
-                            <span>Delete Chat</span>
-                        </button>
-                    </div>
-                </div>
-            )}
+
 
             {/* ── Scrollable Messages Area ──────────────────────────────── */}
             <div
@@ -1512,58 +1454,6 @@ export default function NewChatPage(): JSX.Element {
                     </p>
                 </div>
             )}
-
-            {/* Clear History Confirmation Dialog */}
-            <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
-                <DialogContent className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md border border-zinc-150 dark:border-zinc-800 shadow-xl p-6">
-                    <DialogHeader>
-                        <DialogTitle className="text-zinc-900 dark:text-zinc-100 font-semibold text-lg">Clear Chat History</DialogTitle>
-                        <DialogDescription className="text-zinc-500 dark:text-zinc-400 text-sm mt-2">
-                            Are you sure you want to clear all messages in this conversation? This action is irreversible and cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter className="mt-6 gap-2 flex justify-end">
-                        <button
-                            onClick={() => setShowClearConfirm(false)}
-                            className="px-4 py-2 bg-zinc-100 dark:bg-zinc-850 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-lg text-sm font-semibold transition-colors cursor-pointer"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={handleClearHistory}
-                            className="px-4 py-2 bg-red-650 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors cursor-pointer"
-                        >
-                            Clear History
-                        </button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* Delete Chat Confirmation Dialog */}
-            <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-                <DialogContent className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md border border-zinc-150 dark:border-zinc-800 shadow-xl p-6">
-                    <DialogHeader>
-                        <DialogTitle className="text-zinc-900 dark:text-zinc-100 font-semibold text-lg">Delete Conversation</DialogTitle>
-                        <DialogDescription className="text-zinc-500 dark:text-zinc-400 text-sm mt-2">
-                            Are you sure you want to delete this conversation? This will permanently delete the conversation and all of its messages. This action is irreversible.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter className="mt-6 gap-2 flex justify-end">
-                        <button
-                            onClick={() => setShowDeleteConfirm(false)}
-                            className="px-4 py-2 bg-zinc-100 dark:bg-zinc-850 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-lg text-sm font-semibold transition-colors cursor-pointer"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={handleDeleteActiveConversation}
-                            className="px-4 py-2 bg-red-650 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors cursor-pointer"
-                        >
-                            Delete Chat
-                        </button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
 
             {/* Delete Message Confirmation Dialog */}
             <Dialog open={messageToDelete !== null} onOpenChange={(open) => !open && setMessageToDelete(null)}>
