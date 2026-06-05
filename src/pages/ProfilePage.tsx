@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { cacheWebSocket } from "@/utils/cacheWebSocket";
+import { cn } from "@/lib/utils";
 
 export default function ProfilePage() {
     const { getToken, user } = useKindeAuth();
@@ -21,10 +23,27 @@ export default function ProfilePage() {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isAvatarDeleted, setIsAvatarDeleted] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isWsConnected, setIsWsConnected] = useState(false);
 
     // States for editable name fields
     const [editFirstName, setEditFirstName] = useState("");
     const [editLastName, setEditLastName] = useState("");
+
+    // Subscribe to WebSocket status changes
+    useEffect(() => {
+        setIsWsConnected(cacheWebSocket.isConnected());
+
+        const handleConnect = () => setIsWsConnected(true);
+        const handleDisconnect = () => setIsWsConnected(false);
+
+        cacheWebSocket.on("ws:connected", handleConnect);
+        cacheWebSocket.on("ws:disconnected", handleDisconnect);
+
+        return () => {
+            cacheWebSocket.off("ws:connected", handleConnect);
+            cacheWebSocket.off("ws:disconnected", handleDisconnect);
+        };
+    }, []);
 
     // Load profile from sessionStorage on mount, or sync if not present
     useEffect(() => {
@@ -270,6 +289,10 @@ export default function ProfilePage() {
                                         </div>
                                     )}
                                 </div>
+                                <span className={cn(
+                                    "absolute bottom-1 right-1 block h-3.5 w-3.5 rounded-full ring-2 ring-white dark:ring-zinc-900 transition-all duration-300",
+                                    isWsConnected ? "bg-green-500" : "bg-yellow-500"
+                                )} />
                                 {isEditing && currentAvatarUrl && (
                                     <button
                                         type="button"

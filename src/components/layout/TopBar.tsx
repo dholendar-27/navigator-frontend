@@ -45,6 +45,10 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuSeparator,
+    DropdownMenuSub,
+    DropdownMenuSubTrigger,
+    DropdownMenuSubContent,
+    DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
 import {
     Tooltip,
@@ -184,6 +188,68 @@ function UsageRow({ label, used, limit }: UsageRowProps): JSX.Element {
     );
 }
 
+const USFlag = () => (
+    <svg className="w-[18px] h-[18px] rounded-full shrink-0" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <mask id="us-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="20" height="20">
+            <circle cx="10" cy="10" r="10" fill="#FCFCFC"/>
+        </mask>
+        <g mask="url(#us-mask)">
+            <rect width="20" height="20" fill="#FCFCFC"/>
+            {/* Stripes */}
+            <path d="M0 1.538h20M0 4.615h20M0 7.692h20M0 10.769h20M0 13.846h20M0 16.923h20" stroke="#E31D23" strokeWidth="1.54"/>
+            {/* Canton */}
+            <rect width="10.77" height="10.77" fill="#0A3161"/>
+            {/* Stylized stars */}
+            <circle cx="2.2" cy="2.2" r="0.5" fill="#FCFCFC"/>
+            <circle cx="5.0" cy="2.2" r="0.5" fill="#FCFCFC"/>
+            <circle cx="7.8" cy="2.2" r="0.5" fill="#FCFCFC"/>
+            <circle cx="3.6" cy="5.0" r="0.5" fill="#FCFCFC"/>
+            <circle cx="6.4" cy="5.0" r="0.5" fill="#FCFCFC"/>
+            <circle cx="2.2" cy="7.8" r="0.5" fill="#FCFCFC"/>
+            <circle cx="5.0" cy="7.8" r="0.5" fill="#FCFCFC"/>
+            <circle cx="7.8" cy="7.8" r="0.5" fill="#FCFCFC"/>
+        </g>
+    </svg>
+);
+
+const FrenchFlag = () => (
+    <svg className="w-[18px] h-[18px] rounded-full shrink-0 border border-zinc-200/60 dark:border-zinc-800" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <mask id="fr-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="20" height="20">
+            <circle cx="10" cy="10" r="10" fill="#FCFCFC"/>
+        </mask>
+        <g mask="url(#fr-mask)">
+            <rect x="0" width="6.67" height="20" fill="#002395"/>
+            <rect x="6.67" width="6.67" height="20" fill="#FCFCFC"/>
+            <rect x="13.34" width="6.67" height="20" fill="#ED2939"/>
+        </g>
+    </svg>
+);
+
+const JapaneseFlag = () => (
+    <svg className="w-[18px] h-[18px] rounded-full shrink-0 border border-zinc-200/60 dark:border-zinc-800" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <mask id="jp-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="20" height="20">
+            <circle cx="10" cy="10" r="10" fill="#FCFCFC"/>
+        </mask>
+        <g mask="url(#jp-mask)">
+            <rect width="20" height="20" fill="#FCFCFC"/>
+            <circle cx="10" cy="10" r="4.5" fill="#BC002D"/>
+        </g>
+    </svg>
+);
+
+const SpanishFlag = () => (
+    <svg className="w-[18px] h-[18px] rounded-full shrink-0" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <mask id="es-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="20" height="20">
+            <circle cx="10" cy="10" r="10" fill="#FCFCFC"/>
+        </mask>
+        <g mask="url(#es-mask)">
+            <rect y="0" width="20" height="5" fill="#C60B1E"/>
+            <rect y="5" width="20" height="10" fill="#FBE122"/>
+            <rect y="15" width="20" height="5" fill="#C60B1E"/>
+        </g>
+    </svg>
+);
+
 
 type TopBarProps = {
     onToggleSidebar: () => void;
@@ -197,7 +263,7 @@ export default function TopBar({
     const [profile, setProfile] = useState<any>(null);
     const [changePasswordOpen, setChangePasswordOpen] = useState(false);
     const navigate = useNavigate();
-    const { theme, toggleTheme } = useTheme();
+    const { theme, setTheme } = useTheme();
     const [isWsConnected, setIsWsConnected] = useState(false);
 
     useEffect(() => {
@@ -392,30 +458,6 @@ export default function TopBar({
             </div>
 
             <div className="flex items-center gap-3" data-tour="topbar-actions">
-                {/* Theme Toggle */}
-                <TooltipProvider delayDuration={200}>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <button
-                                type="button"
-                                onClick={toggleTheme}
-                                className="rounded-full p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-200 dark:focus:ring-zinc-700 transition-colors"
-                                data-testid="theme-toggle-btn"
-                                aria-label={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
-                                data-tour="theme-toggle"
-                            >
-                                {theme === "light" ? (
-                                    <Moon className="h-5 w-5 text-zinc-700 dark:text-zinc-300" />
-                                ) : (
-                                    <Sun className="h-5 w-5 text-zinc-700 dark:text-zinc-300" />
-                                )}
-                            </button>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom" className="text-xs">
-                            {theme === "light" ? "Dark mode" : "Light mode"}
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
 
                 {/* Notifications */}
                 <DropdownMenu>
@@ -581,40 +623,6 @@ export default function TopBar({
                         sideOffset={2}
                         className="w-[300px] rounded-[10px] p-[10px] border border-zinc-200/60 dark:border-zinc-800 shadow-lg bg-[#FEFFFA] dark:bg-zinc-900 space-y-3.5 focus:outline-none"
                     >
-                        {/* User Profile Header with Status Badge */}
-                        <div className="flex items-center gap-3 px-2.5 py-1.5 border-b border-zinc-100 dark:border-zinc-800/60 pb-3">
-                            <div className="relative">
-                                <Avatar className="h-10 w-10">
-                                    {profile?.avatar_url ? (
-                                        <AvatarImage
-                                            src={profile.avatar_url}
-                                            alt={fullName}
-                                            className="object-cover h-full w-full"
-                                        />
-                                    ) : user?.picture ? (
-                                        <AvatarImage
-                                            src={user.picture}
-                                            alt={fullName}
-                                        />
-                                    ) : null}
-                                    <AvatarFallback className="bg-zinc-100 text-zinc-800 font-semibold text-sm">
-                                        {initials}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <span className={cn(
-                                    "absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-[#FEFFFA] dark:ring-zinc-900 transition-all duration-300",
-                                    isWsConnected ? "bg-green-500" : "bg-yellow-500"
-                                )} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate leading-none mb-1">
-                                    {fullName}
-                                </p>
-                                <p className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate leading-none">
-                                    {user?.email || profile?.email || ""}
-                                </p>
-                            </div>
-                        </div>
 
                         {/* Overall Usage Card Container */}
                         <div className="rounded-[10px] bg-[#60646B14] dark:bg-zinc-800/40 p-3 border border-zinc-150/60 dark:border-zinc-800">
@@ -671,6 +679,96 @@ export default function TopBar({
                                 <span className="font-medium">My Profile</span>
                             </DropdownMenuItem>
 
+                            {/* Theme Submenu */}
+                            <DropdownMenuSub>
+                                <DropdownMenuSubTrigger
+                                    className="flex items-center px-2.5 py-2 rounded-lg text-xs text-zinc-700 dark:text-zinc-300 hover:bg-[#60646B1A] dark:hover:bg-zinc-800 focus:bg-[#60646B1A] dark:focus:bg-zinc-800 data-[state=open]:bg-[#60646B1A] dark:data-[state=open]:bg-zinc-800 cursor-pointer select-none [&_svg]:size-4 [&_svg]:shrink-0"
+                                >
+                                    <div className="flex items-center gap-2.5 flex-1">
+                                        {theme === "light" ? (
+                                            <Sun className="h-4 w-4 text-zinc-500" />
+                                        ) : theme === "dark" ? (
+                                            <Moon className="h-4 w-4 text-zinc-500" />
+                                        ) : (
+                                            <Settings className="h-4 w-4 text-zinc-500" />
+                                        )}
+                                        <span className="font-medium">Theme</span>
+                                    </div>
+                                    <span className="text-blue-600 dark:text-blue-400 font-medium text-xs mr-0.5 capitalize">
+                                        {theme}
+                                    </span>
+                                </DropdownMenuSubTrigger>
+                                <DropdownMenuPortal>
+                                    <DropdownMenuSubContent
+                                        sideOffset={8}
+                                        className="w-[150px] rounded-[10px] p-[10px] border border-zinc-200/60 dark:border-zinc-800 shadow-lg bg-[#FEFFFA] dark:bg-zinc-900 space-y-0.5 focus:outline-none"
+                                    >
+                                        <DropdownMenuItem
+                                            onSelect={(e) => {
+                                                e.preventDefault();
+                                                setTheme("light");
+                                            }}
+                                            className={cn(
+                                                "flex items-center justify-between px-2.5 py-2 rounded-lg text-xs text-zinc-700 dark:text-zinc-300 hover:bg-[#60646B1A] dark:hover:bg-zinc-800 focus:bg-[#60646B1A] dark:focus:bg-zinc-800 cursor-pointer",
+                                                theme === "light" && "bg-[#60646B0D] dark:bg-zinc-800/40"
+                                            )}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <Sun className="h-4 w-4 text-zinc-500" />
+                                                <span>Light</span>
+                                            </div>
+                                            {theme === "light" && (
+                                                <div className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-blue-600 shrink-0">
+                                                    <Check className="h-2 w-2 stroke-[4] text-white" />
+                                                </div>
+                                            )}
+                                        </DropdownMenuItem>
+
+                                        <DropdownMenuItem
+                                            onSelect={(e) => {
+                                                e.preventDefault();
+                                                setTheme("dark");
+                                            }}
+                                            className={cn(
+                                                "flex items-center justify-between px-2.5 py-2 rounded-lg text-xs text-zinc-700 dark:text-zinc-300 hover:bg-[#60646B1A] dark:hover:bg-zinc-800 focus:bg-[#60646B1A] dark:focus:bg-zinc-800 cursor-pointer",
+                                                theme === "dark" && "bg-[#60646B0D] dark:bg-zinc-800/40"
+                                            )}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <Moon className="h-4 w-4 text-zinc-500" />
+                                                <span>Dark</span>
+                                            </div>
+                                            {theme === "dark" && (
+                                                <div className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-blue-600 shrink-0">
+                                                    <Check className="h-2 w-2 stroke-[4] text-white" />
+                                                </div>
+                                            )}
+                                        </DropdownMenuItem>
+
+                                        <DropdownMenuItem
+                                            onSelect={(e) => {
+                                                e.preventDefault();
+                                                setTheme("system");
+                                            }}
+                                            className={cn(
+                                                "flex items-center justify-between px-2.5 py-2 rounded-lg text-xs text-zinc-700 dark:text-zinc-300 hover:bg-[#60646B1A] dark:hover:bg-zinc-800 focus:bg-[#60646B1A] dark:focus:bg-zinc-800 cursor-pointer",
+                                                theme === "system" && "bg-[#60646B0D] dark:bg-zinc-800/40"
+                                            )}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <Settings className="h-4 w-4 text-zinc-500" />
+                                                <span>System</span>
+                                            </div>
+                                            {theme === "system" && (
+                                                <div className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-blue-600 shrink-0">
+                                                    <Check className="h-2 w-2 stroke-[4] text-white" />
+                                                </div>
+                                            )}
+                                        </DropdownMenuItem>
+                                    </DropdownMenuSubContent>
+                                </DropdownMenuPortal>
+                            </DropdownMenuSub>
+
                             <DropdownMenuItem
                                 onClick={() => navigate("/subscription")}
                                 className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs text-zinc-700 dark:text-zinc-300 hover:bg-[#60646B1A] dark:hover:bg-zinc-800 focus:bg-[#60646B1A] dark:focus:bg-zinc-800 cursor-pointer"
@@ -679,16 +777,57 @@ export default function TopBar({
                                 <span className="font-medium">Subscription</span>
                             </DropdownMenuItem>
 
-                            <DropdownMenuItem
-                                onClick={() => toast.info("Language settings coming soon")}
-                                className="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs text-zinc-700 dark:text-zinc-300 hover:bg-[#60646B1A] dark:hover:bg-zinc-800 focus:bg-[#60646B1A] dark:focus:bg-zinc-800 cursor-pointer"
-                            >
-                                <div className="flex items-center gap-2.5">
-                                    <Languages className="h-4 w-4 text-zinc-500" />
-                                    <span className="font-medium">Language</span>
-                                </div>
-                                <ChevronRight className="h-3.5 w-3.5 text-zinc-400" />
-                            </DropdownMenuItem>
+                            {/* Language Submenu */}
+                            <DropdownMenuSub>
+                                <DropdownMenuSubTrigger
+                                    className="flex items-center px-2.5 py-2 rounded-lg text-xs text-zinc-700 dark:text-zinc-300 hover:bg-[#60646B1A] dark:hover:bg-zinc-800 focus:bg-[#60646B1A] dark:focus:bg-zinc-800 data-[state=open]:bg-[#60646B1A] dark:data-[state=open]:bg-zinc-800 cursor-pointer select-none [&_svg]:size-4 [&_svg]:shrink-0"
+                                >
+                                    <div className="flex items-center gap-2.5 flex-1">
+                                        <Languages className="h-4 w-4 text-zinc-500" />
+                                        <span className="font-medium">Language</span>
+                                    </div>
+                                    <span className="text-blue-600 dark:text-blue-400 font-medium text-xs mr-0.5">
+                                        English
+                                    </span>
+                                </DropdownMenuSubTrigger>
+                                <DropdownMenuPortal>
+                                    <DropdownMenuSubContent
+                                        sideOffset={8}
+                                        className="w-[180px] rounded-[10px] p-[10px] border border-zinc-200/60 dark:border-zinc-800 shadow-lg bg-[#FEFFFA] dark:bg-zinc-900 space-y-0.5 focus:outline-none"
+                                    >
+                                        <DropdownMenuItem className="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs text-zinc-700 dark:text-zinc-300 bg-[#60646B0D] dark:bg-zinc-800/40 hover:bg-[#60646B1A] dark:hover:bg-zinc-800 focus:bg-[#60646B1A] dark:focus:bg-zinc-800 cursor-pointer">
+                                            <div className="flex items-center gap-3">
+                                                <USFlag />
+                                                <span className="font-medium">English</span>
+                                            </div>
+                                            <div className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-blue-600 shrink-0">
+                                                <Check className="h-2 w-2 stroke-[4] text-white" />
+                                            </div>
+                                        </DropdownMenuItem>
+
+                                        <DropdownMenuItem disabled className="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs text-zinc-700 dark:text-zinc-300">
+                                            <div className="flex items-center gap-3">
+                                                <FrenchFlag />
+                                                <span className="font-medium">French</span>
+                                            </div>
+                                        </DropdownMenuItem>
+
+                                        <DropdownMenuItem disabled className="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs text-zinc-700 dark:text-zinc-300">
+                                            <div className="flex items-center gap-3">
+                                                <JapaneseFlag />
+                                                <span className="font-medium">Japanese</span>
+                                            </div>
+                                        </DropdownMenuItem>
+
+                                        <DropdownMenuItem disabled className="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs text-zinc-700 dark:text-zinc-300">
+                                            <div className="flex items-center gap-3">
+                                                <SpanishFlag />
+                                                <span className="font-medium">Spanish</span>
+                                            </div>
+                                        </DropdownMenuItem>
+                                    </DropdownMenuSubContent>
+                                </DropdownMenuPortal>
+                            </DropdownMenuSub>
 
                             <DropdownMenuItem
                                 onClick={() => toast.info("About Navigator details")}

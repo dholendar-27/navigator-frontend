@@ -413,7 +413,7 @@ export default function OnboardingPage({ onComplete }: OnboardingPageProps) {
                                                 {currentPhoneCountry ? `${currentPhoneCountry.flag} ${currentPhoneCountry.dial_code}` : "+1"}
                                             </SelectValue>
                                         </SelectTrigger>
-                                        <SelectContent className="max-h-60 overflow-y-auto bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-850">
+                                        <SelectContent className="max-h-60 overflow-y-auto bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
                                             {countries.map((c) => (
                                                 <SelectItem key={`${c.code}-dial`} value={c.code} textValue={c.name} className="cursor-pointer text-sm">
                                                     {c.flag} {c.dial_code} ({c.code})

@@ -92,8 +92,8 @@ function StatusDot({
 }: StatusDotProps): JSX.Element {
     const isPending = status?.toLowerCase() === "pending";
     const color = isPending
-        ? "bg-zinc-500 dark:bg-zinc-400"
-        : "bg-zinc-700 dark:bg-zinc-300";
+        ? "bg-[#FF5100]"
+        : "bg-[#149614]";
 
     return (
         <TooltipProvider delayDuration={200}>
@@ -533,11 +533,11 @@ export default function EmployeeTable({
                                     <div className="flex justify-between w-full md:w-auto text-sm truncate">
                                         <span className="md:hidden text-zinc-505 mr-2">Status:</span>
                                         {emp.isActive !== false ? (
-                                            <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-800/30 font-medium">
+                                            <Badge variant="outline" className="bg-[#149614]/10 text-[#149614] border-[#149614]/20 dark:bg-[#149614]/10 dark:text-[#149614] dark:border-[#149614]/30 font-medium">
                                                 Active
                                             </Badge>
                                         ) : (
-                                            <Badge variant="outline" className="bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800/30 dark:text-zinc-400 dark:border-zinc-700/30 font-medium">
+                                            <Badge variant="outline" className="bg-[#FF5100]/10 text-[#FF5100] border-[#FF5100]/20 dark:bg-[#FF5100]/10 dark:text-[#FF5100] dark:border-[#FF5100]/30 font-medium">
                                                 Pending Invite
                                             </Badge>
                                         )}

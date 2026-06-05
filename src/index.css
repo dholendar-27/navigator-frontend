@@ -59,13 +59,13 @@
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     font-family: 'Inter Display', 'Inter', system-ui, -apple-system, sans-serif;
-    letter-spacing: -0.05em;
+    letter-spacing: -0.02em;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   input, textarea, button, select {
     font-family: 'Inter Display', 'Inter', system-ui, -apple-system, sans-serif;
-    letter-spacing: -0.05em;
+    letter-spacing: -0.02em;
   }
 
   strong, b {

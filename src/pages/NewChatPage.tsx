@@ -475,7 +475,7 @@ function MessageContent({
                     return (
                         <div key={idx} className="flex items-start gap-2 pl-2">
                             <span className="shrink-0 text-xs font-semibold text-zinc-400 mt-0.5 w-4">{numMatch[1]}.</span>
-                            <span className="text-zinc-850 dark:text-zinc-150">{formatInline(numMatch[2], citations)}</span>
+                            <span className="text-zinc-800 dark:text-zinc-155">{formatInline(numMatch[2], citations)}</span>
                         </div>
                     );
                 }
@@ -525,12 +525,12 @@ function formatInline(text: string, citations?: Citation[]): JSX.Element {
                 if (genericMatch) {
                     const content = genericMatch[1].trim();
                     const firstPart = content.split(",")[0].trim();
-                    
+
                     const foundCitation = citations?.find(c => {
                         const fname = c.filename.toLowerCase();
                         const contentLower = content.toLowerCase();
                         const firstPartLower = firstPart.toLowerCase();
-                        
+
                         return fname === contentLower || fname === firstPartLower || contentLower.includes(fname);
                     });
 
@@ -1184,10 +1184,10 @@ export default function NewChatPage(): JSX.Element {
                     <div className="flex flex-col items-center justify-center min-h-full text-center px-3 sm:px-6 py-6 md:py-10 max-w-5xl mx-auto">
                         {/* Logo */}
                         <div className="mb-6 select-none pointer-events-none">
-                            <img 
-                                src="/logo.svg" 
-                                alt="Logo" 
-                                className="h-12 w-12 mx-auto dark:brightness-110" 
+                            <img
+                                src="/logo.svg"
+                                alt="Logo"
+                                className="h-12 w-12 mx-auto dark:brightness-110"
                             />
                         </div>
 
@@ -1393,7 +1393,7 @@ export default function NewChatPage(): JSX.Element {
                                                                 </Tooltip>
                                                                 <Tooltip>
                                                                     <TooltipTrigger asChild>
-                                                                        <button 
+                                                                        <button
                                                                             onClick={() => {
                                                                                 navigator.clipboard.writeText(m.content);
                                                                                 toast.success("Message copied to clipboard!");
@@ -1407,7 +1407,7 @@ export default function NewChatPage(): JSX.Element {
                                                                 </Tooltip>
                                                                 <Tooltip>
                                                                     <TooltipTrigger asChild>
-                                                                        <button 
+                                                                        <button
                                                                             onClick={() => setMessageToDelete(m.id)}
                                                                             className="flex items-center gap-1.5 text-zinc-450 hover:text-red-650 dark:hover:text-red-400 transition-colors cursor-pointer"
                                                                         >
@@ -1508,88 +1508,88 @@ export default function NewChatPage(): JSX.Element {
                     </div>
 
                     <p className="text-center text-[11px] text-zinc-400 dark:text-zinc-500 mt-2 select-none">
-                                                        Navigator may make mistakes. Verify important information.
-                                                    </p>
-                                                </div>
-                                            )}
+                        Navigator may make mistakes. Verify important information.
+                    </p>
+                </div>
+            )}
 
-                                            {/* Clear History Confirmation Dialog */}
-                                            <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
-                                                <DialogContent className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md border border-zinc-150 dark:border-zinc-800 shadow-xl p-6">
-                                                    <DialogHeader>
-                                                        <DialogTitle className="text-zinc-900 dark:text-zinc-100 font-semibold text-lg">Clear Chat History</DialogTitle>
-                                                        <DialogDescription className="text-zinc-500 dark:text-zinc-400 text-sm mt-2">
-                                                            Are you sure you want to clear all messages in this conversation? This action is irreversible and cannot be undone.
-                                                        </DialogDescription>
-                                                    </DialogHeader>
-                                                    <DialogFooter className="mt-6 gap-2 flex justify-end">
-                                                        <button
-                                                            onClick={() => setShowClearConfirm(false)}
-                                                            className="px-4 py-2 bg-zinc-100 dark:bg-zinc-850 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-lg text-sm font-semibold transition-colors cursor-pointer"
-                                                        >
-                                                            Cancel
-                                                        </button>
-                                                        <button
-                                                            onClick={handleClearHistory}
-                                                            className="px-4 py-2 bg-red-650 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors cursor-pointer"
-                                                        >
-                                                            Clear History
-                                                        </button>
-                                                    </DialogFooter>
-                                                </DialogContent>
-                                            </Dialog>
+            {/* Clear History Confirmation Dialog */}
+            <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
+                <DialogContent className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md border border-zinc-150 dark:border-zinc-800 shadow-xl p-6">
+                    <DialogHeader>
+                        <DialogTitle className="text-zinc-900 dark:text-zinc-100 font-semibold text-lg">Clear Chat History</DialogTitle>
+                        <DialogDescription className="text-zinc-500 dark:text-zinc-400 text-sm mt-2">
+                            Are you sure you want to clear all messages in this conversation? This action is irreversible and cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="mt-6 gap-2 flex justify-end">
+                        <button
+                            onClick={() => setShowClearConfirm(false)}
+                            className="px-4 py-2 bg-zinc-100 dark:bg-zinc-850 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-lg text-sm font-semibold transition-colors cursor-pointer"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleClearHistory}
+                            className="px-4 py-2 bg-red-650 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors cursor-pointer"
+                        >
+                            Clear History
+                        </button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
-                                            {/* Delete Chat Confirmation Dialog */}
-                                            <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-                                                <DialogContent className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md border border-zinc-150 dark:border-zinc-800 shadow-xl p-6">
-                                                    <DialogHeader>
-                                                        <DialogTitle className="text-zinc-900 dark:text-zinc-100 font-semibold text-lg">Delete Conversation</DialogTitle>
-                                                        <DialogDescription className="text-zinc-500 dark:text-zinc-400 text-sm mt-2">
-                                                            Are you sure you want to delete this conversation? This will permanently delete the conversation and all of its messages. This action is irreversible.
-                                                        </DialogDescription>
-                                                    </DialogHeader>
-                                                    <DialogFooter className="mt-6 gap-2 flex justify-end">
-                                                        <button
-                                                            onClick={() => setShowDeleteConfirm(false)}
-                                                            className="px-4 py-2 bg-zinc-100 dark:bg-zinc-850 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-lg text-sm font-semibold transition-colors cursor-pointer"
-                                                        >
-                                                            Cancel
-                                                        </button>
-                                                        <button
-                                                            onClick={handleDeleteActiveConversation}
-                                                            className="px-4 py-2 bg-red-650 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors cursor-pointer"
-                                                        >
-                                                            Delete Chat
-                                                        </button>
-                                                    </DialogFooter>
-                                                </DialogContent>
-                                            </Dialog>
+            {/* Delete Chat Confirmation Dialog */}
+            <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+                <DialogContent className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md border border-zinc-150 dark:border-zinc-800 shadow-xl p-6">
+                    <DialogHeader>
+                        <DialogTitle className="text-zinc-900 dark:text-zinc-100 font-semibold text-lg">Delete Conversation</DialogTitle>
+                        <DialogDescription className="text-zinc-500 dark:text-zinc-400 text-sm mt-2">
+                            Are you sure you want to delete this conversation? This will permanently delete the conversation and all of its messages. This action is irreversible.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="mt-6 gap-2 flex justify-end">
+                        <button
+                            onClick={() => setShowDeleteConfirm(false)}
+                            className="px-4 py-2 bg-zinc-100 dark:bg-zinc-850 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-lg text-sm font-semibold transition-colors cursor-pointer"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleDeleteActiveConversation}
+                            className="px-4 py-2 bg-red-650 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors cursor-pointer"
+                        >
+                            Delete Chat
+                        </button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
-                                            {/* Delete Message Confirmation Dialog */}
-                                            <Dialog open={messageToDelete !== null} onOpenChange={(open) => !open && setMessageToDelete(null)}>
-                                                <DialogContent className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md border border-zinc-150 dark:border-zinc-800 shadow-xl p-6">
-                                                    <DialogHeader>
-                                                        <DialogTitle className="text-zinc-900 dark:text-zinc-100 font-semibold text-lg">Delete Message</DialogTitle>
-                                                        <DialogDescription className="text-zinc-500 dark:text-zinc-400 text-sm mt-2">
-                                                            Are you sure you want to delete this message? This will delete this message and all subsequent messages in this chat. This action is irreversible.
-                                                        </DialogDescription>
-                                                    </DialogHeader>
-                                                    <DialogFooter className="mt-6 gap-2 flex justify-end">
-                                                        <button
-                                                            onClick={() => setMessageToDelete(null)}
-                                                            className="px-4 py-2 bg-zinc-100 dark:bg-zinc-850 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-lg text-sm font-semibold transition-colors cursor-pointer"
-                                                        >
-                                                            Cancel
-                                                        </button>
-                                                        <button
-                                                            onClick={() => messageToDelete && handleTruncateMessage(messageToDelete)}
-                                                            className="px-4 py-2 bg-red-650 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors cursor-pointer"
-                                                        >
-                                                            Delete
-                                                        </button>
-                                                    </DialogFooter>
-                                                </DialogContent>
-                                            </Dialog>
-                                        </div>
-                                    );
-                                }
+            {/* Delete Message Confirmation Dialog */}
+            <Dialog open={messageToDelete !== null} onOpenChange={(open) => !open && setMessageToDelete(null)}>
+                <DialogContent className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md border border-zinc-150 dark:border-zinc-800 shadow-xl p-6">
+                    <DialogHeader>
+                        <DialogTitle className="text-zinc-900 dark:text-zinc-100 font-semibold text-lg">Delete Message</DialogTitle>
+                        <DialogDescription className="text-zinc-500 dark:text-zinc-400 text-sm mt-2">
+                            Are you sure you want to delete this message? This will delete this message and all subsequent messages in this chat. This action is irreversible.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="mt-6 gap-2 flex justify-end">
+                        <button
+                            onClick={() => setMessageToDelete(null)}
+                            className="px-4 py-2 bg-zinc-100 dark:bg-zinc-850 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-lg text-sm font-semibold transition-colors cursor-pointer"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={() => messageToDelete && handleTruncateMessage(messageToDelete)}
+                            className="px-4 py-2 bg-red-650 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors cursor-pointer"
+                        >
+                            Delete
+                        </button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </div>
+    );
+}

@@ -895,8 +895,8 @@ export default function KnowledgeBasePage() {
 
             {/* Filters or Batch Actions */}
             {selected.size > 0 ? (
-                <div className="flex-shrink-0 mt-4 flex items-center justify-between gap-3 bg-transparent select-none animate-fade-in">
-                    <div className="flex items-center gap-3">
+                <div className="mt-4 shrink-0 flex items-center justify-between gap-2 bg-transparent select-none animate-fade-in">
+                    <div className="flex items-center gap-2">
                         <PermissionGate
                             permissions={[PERMISSIONS.FILE_DELETE, PERMISSIONS.FOLDER_DELETE]}
                             fallback={null}
@@ -906,15 +906,15 @@ export default function KnowledgeBasePage() {
                                 size="sm"
                                 disabled={isBatchProcessing}
                                 onClick={() => setConfirmBatchDelete(true)}
-                                className="h-10 border-[#E7E7E0] dark:border-zinc-700 text-red-650 hover:text-red-700 dark:text-red-400 bg-[#FEFFFA] dark:bg-zinc-900 hover:bg-red-50 dark:hover:bg-red-950/20 text-sm font-semibold rounded-lg shadow-sm"
+                                className="h-6 px-2.5 border-[#E7E7E0] dark:border-zinc-700 text-red-650 hover:text-red-700 dark:text-red-400 bg-[#FEFFFA] dark:bg-zinc-900 hover:bg-red-50 dark:hover:bg-red-950/20 text-xs font-normal rounded-md shadow-sm flex items-center justify-center gap-1.5"
                             >
-                                <Trash2 className="h-4 w-4 mr-2 text-red-500" />
+                                <Trash2 className="h-3.5 w-3.5 text-red-500" />
                                 Delete
                             </Button>
                         </PermissionGate>
                     </div>
                     {/* Right side selection badge */}
-                    <div className="flex items-center gap-2 px-3 py-2 border border-[#E7E7E0] dark:border-zinc-800 bg-[#FEFFFA] dark:bg-zinc-900 rounded-lg text-sm text-zinc-650 dark:text-zinc-300 font-medium shadow-xs">
+                    <div className="flex items-center gap-1.5 px-2.5 h-6 border border-[#E7E7E0] dark:border-zinc-800 bg-[#FEFFFA] dark:bg-zinc-900 rounded-md text-xs text-zinc-650 dark:text-zinc-300 font-normal shadow-sm">
                         <span>{selected.size} selected</span>
                         <button
                             type="button"
@@ -922,7 +922,7 @@ export default function KnowledgeBasePage() {
                             className="text-zinc-400 hover:text-zinc-650 dark:hover:text-zinc-200 transition-colors ml-1 cursor-pointer"
                             aria-label="Clear selection"
                         >
-                            <X className="h-4 w-4" />
+                            <X className="h-3 w-3" />
                         </button>
                     </div>
                 </div>

@@ -83,7 +83,10 @@ export default function ColumnSettings({
     };
 
     const handleReset = () => {
-        setTempVisible(new Set(defaultColumns.slice(0, maxAllowed)));
+        const resetCols = defaultColumns.slice(0, maxAllowed);
+        setTempVisible(new Set(resetCols));
+        onApply(resetCols);
+        setOpen(false);
     };
 
     const handleApply = () => {
@@ -105,7 +108,7 @@ export default function ColumnSettings({
             <PopoverContent align={align} className="w-60 p-0 bg-white dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-800 rounded-xl shadow-lg">
                 {/* Select All */}
                 <div
-                    className={`flex items-center justify-between px-4 py-3 hover:bg-zinc-50/50 dark:hover:bg-zinc-850/50 ${columns.length > maxAllowed ? "cursor-not-allowed" : "cursor-pointer"}`}
+                    className={`flex items-center justify-between px-4 py-3 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/50 ${columns.length > maxAllowed ? "cursor-not-allowed" : "cursor-pointer"}`}
                     onClick={() => columns.length <= maxAllowed && handleSelectAll(!isAllSelected)}
                 >
                     <div className="flex items-center gap-3">
@@ -134,7 +137,7 @@ export default function ColumnSettings({
                         return (
                             <div
                                 key={col.key}
-                                className={`flex items-center gap-3 px-4 py-2 hover:bg-zinc-50/50 dark:hover:bg-zinc-850/50 ${isCheckboxDisabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+                                className={`flex items-center gap-3 px-4 py-2 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/50 ${isCheckboxDisabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
                                 onClick={() => !isCheckboxDisabled && handleToggleColumn(col.key, !isChecked)}
                             >
                                 <Checkbox

@@ -40,7 +40,7 @@ const EMPLOYEE_COLUMNS = [
     { key: "createdDate", label: "Created Date" },
 ];
 
-const DEFAULT_EMPLOYEE_COLUMNS = ["name", "status", "role", "kbFiles"];
+const DEFAULT_EMPLOYEE_COLUMNS = ["name", "kbFiles", "simpleInteraction", "complexInteraction"];
 import EmptyState from "@/components/employees/EmptyState";
 import UnifiedEmptyState from "@/components/ui/empty-state";
 import AddEmployeeDrawer from "@/components/employees/AddEmployeeDrawer";

@@ -159,7 +159,7 @@ export default function SubscriptionPage(): JSX.Element {
                                 <ChevronDown className="h-4 w-4 text-zinc-450 dark:text-zinc-500" />
                             </button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-32 bg-[#FEFFFA] dark:bg-zinc-900 border border-[#E7E7E0] dark:border-zinc-850 rounded-xl p-1 shadow-md">
+                        <DropdownMenuContent align="start" className="w-32 bg-[#FEFFFA] dark:bg-zinc-900 border border-[#E7E7E0] dark:border-zinc-800 rounded-xl p-1 shadow-md">
                             {currencies.map((curr) => (
                                 <DropdownMenuItem
                                     key={curr.code}
@@ -178,29 +178,26 @@ export default function SubscriptionPage(): JSX.Element {
                         <button
                             type="button"
                             onClick={() => setBillingCycle("monthly")}
-                            className={`flex items-center h-full px-4 rounded-[6px] text-xs font-semibold cursor-pointer transition-all ${
-                                billingCycle === "monthly"
+                            className={`flex items-center h-full px-4 rounded-[6px] text-xs font-semibold cursor-pointer transition-all ${billingCycle === "monthly"
                                     ? "bg-[#EBF2FE] dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-bold"
                                     : "text-zinc-500 hover:text-zinc-855 dark:text-zinc-450 dark:hover:text-zinc-255"
-                            }`}
+                                }`}
                         >
                             Monthly
                         </button>
                         <button
                             type="button"
                             onClick={() => setBillingCycle("yearly")}
-                            className={`flex items-center gap-2 h-full px-3 rounded-[6px] text-xs font-semibold cursor-pointer transition-all ${
-                                billingCycle === "yearly"
+                            className={`flex items-center gap-2 h-full px-3 rounded-[6px] text-xs font-semibold cursor-pointer transition-all ${billingCycle === "yearly"
                                     ? "bg-[#EBF2FE] dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-bold"
                                     : "text-zinc-500 hover:text-zinc-855 dark:text-zinc-450 dark:hover:text-zinc-255"
-                            }`}
+                                }`}
                         >
                             <span>Yearly</span>
-                            <span className={`flex items-center gap-1.5 px-2 py-0.5 rounded-[4px] text-[10px] font-bold transition-all ${
-                                billingCycle === "yearly"
+                            <span className={`flex items-center gap-1.5 px-2 py-0.5 rounded-[4px] text-[10px] font-bold transition-all ${billingCycle === "yearly"
                                     ? "bg-[#FFEBE3] text-[#FF4E20] dark:bg-orange-950/50 dark:text-orange-400"
                                     : "bg-orange-50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-500"
-                            }`}>
+                                }`}>
                                 <Tag className="h-3.5 w-3.5 fill-current stroke-[2.5]" />
                                 Up to 12% Off
                             </span>
@@ -294,7 +291,7 @@ export default function SubscriptionPage(): JSX.Element {
                                     <Button
                                         variant="outline"
                                         onClick={() => handlePlanAction(plan.name, plan.buttonVariant)}
-                                        className="w-full rounded-[8px] font-medium py-2 h-10 border border-[#E7E7E0] dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 bg-[#FEFFFA] dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-850 transition-colors"
+                                        className="w-full rounded-[8px] font-medium py-2 h-10 border border-[#E7E7E0] dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 bg-[#FEFFFA] dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
                                     >
                                         {plan.buttonVariant === "upgrade" ? "Upgrade" : "Downgrade"}
                                     </Button>
