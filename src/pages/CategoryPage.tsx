@@ -134,7 +134,7 @@ export default function CategoryPage() {
 
     // Populate categories from API
     const loadCategories = useCallback(async (showSkeleton = false) => {
-        if (!isAuthenticated) return;
+        if (!isAuthenticated || isPermissionsLoading) return;
         if (showSkeleton || categories.length === 0) {
             setIsLoading(true);
         }
@@ -145,16 +145,24 @@ export default function CategoryPage() {
             // Members don't have employee:view permission — skip employee/role fetches
             let employeesData: any = [];
             let rolesData: any = [];
-            const groupsResult = await listGroups(token).catch(() => null);
-            const groupsData = groupsResult ?? [];
-
+            let groupsData: any = [];
+            
             if (!isMember) {
+                // Non-members can fetch all groups
+                const groupsResult = await listGroups(token).catch(() => null);
+                groupsData = groupsResult?.items ?? groupsResult ?? [];
+                
                 const [empResult, rolesResult] = await Promise.allSettled([
                     listEmployees(token),
                     listRoles(token),
                 ]);
                 employeesData = empResult.status === "fulfilled" ? empResult.value : [];
                 rolesData = rolesResult.status === "fulfilled" ? rolesResult.value : [];
+            } else {
+                // Members: fetch only their own groups (which comes from their group memberships)
+                // Skip employee and role data - members don't have access
+                const groupsResult = await listGroups(token).catch(() => null);
+                groupsData = groupsResult?.items ?? groupsResult ?? [];
             }
 
 
@@ -164,7 +172,8 @@ export default function CategoryPage() {
             const rolesList = Array.isArray(rolesData)
                 ? rolesData
                 : ((rolesData as any)?.roles || []);
-            const groupsList = Array.isArray(groupsData) ? groupsData : (groupsData?.groups || []);
+            // Handle paginated groups response: items array or fallback to groups or empty
+            const groupsList = Array.isArray(groupsData) ? groupsData : (groupsData?.items || groupsData?.groups || []);
 
             // Map employees for display
             const mappedEmployees = currentEmployees.map((emp: any) => {
@@ -280,7 +289,7 @@ export default function CategoryPage() {
         } finally {
             setIsLoading(false);
         }
-    }, [isAuthenticated, getToken, isMember]);
+    }, [isAuthenticated, isPermissionsLoading, getToken, isMember]);
 
     // Load categories on mount and when dependencies change
     useEffect(() => {

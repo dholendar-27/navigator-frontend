@@ -296,7 +296,7 @@ export default function EmployeeTable({
                 if (!token) return;
                 const data = await listGroups(token).catch(() => []);
                 if (!mounted) return;
-                setGroups(Array.isArray(data) ? data : (data?.groups || []));
+                setGroups(Array.isArray(data) ? data : (data?.items || data?.groups || []));
             } catch (err) {
                 console.error("Failed to load groups", err);
             }

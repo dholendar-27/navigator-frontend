@@ -218,7 +218,8 @@ export default function EmployeesPage() {
             });
             const inviteList = empData?.pending_invites || (Array.isArray(inviteData) ? inviteData : ((inviteData as any)?.invites || []));
             const rolesList = Array.isArray(rolesData) ? (rolesData as any) : [];
-            const groupsList = Array.isArray(groupsData) ? groupsData : (groupsData?.groups || []);
+            // Handle paginated groups response: items array or fallback to groups or empty
+            const groupsList = Array.isArray(groupsData) ? groupsData : (groupsData?.items || groupsData?.groups || []);
             const groupNames = groupsList.map((g: any) => g.name);
             setTeams(groupNames);
 
