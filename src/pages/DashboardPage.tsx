@@ -6,9 +6,7 @@ import {
     CreditCard,
     RefreshCw,
     ChevronDown,
-    FileEdit,
     UserPlus,
-    AlertTriangle,
     Activity
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -78,41 +76,6 @@ const dataSets: Record<string, DataPoint[]> = {
     ]
 };
 
-// Fallback dummy activities for testing
-const dummyActivities = [
-    {
-        id: "d1",
-        title: 'File "Employee Guidelines" edited',
-        subtitle: "By Isabella Byrne",
-        time: "5m ago",
-        icon: FileEdit,
-        iconColor: "text-blue-600 bg-blue-50 dark:bg-blue-950/30 border-blue-100 dark:border-blue-900/30",
-    },
-    {
-        id: "d2",
-        title: "Invitation has been sent to 24 employees",
-        subtitle: "By Oliver Roberts",
-        time: "1h ago",
-        icon: UserPlus,
-        iconColor: "text-zinc-600 bg-zinc-50 dark:bg-zinc-800/40 border-zinc-150 dark:border-zinc-800",
-    },
-    {
-        id: "d3",
-        title: 'Folder "HR Policies" uploaded with 24 files',
-        subtitle: "By Isabella Byrne",
-        time: "2h ago",
-        icon: FileText,
-        iconColor: "text-zinc-650 bg-zinc-50 dark:bg-zinc-800/40 border-zinc-150 dark:border-zinc-800",
-    },
-    {
-        id: "d4",
-        title: "Simple Interactions exceeded the plan limit and incurred an overage charge of $5",
-        subtitle: "System Alert",
-        time: "2h ago",
-        icon: AlertTriangle,
-        iconColor: "text-orange-600 bg-orange-50 dark:bg-orange-950/20 border-orange-100 dark:border-orange-900/30",
-    }
-];
 
 // ─── HELPERS ───────────────────────────────────────────────────────────────
 
@@ -372,7 +335,7 @@ export default function DashboardPage(): JSX.Element {
     const [kbSizeBytes, setKbSizeBytes] = useState<number>(133222); // 130.1 KB in bytes
     const [usageLimit, setUsageLimit] = useState<number>(64);
     const [plan, setPlan] = useState<string>("Core Plan");
-    const [recentActivities, setRecentActivities] = useState<any[]>(dummyActivities);
+    const [recentActivities, setRecentActivities] = useState<any[]>([]);
 
     const [isRefreshed, setIsRefreshed] = useState(false);
     const [timeframe, setTimeframe] = useState<string>("this-month");
@@ -420,45 +383,43 @@ export default function DashboardPage(): JSX.Element {
 
             // 4. Map notifications to recent activities
             const rawNotifs = notifData?.notifications || [];
-            if (rawNotifs.length > 0) {
-                const mapped = rawNotifs.slice(0, 10).map((n: any) => {
-                    let icon = Activity;
-                    let iconColor = "text-zinc-600 bg-zinc-50 dark:bg-zinc-800/40 border-zinc-150 dark:border-zinc-800";
+            const mapped = rawNotifs.slice(0, 10).map((n: any) => {
+                let icon = Activity;
+                let iconColor = "text-zinc-600 bg-zinc-50 dark:bg-zinc-800/40 border-zinc-150 dark:border-zinc-800";
 
-                    switch (n.type) {
-                        case "team_added":
-                            icon = UserPlus;
-                            iconColor = "text-blue-600 bg-blue-50 dark:bg-blue-950/30 border-blue-100 dark:border-blue-900/30";
-                            break;
-                        case "team_removed":
-                            icon = Activity; // Fallback
-                            iconColor = "text-orange-600 bg-orange-50 dark:bg-orange-950/20 border-orange-100 dark:border-orange-900/30";
-                            break;
-                        case "file_uploaded":
-                            icon = FileText;
-                            iconColor = "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900/30";
-                            break;
-                        case "file_removed":
-                            icon = FileText;
-                            iconColor = "text-red-650 bg-red-50 dark:bg-red-950/20 border-red-100 dark:border-red-900/30";
-                            break;
-                        case "role_updated":
-                            icon = Activity;
-                            iconColor = "text-purple-650 bg-purple-50 dark:bg-purple-950/20 border-purple-100 dark:border-purple-900/30";
-                            break;
-                    }
+                switch (n.type) {
+                    case "team_added":
+                        icon = UserPlus;
+                        iconColor = "text-blue-600 bg-blue-50 dark:bg-blue-950/30 border-blue-100 dark:border-blue-900/30";
+                        break;
+                    case "team_removed":
+                        icon = Activity; // Fallback
+                        iconColor = "text-orange-600 bg-orange-50 dark:bg-orange-950/20 border-orange-100 dark:border-orange-900/30";
+                        break;
+                    case "file_uploaded":
+                        icon = FileText;
+                        iconColor = "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900/30";
+                        break;
+                    case "file_removed":
+                        icon = FileText;
+                        iconColor = "text-red-650 bg-red-50 dark:bg-red-950/20 border-red-100 dark:border-red-900/30";
+                        break;
+                    case "role_updated":
+                        icon = Activity;
+                        iconColor = "text-purple-650 bg-purple-50 dark:bg-purple-950/20 border-purple-100 dark:border-purple-900/30";
+                        break;
+                }
 
-                    return {
-                        id: n.id,
-                        title: n.title || "Log item created",
-                        subtitle: n.message || "",
-                        time: formatRelativeTime(n.created_at),
-                        icon,
-                        iconColor
-                    };
-                });
-                setRecentActivities(mapped);
-            }
+                return {
+                    id: n.id,
+                    title: n.title || "Log item created",
+                    subtitle: n.message || "",
+                    time: formatRelativeTime(n.created_at),
+                    icon,
+                    iconColor
+                };
+            });
+            setRecentActivities(mapped);
         } catch (e) {
             console.warn("Failed to retrieve live stats for dashboard:", e);
         }
@@ -670,31 +631,60 @@ export default function DashboardPage(): JSX.Element {
                     </div>
 
                     {/* Activities List */}
-                    <div className="flex-1 overflow-y-auto overflow-x-hidden space-y-3 pr-1 min-h-0 scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent hover:scrollbar-thumb-zinc-400 dark:hover:scrollbar-thumb-zinc-600">
-                        {recentActivities.map((act) => {
-                            const IconComp = act.icon;
-                            return (
-                                <div
-                                    key={act.id}
-                                    className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors border border-transparent hover:border-zinc-100/50 dark:hover:border-zinc-800/40"
-                                >
-                                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border shadow-xs ${act.iconColor}`}>
-                                        <IconComp className="h-4.5 w-4.5" />
-                                    </div>
-                                    <div className="min-w-0 flex-1 space-y-1">
-                                        <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 leading-normal break-all">
-                                            {act.title}
-                                        </p>
-                                        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[10px] text-zinc-400 dark:text-zinc-500 font-medium min-w-0">
-                                            <span className="break-all">{act.subtitle}</span>
-                                            <span className="h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-700 shrink-0" />
-                                            <span className="shrink-0">{act.time}</span>
+                    {recentActivities.length === 0 ? (
+                        <div className="flex-1 flex flex-col items-center justify-center text-center py-12">
+                            <svg
+                                className="w-14 h-14 text-zinc-300 dark:text-zinc-700 mb-3"
+                                viewBox="0 0 48 48"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M10 4C7.79086 4 6 5.79086 6 8V40C6 42.2091 7.79086 44 10 44H38C40.2091 44 42 42.2091 42 40V16L30 4H10Z"
+                                    fill="currentColor"
+                                />
+                                <path
+                                    d="M30 4V16H42L30 4Z"
+                                    fill="currentColor"
+                                    fillOpacity="0.2"
+                                />
+                                <rect x="14" y="24" width="20" height="4" rx="2" fill="#FEFFFA" className="dark:fill-zinc-900" />
+                                <rect x="14" y="32" width="12" height="4" rx="2" fill="#FEFFFA" className="dark:fill-zinc-900" />
+                            </svg>
+                            <h3 className="text-sm font-semibold text-zinc-750 dark:text-zinc-300">
+                                No Data Found
+                            </h3>
+                            <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">
+                                No interactions available yet.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="flex-1 overflow-y-auto overflow-x-hidden space-y-3 pr-1 min-h-0 scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent hover:scrollbar-thumb-zinc-400 dark:hover:scrollbar-thumb-zinc-600">
+                            {recentActivities.map((act) => {
+                                const IconComp = act.icon;
+                                return (
+                                    <div
+                                        key={act.id}
+                                        className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors border border-transparent hover:border-zinc-100/50 dark:hover:border-zinc-800/40"
+                                    >
+                                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border shadow-xs ${act.iconColor}`}>
+                                            <IconComp className="h-4.5 w-4.5" />
+                                        </div>
+                                        <div className="min-w-0 flex-1 space-y-1">
+                                            <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 leading-normal break-all">
+                                                {act.title}
+                                            </p>
+                                            <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[10px] text-zinc-400 dark:text-zinc-500 font-medium min-w-0">
+                                                <span className="break-all">{act.subtitle}</span>
+                                                <span className="h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-700 shrink-0" />
+                                                <span className="shrink-0">{act.time}</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            );
-                        })}
-                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -711,31 +701,60 @@ export default function DashboardPage(): JSX.Element {
                     </DialogHeader>
 
                     {/* Scrollable list inside modal */}
-                    <div className="flex-1 overflow-y-auto pr-1 py-2 space-y-3 no-scrollbar min-h-0">
-                        {recentActivities.map((act) => {
-                            const IconComp = act.icon;
-                            return (
-                                <div
-                                    key={act.id}
-                                    className="flex items-start gap-3 p-3 rounded-xl hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors border border-transparent hover:border-zinc-100/50 dark:hover:border-zinc-800/40 min-w-0"
-                                >
-                                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border shadow-xs ${act.iconColor}`}>
-                                        <IconComp className="h-4.5 w-4.5" />
-                                    </div>
-                                    <div className="min-w-0 flex-1 space-y-1">
-                                        <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 leading-normal break-all">
-                                            {act.title}
-                                        </p>
-                                        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[10px] text-zinc-400 dark:text-zinc-500 font-medium min-w-0">
-                                            <span className="break-all">{act.subtitle}</span>
-                                            <span className="h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-700 shrink-0" />
-                                            <span className="shrink-0">{act.time}</span>
+                    {recentActivities.length === 0 ? (
+                        <div className="flex-1 flex flex-col items-center justify-center text-center py-12">
+                            <svg
+                                className="w-14 h-14 text-zinc-300 dark:text-zinc-700 mb-3"
+                                viewBox="0 0 48 48"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M10 4C7.79086 4 6 5.79086 6 8V40C6 42.2091 7.79086 44 10 44H38C40.2091 44 42 42.2091 42 40V16L30 4H10Z"
+                                    fill="currentColor"
+                                />
+                                <path
+                                    d="M30 4V16H42L30 4Z"
+                                    fill="currentColor"
+                                    fillOpacity="0.2"
+                                />
+                                <rect x="14" y="24" width="20" height="4" rx="2" fill="#FEFFFA" className="dark:fill-zinc-900" />
+                                <rect x="14" y="32" width="12" height="4" rx="2" fill="#FEFFFA" className="dark:fill-zinc-900" />
+                            </svg>
+                            <h3 className="text-sm font-semibold text-zinc-750 dark:text-zinc-300">
+                                No Data Found
+                            </h3>
+                            <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">
+                                No interactions available yet.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="flex-1 overflow-y-auto pr-1 py-2 space-y-3 no-scrollbar min-h-0">
+                            {recentActivities.map((act) => {
+                                const IconComp = act.icon;
+                                return (
+                                    <div
+                                        key={act.id}
+                                        className="flex items-start gap-3 p-3 rounded-xl hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors border border-transparent hover:border-zinc-100/50 dark:hover:border-zinc-800/40 min-w-0"
+                                    >
+                                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border shadow-xs ${act.iconColor}`}>
+                                            <IconComp className="h-4.5 w-4.5" />
+                                        </div>
+                                        <div className="min-w-0 flex-1 space-y-1">
+                                            <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 leading-normal break-all">
+                                                {act.title}
+                                            </p>
+                                            <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[10px] text-zinc-400 dark:text-zinc-500 font-medium min-w-0">
+                                                <span className="break-all">{act.subtitle}</span>
+                                                <span className="h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-700 shrink-0" />
+                                                <span className="shrink-0">{act.time}</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            );
-                        })}
-                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </DialogContent>
             </Dialog>
         </div>

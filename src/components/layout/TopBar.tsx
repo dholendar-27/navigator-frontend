@@ -27,11 +27,7 @@ import { cacheWebSocket } from "@/utils/cacheWebSocket";
 import { toast } from "sonner";
 import ChangePasswordDrawer from "@/components/layout/ChangePasswordDrawer";
 
-import {
-    Avatar,
-    AvatarImage,
-    AvatarFallback,
-} from "@/components/ui/avatar";
+
 import React, { useEffect, useState } from "react";
 import type { JSX } from "react";
 import { useKindeAuth } from "@kinde-oss/kinde-auth-react";
@@ -245,10 +241,12 @@ const SpanishFlag = () => (
 
 type TopBarProps = {
     onToggleSidebar: () => void;
+    onProfileClick: () => void;
 };
 
 export default function TopBar({
     onToggleSidebar,
+    onProfileClick,
 }: TopBarProps): JSX.Element {
     const { logout, user, isLoading, getToken } = useKindeAuth();
     const [usage, setUsage] = useState<UsageData | null>(null);
@@ -257,6 +255,11 @@ export default function TopBar({
     const navigate = useNavigate();
     const { theme, setTheme } = useTheme();
     const [isWsConnected, setIsWsConnected] = useState(false);
+    const [avatarError, setAvatarError] = useState(false);
+
+    useEffect(() => {
+        setAvatarError(false);
+    }, [profile?.avatar_url, user?.picture]);
 
     useEffect(() => {
         setIsWsConnected(cacheWebSocket.isConnected());
@@ -565,7 +568,7 @@ export default function TopBar({
                 {/* Settings */}
                 <button
                     type="button"
-                    onClick={() => navigate("/profile")}
+                    onClick={onProfileClick}
                     className="hidden sm:block rounded-full p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-200 dark:focus:ring-zinc-700 transition-colors cursor-pointer"
                     data-testid="settings-btn"
                     aria-label="Settings"
@@ -584,24 +587,20 @@ export default function TopBar({
                             data-tour="profile"
                         >
                             <div className="relative">
-                                <Avatar className="h-9 w-9">
-                                    {profile?.avatar_url ? (
-                                        <AvatarImage
-                                            src={profile.avatar_url}
+                                <div className="h-9 w-9 rounded-full overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shadow-xs">
+                                    {(profile?.avatar_url || user?.picture) && !avatarError ? (
+                                        <img
+                                            src={profile?.avatar_url || user?.picture}
                                             alt={fullName}
                                             className="object-cover h-full w-full"
+                                            onError={() => setAvatarError(true)}
                                         />
-                                    ) : user?.picture ? (
-                                        <AvatarImage
-                                            src={user.picture}
-                                            alt={fullName}
-                                        />
-                                    ) : null}
-
-                                    <AvatarFallback className="bg-zinc-100 text-zinc-800 font-semibold text-sm">
-                                        {initials}
-                                    </AvatarFallback>
-                                </Avatar>
+                                    ) : (
+                                        <span className="text-zinc-800 dark:text-zinc-200 font-semibold text-sm">
+                                            {initials}
+                                        </span>
+                                    )}
+                                </div>
                                 <span className={cn(
                                     "absolute bottom-0.5 right-0.5 block h-2.5 w-2.5 rounded-full ring-2 ring-[#FEFFFA] dark:ring-zinc-900 transition-all duration-300",
                                     isWsConnected ? "bg-green-500" : "bg-yellow-500"
@@ -664,7 +663,7 @@ export default function TopBar({
                             </div>
                             
                             <DropdownMenuItem
-                                onClick={() => navigate("/profile")}
+                                onClick={onProfileClick}
                                 className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs text-zinc-700 dark:text-zinc-300 hover:bg-[#60646B1A] dark:hover:bg-zinc-800 focus:bg-[#60646B1A] dark:focus:bg-zinc-800 cursor-pointer"
                             >
                                 <User className="h-4 w-4 text-zinc-500" />

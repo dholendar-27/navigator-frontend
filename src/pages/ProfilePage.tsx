@@ -14,7 +14,7 @@ import { cacheWebSocket } from "@/utils/cacheWebSocket";
 import { cn } from "@/lib/utils";
 import { validateEmployeeCode, getEmployeeCodeConstraintsText } from "@/utils/employeeCodeValidation";
 
-export default function ProfilePage() {
+export default function ProfilePage({ onClose }: { onClose?: () => void }) {
     const { getToken, user } = useKindeAuth();
     const navigate = useNavigate();
     const [profile, setProfile] = useState<any>(null);
@@ -222,7 +222,11 @@ export default function ProfilePage() {
         if (isEditing) {
             handleCancel();
         } else {
-            navigate(-1);
+            if (onClose) {
+                onClose();
+            } else {
+                navigate(-1);
+            }
         }
     };
 

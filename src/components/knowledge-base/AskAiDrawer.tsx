@@ -32,7 +32,7 @@ export default function AskAiDrawer({ open, onOpenChange, folderId }: AskAiDrawe
         {
             id: "1",
             role: "assistant",
-            content: "Hello! I can search through your knowledge base and answer questions using AI. What would you like to know?",
+            content: "Hi there! How can I help you today?",
         },
     ]);
     const [input, setInput] = useState("");
@@ -58,7 +58,7 @@ export default function AskAiDrawer({ open, onOpenChange, folderId }: AskAiDrawe
                 {
                     id: "1",
                     role: "assistant",
-                    content: "Hello! I can search through your knowledge base and answer questions using AI. What would you like to know?",
+                    content: "Hi there! How can I help you today?",
                 },
             ]);
             setConversationId(null);

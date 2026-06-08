@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback, useRef, type JSX } from "react";
+import { useState, useEffect, useCallback, useRef, type JSX, lazy, Suspense } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Pencil, MessageSquare, X, Search, Loader2, Clock } from "lucide-react";
+
+const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
 
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
@@ -126,6 +128,7 @@ function OnboardingSkeleton({ loadingTime }: { loadingTime: number }) {
 export default function AppLayout(): JSX.Element {
     const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
     const [searchOpen, setSearchOpen] = useState<boolean>(false);
+    const [profileOpen, setProfileOpen] = useState<boolean>(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [isLoadingConvs, setIsLoadingConvs] = useState(false);
@@ -384,6 +387,7 @@ export default function AppLayout(): JSX.Element {
             <div className="flex flex-1 flex-col overflow-hidden w-full min-w-0">
                 <TopBar
                     onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
+                    onProfileClick={() => setProfileOpen(true)}
                 />
 
                 <main
@@ -520,6 +524,13 @@ export default function AppLayout(): JSX.Element {
                         </div>
                     </div>
                 </div>
+            )}
+            
+            {/* Profile Drawer Overlay */}
+            {profileOpen && (
+                <Suspense fallback={null}>
+                    <ProfilePage onClose={() => setProfileOpen(false)} />
+                </Suspense>
             )}
             </div>
         </div>

@@ -78,8 +78,8 @@ export default function InviteAcceptancePage() {
             return;
         }
 
-        if (password.length < 8) {
-            setError("Password must be at least 8 characters");
+        if (password.length < 12) {
+            setError("Password must be at least 12 characters");
             return;
         }
 
@@ -130,7 +130,7 @@ export default function InviteAcceptancePage() {
 
 
     // Helper to evaluate checklist item states
-    const isMinLength = password.length >= 8;
+    const isMinLength = password.length >= 12;
     const hasUppercase = /[A-Z]/.test(password);
     const hasNumber = /[0-9]/.test(password);
     const hasSpecial = /[!@#$%^&*]/.test(password);
@@ -273,7 +273,7 @@ export default function InviteAcceptancePage() {
                                         className={`w-5 h-5 shrink-0 transition-colors ${isMinLength ? "text-green-600 dark:text-green-500" : "text-zinc-300 dark:text-zinc-700"
                                             }`}
                                     />
-                                    <span>Minimum 8 characters</span>
+                                    <span>Minimum 12 characters</span>
                                 </li>
                                 <li className="flex items-center gap-2.5">
                                     <CheckCircle

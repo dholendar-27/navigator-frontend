@@ -1,4 +1,4 @@
-import { useState, useRef, type JSX } from "react";
+import { useState, useRef, useEffect, type JSX } from "react";
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -111,6 +111,30 @@ export default function SubscriptionPage(): JSX.Element {
     const [currency, setCurrency] = useState<CurrencyConfig>(currencies[0]);
     const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    // Load preferences from localStorage on mount
+    useEffect(() => {
+        const savedCurrencyCode = localStorage.getItem("subscription-currency");
+        const savedBillingCycle = localStorage.getItem("subscription-billing-cycle") as "monthly" | "yearly" | null;
+
+        if (savedCurrencyCode) {
+            const saved = currencies.find(c => c.code === savedCurrencyCode);
+            if (saved) setCurrency(saved);
+        }
+
+        if (savedBillingCycle && ["monthly", "yearly"].includes(savedBillingCycle)) {
+            setBillingCycle(savedBillingCycle);
+        }
+    }, []);
+
+    // Save preferences to localStorage whenever they change
+    useEffect(() => {
+        localStorage.setItem("subscription-currency", currency.code);
+    }, [currency]);
+
+    useEffect(() => {
+        localStorage.setItem("subscription-billing-cycle", billingCycle);
+    }, [billingCycle]);
 
     const scroll = (direction: "left" | "right") => {
         if (scrollContainerRef.current) {
