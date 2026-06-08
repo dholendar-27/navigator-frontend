@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect, type JSX } from "react";
-import { 
-    Users, 
-    FileText, 
-    BarChart3, 
-    CreditCard, 
-    RefreshCw, 
+import {
+    Users,
+    FileText,
+    BarChart3,
+    CreditCard,
+    RefreshCw,
     ChevronDown,
     FileEdit,
     UserPlus,
@@ -134,18 +134,18 @@ function formatRelativeTime(dateStr: string): string {
     const date = new Date(normalized);
     const diffMs = now.getTime() - date.getTime();
     if (diffMs < 0) return "Just now";
-    
+
     const diffMins = Math.floor(diffMs / 60000);
     if (diffMins < 1) return "Just now";
     if (diffMins < 60) return `${diffMins}m ago`;
-    
+
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours < 24) return `${diffHours}h ago`;
-    
+
     const diffDays = Math.floor(diffHours / 24);
     if (diffDays === 1) return "Yesterday";
     if (diffDays < 7) return `${diffDays}d ago`;
-    
+
     return date.toLocaleDateString("en-US", { day: "numeric", month: "short" });
 }
 
@@ -154,10 +154,25 @@ function formatRelativeTime(dateStr: string): string {
 function InteractionChart({ data }: { data: DataPoint[] }): JSX.Element {
     const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const [dimensions, setDimensions] = useState({ width: 600, height: 300 });
+
+    useEffect(() => {
+        if (!containerRef.current) return;
+        const observer = new ResizeObserver((entries) => {
+            if (!entries || entries.length === 0) return;
+            const w = entries[0].contentRect.width;
+            const h = entries[0].contentRect.height;
+            if (w > 0 && h > 0) {
+                setDimensions({ width: w, height: h });
+            }
+        });
+        observer.observe(containerRef.current);
+        return () => observer.disconnect();
+    }, []);
 
     // Chart Dimensions
-    const width = 600;
-    const height = 300;
+    const width = dimensions.width;
+    const height = dimensions.height;
     const paddingLeft = 45;
     const paddingRight = 20;
     const paddingTop = 25;
@@ -168,13 +183,14 @@ function InteractionChart({ data }: { data: DataPoint[] }): JSX.Element {
 
     // Y Axis labels
     const yMax = 15;
-    const yTicks = [0, 1, 2, 3, 4, 5, 14, 5, 6, 7];
+    const yTicks = [0, 3, 6, 9, 12, 15];
 
     const getTickValue = (tick: number) => `$${tick}`;
 
     // Calculate coordinates
     const getCoords = (d: DataPoint, idx: number) => {
-        const x = paddingLeft + (idx * chartWidth) / (data.length - 1);
+        const divisor = data.length > 1 ? data.length - 1 : 1;
+        const x = paddingLeft + (idx * chartWidth) / divisor;
         const y = paddingTop + chartHeight - (d.complex / yMax) * chartHeight;
         const ySimple = paddingTop + chartHeight - (d.simple / yMax) * chartHeight;
         return { x, y, ySimple };
@@ -195,12 +211,12 @@ function InteractionChart({ data }: { data: DataPoint[] }): JSX.Element {
         if (!containerRef.current) return;
         const rect = e.currentTarget.getBoundingClientRect();
         const physicalMouseX = e.clientX - rect.left;
-        
+
         // Convert screen coordinates to SVG viewBox coordinates (width = 600)
         const viewBoxMouseX = (physicalMouseX / rect.width) * width;
         const percentageX = (viewBoxMouseX - paddingLeft) / chartWidth;
         const index = Math.round(percentageX * (data.length - 1));
-        
+
         if (index >= 0 && index < data.length) {
             setHoveredIdx(index);
         }
@@ -214,23 +230,23 @@ function InteractionChart({ data }: { data: DataPoint[] }): JSX.Element {
     const hoveredCoords = hoveredData && hoveredIdx !== null ? getCoords(hoveredData, hoveredIdx) : null;
 
     return (
-        <div ref={containerRef} className="relative w-full">
-            <svg 
-                viewBox={`0 0 ${width} ${height}`} 
-                className="w-full h-auto overflow-visible select-none"
+        <div ref={containerRef} className="relative w-full h-full min-h-[220px]">
+            <svg
+                viewBox={`0 0 ${width} ${height}`}
+                className="w-full h-full overflow-visible select-none"
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
             >
                 {/* Horizontal Grid Lines */}
-                {Array.from({ length: 6 }).map((_, i) => {
-                    const y = paddingTop + (i * chartHeight) / 5;
+                {yTicks.map((tick, i) => {
+                    const y = paddingTop + chartHeight - (tick / yMax) * chartHeight;
                     return (
-                        <line 
-                            key={i} 
-                            x1={paddingLeft} 
-                            y1={y} 
-                            x2={width - paddingRight} 
-                            y2={y} 
+                        <line
+                            key={i}
+                            x1={paddingLeft}
+                            y1={y}
+                            x2={width - paddingRight}
+                            y2={y}
                             className="stroke-zinc-100 dark:stroke-zinc-800/80 stroke-1"
                             strokeDasharray="4 4"
                         />
@@ -238,13 +254,13 @@ function InteractionChart({ data }: { data: DataPoint[] }): JSX.Element {
                 })}
 
                 {/* Y Axis Labels */}
-                {yTicks.slice(0, 8).map((tick, i) => {
-                    const y = paddingTop + chartHeight - (i * chartHeight) / 7;
+                {yTicks.map((tick, i) => {
+                    const y = paddingTop + chartHeight - (tick / yMax) * chartHeight;
                     return (
-                        <text 
-                            key={i} 
-                            x={paddingLeft - 12} 
-                            y={y + 4} 
+                        <text
+                            key={i}
+                            x={paddingLeft - 12}
+                            y={y + 4}
                             className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 text-right"
                             style={{ textAnchor: 'end' }}
                         >
@@ -255,12 +271,13 @@ function InteractionChart({ data }: { data: DataPoint[] }): JSX.Element {
 
                 {/* X Axis Labels */}
                 {data.map((d, i) => {
-                    const x = paddingLeft + (i * chartWidth) / (data.length - 1);
+                    const divisor = data.length > 1 ? data.length - 1 : 1;
+                    const x = paddingLeft + (i * chartWidth) / divisor;
                     return (
-                        <text 
-                            key={i} 
-                            x={x} 
-                            y={height - 15} 
+                        <text
+                            key={i}
+                            x={x}
+                            y={height - 15}
                             className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 text-center"
                             style={{ textAnchor: 'middle' }}
                         >
@@ -316,7 +333,7 @@ function InteractionChart({ data }: { data: DataPoint[] }): JSX.Element {
 
             {/* Custom Interactive Tooltip */}
             {hoveredCoords && hoveredData && (
-                <div 
+                <div
                     className="absolute bg-white dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-800 rounded-xl p-3 shadow-xl pointer-events-none transition-all duration-150 z-20"
                     style={{
                         left: `${(hoveredCoords.x / width) * 100}%`,
@@ -349,14 +366,14 @@ function InteractionChart({ data }: { data: DataPoint[] }): JSX.Element {
 
 export default function DashboardPage(): JSX.Element {
     const { getToken, isAuthenticated } = useKindeAuth();
-    
+
     // Live states with dummy fallbacks
     const [employeesCount, setEmployeesCount] = useState<number>(9);
     const [kbSizeBytes, setKbSizeBytes] = useState<number>(133222); // 130.1 KB in bytes
     const [usageLimit, setUsageLimit] = useState<number>(64);
     const [plan, setPlan] = useState<string>("Core Plan");
     const [recentActivities, setRecentActivities] = useState<any[]>(dummyActivities);
-    
+
     const [isRefreshed, setIsRefreshed] = useState(false);
     const [timeframe, setTimeframe] = useState<string>("this-month");
     const [isActivitiesModalOpen, setIsActivitiesModalOpen] = useState(false);
@@ -365,7 +382,7 @@ export default function DashboardPage(): JSX.Element {
         try {
             const token = await getToken();
             if (!token) return;
-            
+
             // Parallel fetches
             const [empData, inviteData, rootData, usageData, notifData] = await Promise.all([
                 listEmployees(token).catch(() => ({ employees: [] })),
@@ -374,7 +391,7 @@ export default function DashboardPage(): JSX.Element {
                 getUsage(token).catch(() => null),
                 getNotifications(token).catch(() => ({ notifications: [] }))
             ]);
-            
+
             // 1. Calculate proper employees count
             const activeEmployees = empData?.employees || (Array.isArray(empData) ? empData : []);
             const invites = inviteData?.invites || (Array.isArray(inviteData) ? inviteData : []);
@@ -382,7 +399,7 @@ export default function DashboardPage(): JSX.Element {
             if (totalEmployees > 0) {
                 setEmployeesCount(totalEmployees);
             }
-            
+
             // 2. Calculate proper KB/MB/GB folder sizes recursively
             const foldersBytes = (rootData.folders || []).reduce((acc: number, f: any) => acc + (f.total_size || 0), 0);
             const filesBytes = (rootData.files || []).reduce((acc: number, f: any) => acc + (f.file_size || 0), 0);
@@ -390,7 +407,7 @@ export default function DashboardPage(): JSX.Element {
             if (totalBytes > 0) {
                 setKbSizeBytes(totalBytes);
             }
-            
+
             // 3. Overall Usage & Subscription
             if (usageData) {
                 setPlan(`${usageData.plan} Plan`);
@@ -400,14 +417,14 @@ export default function DashboardPage(): JSX.Element {
                 const overallPct = Math.round(Math.max(pagesPct, simplePct, complexPct));
                 setUsageLimit(overallPct || 0);
             }
-            
+
             // 4. Map notifications to recent activities
             const rawNotifs = notifData?.notifications || [];
             if (rawNotifs.length > 0) {
                 const mapped = rawNotifs.slice(0, 10).map((n: any) => {
                     let icon = Activity;
                     let iconColor = "text-zinc-600 bg-zinc-50 dark:bg-zinc-800/40 border-zinc-150 dark:border-zinc-800";
-                    
+
                     switch (n.type) {
                         case "team_added":
                             icon = UserPlus;
@@ -430,7 +447,7 @@ export default function DashboardPage(): JSX.Element {
                             iconColor = "text-purple-650 bg-purple-50 dark:bg-purple-950/20 border-purple-100 dark:border-purple-900/30";
                             break;
                     }
-                    
+
                     return {
                         id: n.id,
                         title: n.title || "Log item created",
@@ -451,7 +468,7 @@ export default function DashboardPage(): JSX.Element {
         if (isAuthenticated) {
             fetchLiveStats();
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isAuthenticated]);
 
     const handleRefresh = async () => {
@@ -482,8 +499,8 @@ export default function DashboardPage(): JSX.Element {
                         </h1>
                     </div>
                     <div className="flex items-center">
-                        <Button 
-                            variant="outline" 
+                        <Button
+                            variant="outline"
                             onClick={handleRefresh}
                             disabled={isRefreshed}
                             className="gap-2 rounded-lg border-[#E7E7E0] bg-[#FEFFFA] hover:bg-[#F5F5F0] dark:border-zinc-700 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 font-semibold"
@@ -537,11 +554,11 @@ export default function DashboardPage(): JSX.Element {
                     <div className="space-y-2.5 flex-1 pr-3">
                         <p className="text-xs font-medium text-zinc-450 dark:text-zinc-500 uppercase tracking-wider">Usage Limit</p>
                         <h3 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 tabular-nums">{usageLimit}%</h3>
-                        
+
                         <div className="space-y-1 pt-1">
                             <div className="h-1.5 w-full rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
-                                <div 
-                                    className="h-full rounded-full bg-blue-600 transition-all duration-500" 
+                                <div
+                                    className="h-full rounded-full bg-blue-600 transition-all duration-500"
                                     style={{ width: `${usageLimit}%` }}
                                 />
                             </div>
@@ -571,7 +588,7 @@ export default function DashboardPage(): JSX.Element {
             {/* Bottom Grid Layout (Chart + Recent Activities) */}
             <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
                 {/* Interaction Usage Line Chart Card */}
-                <div className="lg:col-span-2 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-[#FEFFFA] dark:bg-zinc-900/80 p-5 shadow-sm flex flex-col gap-4">
+                <div className="lg:col-span-2 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-[#FEFFFA] dark:bg-zinc-900/80 p-5 shadow-sm flex flex-col gap-4 h-[480px] lg:h-[580px]">
                     <div className="flex items-center justify-between w-full pb-1 border-b border-zinc-100 dark:border-zinc-800/60">
                         <div className="space-y-0.5">
                             <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Interaction Usage</h2>
@@ -587,19 +604,19 @@ export default function DashboardPage(): JSX.Element {
                                 </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-32 bg-white dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-800 rounded-lg p-1.5 shadow-md">
-                                <DropdownMenuItem 
+                                <DropdownMenuItem
                                     onClick={() => setTimeframe("this-month")}
                                     className="px-2.5 py-1.5 rounded-md text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer"
                                 >
                                     This Month
                                 </DropdownMenuItem>
-                                <DropdownMenuItem 
+                                <DropdownMenuItem
                                     onClick={() => setTimeframe("last-month")}
                                     className="px-2.5 py-1.5 rounded-md text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer"
                                 >
                                     Last Month
                                 </DropdownMenuItem>
-                                <DropdownMenuItem 
+                                <DropdownMenuItem
                                     onClick={() => setTimeframe("last-7-days")}
                                     className="px-2.5 py-1.5 rounded-md text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer"
                                 >
@@ -622,8 +639,8 @@ export default function DashboardPage(): JSX.Element {
                     </div>
 
                     {/* Chart Canvas */}
-                    <div className="flex-1 overflow-x-auto w-full no-scrollbar min-h-[220px] flex items-center justify-start md:justify-center">
-                        <div className="min-w-[500px] md:min-w-full w-full">
+                    <div className="flex-1 w-full min-h-[220px] flex items-center justify-center">
+                        <div className="w-full h-full min-h-[220px]">
                             <InteractionChart data={dataSets[timeframe]} />
                         </div>
                     </div>
@@ -637,14 +654,14 @@ export default function DashboardPage(): JSX.Element {
                 </div>
 
                 {/* Recent Activities Card */}
-                <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-[#FEFFFA] dark:bg-zinc-900/80 p-5 shadow-sm flex flex-col gap-4 h-[400px] lg:h-auto min-h-0">
+                <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-[#FEFFFA] dark:bg-zinc-900/80 p-5 shadow-sm flex flex-col gap-4 h-[480px] lg:h-[580px]">
                     <div className="flex items-center justify-between w-full pb-1 border-b border-zinc-100 dark:border-zinc-800/60">
                         <div className="space-y-0.5">
                             <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Recent Activities</h2>
                             <p className="text-[11px] text-zinc-400 font-medium">Activity updates across the team</p>
                         </div>
-                        
-                        <button 
+
+                        <button
                             onClick={() => setIsActivitiesModalOpen(true)}
                             className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline transition-all cursor-pointer"
                         >
@@ -653,12 +670,12 @@ export default function DashboardPage(): JSX.Element {
                     </div>
 
                     {/* Activities List */}
-                    <div className="flex-1 overflow-y-auto overflow-x-hidden space-y-3 pr-1 no-scrollbar min-h-0">
+                    <div className="flex-1 overflow-y-auto overflow-x-hidden space-y-3 pr-1 min-h-0 scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent hover:scrollbar-thumb-zinc-400 dark:hover:scrollbar-thumb-zinc-600">
                         {recentActivities.map((act) => {
                             const IconComp = act.icon;
                             return (
-                                <div 
-                                    key={act.id} 
+                                <div
+                                    key={act.id}
                                     className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors border border-transparent hover:border-zinc-100/50 dark:hover:border-zinc-800/40"
                                 >
                                     <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border shadow-xs ${act.iconColor}`}>
@@ -698,8 +715,8 @@ export default function DashboardPage(): JSX.Element {
                         {recentActivities.map((act) => {
                             const IconComp = act.icon;
                             return (
-                                <div 
-                                    key={act.id} 
+                                <div
+                                    key={act.id}
                                     className="flex items-start gap-3 p-3 rounded-xl hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors border border-transparent hover:border-zinc-100/50 dark:hover:border-zinc-800/40 min-w-0"
                                 >
                                     <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border shadow-xs ${act.iconColor}`}>

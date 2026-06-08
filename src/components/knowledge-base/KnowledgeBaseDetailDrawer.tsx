@@ -337,7 +337,12 @@ export default function KnowledgeBaseDetailDrawer({
                 const res = await getFileDownloadUrl(entry.id, token);
                 if (res?.download_url) {
                     toast.success("Download started", { id: "export-file" });
-                    window.open(res.download_url, "_blank");
+                    const link = document.createElement("a");
+                    link.href = res.download_url;
+                    link.setAttribute("download", entry.name);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
                 } else {
                     throw new Error("Download URL not found");
                 }
