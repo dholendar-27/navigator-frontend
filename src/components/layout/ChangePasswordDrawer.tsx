@@ -28,7 +28,7 @@ type TouchedState = { newPassword?: boolean; confirmPassword?: boolean };
 // ─── Password requirements ────────────────────────────────────────────────────
 
 const requirements = [
-    { label: "Minimum 8 characters",                              test: (v: string) => v.length >= 8 },
+    { label: "Minimum 12 characters",                              test: (v: string) => v.length >= 12 },
     { label: "At least one lowercase letter",                     test: (v: string) => /[a-z]/.test(v) },
     { label: "At least one uppercase letter",                     test: (v: string) => /[A-Z]/.test(v) },
     { label: "At least one number",                               test: (v: string) => /[0-9]/.test(v) },
