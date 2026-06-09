@@ -338,7 +338,7 @@ export default function KnowledgeBaseTable({
 
                                             <PermissionGate
                                                 permissions={[PERMISSIONS.FILE_DELETE, PERMISSIONS.FOLDER_DELETE]}
-                                                requireAny
+                                                requireAll={false}
                                                 fallback={null}
                                             >
                                                 <DropdownMenuItem
@@ -492,7 +492,7 @@ export default function KnowledgeBaseTable({
 
                                             <PermissionGate
                                                 permissions={[PERMISSIONS.FILE_DELETE, PERMISSIONS.FOLDER_DELETE]}
-                                                requireAny
+                                                requireAll={false}
                                                 fallback={null}
                                             >
                                                 <DropdownMenuItem

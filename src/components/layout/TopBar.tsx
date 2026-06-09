@@ -261,11 +261,6 @@ export default function TopBar({
     const navigate = useNavigate();
     const { theme, setTheme } = useTheme();
     const [isWsConnected, setIsWsConnected] = useState(false);
-    const [avatarError, setAvatarError] = useState(false);
-
-    useEffect(() => {
-        setAvatarError(false);
-    }, [profile?.avatar_url, user?.picture]);
 
     useEffect(() => {
         setIsWsConnected(cacheWebSocket.isConnected());
@@ -431,14 +426,6 @@ export default function TopBar({
     };
 
     const fullName = profile?.display_name || (user?.givenName ? `${user.givenName} ${user.familyName || ""}`.trim() : (isLoading ? "Loading..." : "User"));
-    const initials = fullName
-        ? fullName
-            .split(" ")
-            .map((n: string) => n[0])
-            .join("")
-            .slice(0, 2)
-            .toUpperCase()
-        : "U";
 
     return (
         <>

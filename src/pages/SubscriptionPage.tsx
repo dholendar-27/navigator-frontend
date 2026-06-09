@@ -146,11 +146,6 @@ export default function SubscriptionPage(): JSX.Element {
         }
     };
 
-    const formatPrice = (value: number) => {
-        const converted = Math.round(value * currency.multiplier);
-        return new Intl.NumberFormat().format(converted);
-    };
-
     const handlePlanAction = (planName: string, variant: string) => {
         if (variant === "current") {
             toast.info("You are already on the Started plan.");
