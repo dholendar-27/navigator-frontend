@@ -259,7 +259,10 @@ function InteractionChart({ data }: { data: DataPoint[] }): JSX.Element {
                             key={i}
                             x={paddingLeft - 12}
                             y={y + 4}
-                            className="text-[10px] font-medium text-zinc-600 dark:text-zinc-400 text-right"
+                            fontSize="10"
+                            fontWeight="500"
+                            fill="currentColor"
+                            className="text-zinc-500 dark:text-zinc-400"
                             style={{ textAnchor: 'end' }}
                         >
                             {getTickValue(tick)}
@@ -276,7 +279,10 @@ function InteractionChart({ data }: { data: DataPoint[] }): JSX.Element {
                             key={i}
                             x={x}
                             y={height - 15}
-                            className="text-[10px] font-medium text-zinc-600 dark:text-zinc-400 text-center"
+                            fontSize="10"
+                            fontWeight="500"
+                            fill="currentColor"
+                            className="text-zinc-500 dark:text-zinc-400"
                             style={{ textAnchor: 'middle' }}
                         >
                             {d.date}
@@ -677,7 +683,7 @@ export default function DashboardPage(): JSX.Element {
 
                     {/* Chart Footer Indicator */}
                     <div className="flex items-center justify-center gap-1 py-1 bg-zinc-50/50 dark:bg-zinc-800/20 border border-zinc-100 dark:border-zinc-800/60 rounded-xl">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-white">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                             Dollar / Monthly
                         </p>
                     </div>

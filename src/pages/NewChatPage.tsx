@@ -125,7 +125,7 @@ function ThinkingAccordion({ isStreaming, thinkingSteps }: ThinkingAccordionProp
     }
 
     return (
-        <div className="w-fit mb-1.5 select-none bg-[#E7E7E0] dark:bg-[#E7E7E0]/10 rounded-lg transition-all overflow-hidden">
+        <div className="w-[50%] mb-1.5 select-none bg-[#E7E7E0] dark:bg-[#E7E7E0]/10 rounded-lg transition-all overflow-hidden">
             {/* Header row */}
             <div
                 onClick={() => setIsExpanded(!isExpanded)}
@@ -149,7 +149,10 @@ function ThinkingAccordion({ isStreaming, thinkingSteps }: ThinkingAccordionProp
                         setIsExpanded(!isExpanded);
                     }}
                 >
-                    <span>{isExpanded ? "▼" : "▶"}</span>
+                    {isExpanded
+                        ? <ChevronDown className="h-3 w-3" />
+                        : <ChevronDown className="h-3 w-3 -rotate-90" />
+                    }
                 </button>
             </div>
 
