@@ -3,7 +3,6 @@ import { useMemo, useState, useEffect, type JSX } from "react";
 import {
     MoreVertical,
     Eye,
-    Pencil,
     FolderPlus,
     RotateCw,
     Trash2,
@@ -21,6 +20,7 @@ import {
 } from "@/components/ui/avatar";
 
 import { Checkbox } from "@/components/ui/checkbox";
+import { MultiSelect } from "@/components/ui/multi-select";
 
 import {
     DropdownMenu,
@@ -71,12 +71,10 @@ type RowMenuProps = {
     employee: Employee;
     onDelete: (id: string) => void;
     onView: (employee: Employee) => void;
-    onEdit?: (employee: Employee) => void;
     onResendInvite?: (id: string) => void;
     onRevokeInvite?: (id: string) => void;
     currentUserEmail?: string;
     onAddToTeam?: (employee: Employee) => void;
-    currentUserRole?: string;
 };
 
 type EmployeeTableProps = {
@@ -124,19 +122,15 @@ function RowMenu({
     employee,
     onDelete,
     onView,
-    onEdit,
     onResendInvite,
     onRevokeInvite,
     currentUserEmail,
     onAddToTeam,
-    currentUserRole,
 }: RowMenuProps): JSX.Element {
     // Delete is hidden if: target is Super Admin, OR target is the current user
     const isSelf = currentUserEmail && employee.email === currentUserEmail;
     const isTargetSuperAdmin = (employee.role || "").toLowerCase().replace(/\s+/g, "_") === "super_admin";
     const canDelete = !isSelf && !isTargetSuperAdmin;
-    const currentIsSuperAdmin = (currentUserRole || "").toLowerCase().replace(/\s+/g, "_") === "super_admin";
-    const canEdit = !isTargetSuperAdmin || currentIsSuperAdmin;
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -164,31 +158,6 @@ function RowMenu({
                     <Eye className="mr-2 h-4 w-4 text-zinc-600 dark:text-zinc-400" />
                     View Details
                 </DropdownMenuItem>
- 
-                <PermissionGate permission={PERMISSIONS.EMPLOYEE_EDIT} fallback={
-                    <DropdownMenuItem disabled className="cursor-not-allowed opacity-60 flex items-center">
-                        <Pencil className="mr-2 h-4 w-4 text-zinc-600 dark:text-zinc-400" />
-                        Edit
-                    </DropdownMenuItem>
-                }>
-                    {canEdit ? (
-                        <DropdownMenuItem
-                            onClick={() => onEdit?.(employee)}
-                            className="cursor-pointer"
-                        >
-                            <Pencil className="mr-2 h-4 w-4 text-zinc-600 dark:text-zinc-400" />
-                            Edit
-                        </DropdownMenuItem>
-                    ) : (
-                        <DropdownMenuItem
-                            disabled
-                            className="cursor-not-allowed opacity-60"
-                        >
-                            <Pencil className="mr-2 h-4 w-4 text-zinc-600 dark:text-zinc-400" />
-                            Edit (Super Admin only)
-                        </DropdownMenuItem>
-                    )}
-                </PermissionGate>
 
 
                 <PermissionGate
@@ -300,7 +269,7 @@ export default function EmployeeTable({
     const [groups, setGroups] = useState<any[]>([]);
     const [teamPickerOpen, setTeamPickerOpen] = useState(false);
     const [teamTarget, setTeamTarget] = useState<Employee | null>(null);
-    const [selectedGroup, setSelectedGroup] = useState<string>("");
+    const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
     const [isAddingToTeam, setIsAddingToTeam] = useState(false);
 
     useEffect(() => {
@@ -527,17 +496,15 @@ export default function EmployeeTable({
                                             data-testid={`employee-select-row-${emp.id}`}
                                         />
                                     </div>
-                                    <div className="md:hidden">
+                                    <div className="md:hidden flex items-center gap-1">
                                         <RowMenu
                                             employee={emp}
                                             onDelete={(id) => setConfirmDeleteId(id)}
                                             onView={onView}
-                                            onEdit={onEdit}
                                             onResendInvite={onResendInvite}
                                             onRevokeInvite={(id) => setConfirmRevokeId(id)}
                                             currentUserEmail={currentUserEmail}
-                                            onAddToTeam={(e) => { setTeamTarget(e); setTeamPickerOpen(true); setSelectedGroup(""); }}
-                                            currentUserRole={currentUserRole}
+                                            onAddToTeam={(e) => { setTeamTarget(e); setTeamPickerOpen(true); setSelectedGroups([]); }}
                                         />
                                     </div>
                                 </div>
@@ -689,17 +656,15 @@ export default function EmployeeTable({
                                     </div>
                                 )}
 
-                                <div className="hidden md:flex justify-end px-2" onClick={(e) => e.stopPropagation()}>
+                                <div className="hidden md:flex justify-end items-center gap-1.5 px-2" onClick={(e) => e.stopPropagation()}>
                                     <RowMenu
                                         employee={emp}
                                         onDelete={(id) => setConfirmDeleteId(id)}
                                         onView={onView}
-                                        onEdit={onEdit}
                                         onResendInvite={onResendInvite}
                                         onRevokeInvite={(id) => setConfirmRevokeId(id)}
                                         currentUserEmail={currentUserEmail}
-                                        onAddToTeam={(e) => { setTeamTarget(e); setTeamPickerOpen(true); setSelectedGroup(""); }}
-                                        currentUserRole={currentUserRole}
+                                        onAddToTeam={(e) => { setTeamTarget(e); setTeamPickerOpen(true); setSelectedGroups([]); }}
                                     />
                                 </div>
                             </div>
@@ -709,43 +674,40 @@ export default function EmployeeTable({
             </div>
 
             {/* Category picker dialog */}
-            <Dialog open={teamPickerOpen} onOpenChange={(open) => !open && setTeamPickerOpen(false)}>
+            <Dialog open={teamPickerOpen} onOpenChange={(open) => { if (!open) { setTeamPickerOpen(false); setSelectedGroups([]); } }}>
                 <DialogContent className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md border border-zinc-150 dark:border-zinc-800 shadow-xl p-6">
                     <DialogHeader>
                         <DialogTitle className="text-zinc-900 dark:text-zinc-100 font-semibold text-lg">Add to Category</DialogTitle>
                         <DialogDescription className="text-zinc-500 dark:text-zinc-400 text-sm mt-2">
-                            Select a category to add {teamTarget?.name} to.
+                            Select categories to add {teamTarget?.name} to.
                         </DialogDescription>
                     </DialogHeader>
 
                     <div className="mt-4">
-                        <Select value={selectedGroup} onValueChange={setSelectedGroup}>
-                            <SelectTrigger className="h-10 rounded-lg border-zinc-200 text-base md:text-sm font-medium w-full">
-                                <SelectValue placeholder="Select category" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {groups.map((g) => (
-                                    <SelectItem key={g.id} value={g.id}>
-                                        {g.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <MultiSelect
+                            options={groups}
+                            selected={selectedGroups}
+                            onChange={setSelectedGroups}
+                            placeholder="Select categories"
+                        />
                     </div>
 
                     <DialogFooter className="mt-6 gap-2">
-                        <Button variant="outline" onClick={() => setTeamPickerOpen(false)} className="rounded-lg text-zinc-700 dark:text-zinc-300">
+                        <Button variant="outline" onClick={() => { setTeamPickerOpen(false); setSelectedGroups([]); }} className="rounded-lg text-zinc-700 dark:text-zinc-300">
                             Cancel
                         </Button>
                         <Button
                             onClick={async () => {
-                                if (!selectedGroup || !teamTarget) return;
+                                if (selectedGroups.length === 0 || !teamTarget) return;
                                 setIsAddingToTeam(true);
                                 try {
                                     const token = await getToken();
                                     if (!token) throw new Error("Not authenticated");
-                                    await addGroupMembers(selectedGroup, [teamTarget.id], token);
-                                    toast.success(`${teamTarget.name} added to category`);
+                                    for (const groupId of selectedGroups) {
+                                        await addGroupMembers(groupId, [teamTarget.id], token);
+                                    }
+                                    toast.success(`${teamTarget.name} added to categories`);
+                                    setSelectedGroups([]);
                                     setTeamPickerOpen(false);
                                 } catch (err: any) {
                                     console.error("Add to category error", err);
@@ -754,7 +716,7 @@ export default function EmployeeTable({
                                     setIsAddingToTeam(false);
                                 }
                             }}
-                            disabled={isAddingToTeam || !selectedGroup}
+                            disabled={isAddingToTeam || selectedGroups.length === 0}
                             className="rounded-lg h-10 px-4 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center gap-2"
                         >
                             {isAddingToTeam ? "Adding..." : "Add to Category"}

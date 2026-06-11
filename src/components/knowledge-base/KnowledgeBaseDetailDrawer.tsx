@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { X, FileText, Loader2, Plus, Search, Minus, Download, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { X, FileText, Loader2, Plus, Search, Minus, Download, Clock, CheckCircle2, XCircle, Pencil } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,8 @@ import { cn } from "@/lib/utils";
 import { useRealTimeFileProcessing } from "@/hooks/useRealTimeFileProcessing";
 import type { KBEntry } from "@/types/knowledge-base";
 import { cacheWebSocket } from "@/utils/cacheWebSocket";
+import { usePermissions } from "@/hooks/usePermissions";
+import { PERMISSIONS } from "@/utils/rbacConfig";
 
 function OcrStatusBadge({ status }: { status?: string | null }) {
     if (!status) return null;
@@ -75,6 +77,9 @@ export default function KnowledgeBaseDetailDrawer({
 }: KBDetailDrawerProps) {
     const { getToken } = useKindeAuth();
 
+    const { hasPermission } = usePermissions();
+    const canEdit = hasPermission(PERMISSIONS.FOLDER_UPDATE);
+
     // Core states
     const [files, setFiles] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -90,6 +95,7 @@ export default function KnowledgeBaseDetailDrawer({
     // File view states
     const [fileDetails, setFileDetails] = useState<any | null>(null);
     const [folderDetails, setFolderDetails] = useState<any | null>(null);
+    const [fetchedFolder, setFetchedFolder] = useState<any | null>(null);
     const [ocrText, setOcrText] = useState<string | null>(null);
     const [isOcrLoading, setIsOcrLoading] = useState<boolean>(false);
     const [ocrError, setOcrError] = useState<string | null>(null);
@@ -362,6 +368,7 @@ export default function KnowledgeBaseDetailDrawer({
             if (token) {
                 const folderData = await getFolder(entry.id, token);
                 setFiles(folderData.files || []);
+                setFetchedFolder(folderData);
                 // Update draft values when opening folder/fetching fresh data
                 setNameDraft(folderData.name || "");
                 setDescDraft(folderData.description || "");
@@ -382,17 +389,20 @@ export default function KnowledgeBaseDetailDrawer({
                 fetchFolderFiles();
                 setFileDetails(null);
                 setFolderDetails(null);
+                setFetchedFolder(null);
                 setOcrText(null);
                 setOcrError(null);
                 setOcrJob(null);
             } else {
                 setFiles([]);
+                setFetchedFolder(null);
                 fetchFileAllDetails();
             }
         } else {
             setFiles([]);
             setFileDetails(null);
             setFolderDetails(null);
+            setFetchedFolder(null);
             setOcrText(null);
             setOcrError(null);
             setOcrJob(null);
@@ -480,6 +490,17 @@ export default function KnowledgeBaseDetailDrawer({
         }
     };
 
+    const handleCancel = () => {
+        if (fetchedFolder) {
+            setNameDraft(fetchedFolder.name || "");
+            setDescDraft(fetchedFolder.description || "");
+        } else if (entry) {
+            setNameDraft(entry.name || "");
+            setDescDraft(entry.description || "");
+        }
+        setMode("view");
+    };
+
     // Save folder changes (PATCH to backend /folders/{folder_id})
     const handleSave = async () => {
         if (!entry) return;
@@ -522,6 +543,7 @@ export default function KnowledgeBaseDetailDrawer({
                         <button
                             onClick={() => onOpenChange(false)}
                             className="rounded-lg p-1.5 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+                            tabIndex={-1}
                             aria-label="Close"
                         >
                             <X className="h-5 w-5" />
@@ -530,6 +552,16 @@ export default function KnowledgeBaseDetailDrawer({
                             {entry.type === "file" ? "File Details" : "Knowledge Base"}
                         </SheetTitle>
                     </div>
+                    {entry.type !== "file" && mode === "view" && canEdit && (
+                        <Button
+                            type="button"
+                            onClick={() => setMode("edit")}
+                            className="flex items-center gap-1.5 bg-[#1A56DB] hover:bg-blue-750 text-white px-3.5 py-1 rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                        >
+                            <Pencil className="h-3.5 w-3.5" />
+                            <span>Edit</span>
+                        </Button>
+                    )}
                 </div>
 
                 {/* 2-Column Responsive Body */}
@@ -761,15 +793,7 @@ export default function KnowledgeBaseDetailDrawer({
                                     </div>
                                 </div>
 
-                                {/* Edit Action Toggle in Left Column */}
-                                {mode === "view" && (
-                                    <Button
-                                        onClick={() => setMode("edit")}
-                                        className="w-full h-10 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 text-white rounded-lg font-semibold text-sm shadow-sm transition-all mt-6"
-                                    >
-                                        Edit Folder Details
-                                    </Button>
-                                )}
+                                {/* Edit Action Toggle in Left Column removed */}
                             </div>
 
                             {/* Right Column: Files & Documents List (8 Cols) */}
@@ -908,13 +932,19 @@ export default function KnowledgeBaseDetailDrawer({
                     )}
                 </div>
 
-                {/* Footer Bar (Only shown in edit mode) */}
                 {entry.type !== "file" && mode === "edit" && (
                     <div className="flex items-center justify-end gap-3 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/40 px-8 py-4">
+                        <button
+                            type="button"
+                            onClick={handleCancel}
+                            className="text-[#1A56DB] hover:text-blue-750 font-semibold text-sm transition-colors cursor-pointer mr-6"
+                        >
+                            Cancel
+                        </button>
                         <Button
                             onClick={handleSave}
                             disabled={isLoading || nameDraft.trim().length === 0}
-                            className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold h-10 px-6 shadow-sm disabled:opacity-50"
+                            className="rounded-lg bg-blue-600 hover:bg-blue-750 text-white font-semibold h-10 px-6 shadow-sm disabled:opacity-50"
                         >
                             {isLoading ? (
                                 <>

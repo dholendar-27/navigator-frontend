@@ -303,7 +303,8 @@ export default function OrganizationProfileDrawer({
                             type="button"
                             onClick={handleClose}
                             className="rounded-md p-1 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
-                            aria-label="Close"
+                            tabIndex={-1}
+                        aria-label="Close"
                         >
                             <X className="h-5 w-5" />
                         </button>
@@ -336,7 +337,8 @@ export default function OrganizationProfileDrawer({
                             type="button"
                             onClick={handleClose}
                             className="rounded-md p-1 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
-                            aria-label="Close"
+                            tabIndex={-1}
+                        aria-label="Close"
                         >
                             <X className="h-5 w-5" />
                         </button>
@@ -346,7 +348,7 @@ export default function OrganizationProfileDrawer({
                         {!isEditing && canEditOrg && (
                             <button
                                 onClick={() => setIsEditing(true)}
-                                className="ml-auto bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-3 py-1.5 h-auto text-sm rounded-lg transition-colors"
+                                className="ml-auto bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-3 py-1 h-auto text-sm rounded-lg transition-colors"
                             >
                                 <Edit2 className="h-4 w-4" />
                                 Edit

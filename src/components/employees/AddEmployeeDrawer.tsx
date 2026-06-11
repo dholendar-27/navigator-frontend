@@ -155,6 +155,7 @@ export default function AddEmployeeDrawer({
                         onClick={() => onOpenChange(false)}
                         className="rounded-md p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
                         data-testid="close-drawer-btn"
+                        tabIndex={-1}
                         aria-label="Close"
                     >
                         <X className="h-5 w-5" />

@@ -78,6 +78,7 @@ export default function AddTextDrawer({
                         onClick={() => onOpenChange(false)}
                         className="rounded-md p-1 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
                         data-testid="close-add-text-btn"
+                        tabIndex={-1}
                         aria-label="Close"
                     >
                         <X className="h-5 w-5" />

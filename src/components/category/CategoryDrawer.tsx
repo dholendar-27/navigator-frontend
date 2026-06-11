@@ -12,6 +12,7 @@ import {
     ChevronDown,
     Loader2,
     FolderClosed,
+    Pencil,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ import { cn } from "@/lib/utils";
 import AddEmployeesDialog from "./AddEmployeesDialog";
 import AddFilesDialog from "./AddFilesDialog";
 import { usePermissions } from "@/hooks/usePermissions";
+import { PERMISSIONS } from "@/utils/rbacConfig";
 import { teamSchema } from "@/schemas/team";
 
 interface CategoryDrawerProps {
@@ -47,8 +49,10 @@ export default function CategoryDrawer({
     allEmployees,
     allFiles,
 }: CategoryDrawerProps): JSX.Element {
-    const isReadOnly = mode === "view";
-    const { role } = usePermissions();
+    const [currentMode, setCurrentMode] = useState<"add" | "edit" | "view">(mode);
+    const isReadOnly = currentMode === "view";
+    const { role, hasPermission } = usePermissions();
+    const canEdit = hasPermission(PERMISSIONS.GROUP_UPDATE);
     const isMember = role === "member";
 
     // Form fields
@@ -75,6 +79,7 @@ export default function CategoryDrawer({
     // Reset drawer state on open/close or category changes
     useEffect(() => {
         if (open) {
+            setCurrentMode(mode);
             const superAdmins = allEmployees
                 .filter((emp) => {
                     const r = (emp.role || "").toLowerCase().replace("_", "");
@@ -91,7 +96,7 @@ export default function CategoryDrawer({
                 setName(category.name);
                 setDescription(category.description || "");
                 setManagerId(category.managerId || "");
-                
+
                 // Merge existing members and all super admins, avoiding duplicates
                 const existing = category.employees || [];
                 const merged = [...existing];
@@ -282,6 +287,37 @@ export default function CategoryDrawer({
         }
     };
 
+    const handleCancel = () => {
+        if (category) {
+            setName(category.name);
+            setDescription(category.description || "");
+            setManagerId(category.managerId || "");
+
+            const superAdmins = allEmployees
+                .filter((emp) => {
+                    const r = (emp.role || "").toLowerCase().replace("_", "");
+                    return r === "superadmin";
+                })
+                .map((emp) => ({
+                    id: emp.id,
+                    name: emp.name,
+                    role: emp.role || "Super Admin",
+                    avatar: emp.avatar || "",
+                }));
+
+            const existing = category.employees || [];
+            const merged = [...existing];
+            superAdmins.forEach((sa) => {
+                if (!merged.some((m) => m.id === sa.id)) {
+                    merged.push(sa);
+                }
+            });
+            setSelectedEmployees(merged);
+            setSelectedFiles(category.files || []);
+        }
+        setCurrentMode("view");
+    };
+
     const handleSave = async () => {
         if (!canSave || isSubmitting) return;
 
@@ -306,7 +342,11 @@ export default function CategoryDrawer({
             };
 
             await onSubmit(newCategory);
-            onOpenChange(false);
+            if (currentMode === "edit") {
+                setCurrentMode("view");
+            } else {
+                onOpenChange(false);
+            }
         } catch (error: any) {
             console.error("Failed to save category:", error);
         } finally {
@@ -335,9 +375,19 @@ export default function CategoryDrawer({
                             <X className="h-5 w-5" />
                         </button>
                         <SheetTitle className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
-                            {mode === "add" ? "Add Category" : mode === "edit" ? "Edit Category" : "Category Details"}
+                            {currentMode === "add" ? "Add Category" : currentMode === "edit" ? "Edit Category" : "Category Details"}
                         </SheetTitle>
                     </div>
+                    {currentMode === "view" && canEdit && (
+                        <Button
+                            type="button"
+                            onClick={() => setCurrentMode("edit")}
+                            className="flex items-center gap-1.5 bg-[#1A56DB] hover:bg-blue-750 text-white px-3.5 py-1.2 rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                        >
+                            <Pencil className="h-3.5 w-3.5" />
+                            <span>Edit</span>
+                        </Button>
+                    )}
                 </div>
 
                 {/* Split Content Area */}
@@ -846,7 +896,13 @@ export default function CategoryDrawer({
                     <div className="flex items-center justify-end gap-3 bg-[#FEFFFA] dark:bg-zinc-900 px-8 py-4 shrink-0 select-none">
                         <Button
                             variant="ghost"
-                            onClick={() => onOpenChange(false)}
+                            onClick={() => {
+                                if (currentMode === "edit") {
+                                    handleCancel();
+                                } else {
+                                    onOpenChange(false);
+                                }
+                            }}
                             className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 text-sm font-semibold h-10 px-4"
                         >
                             Cancel
@@ -878,12 +934,12 @@ export default function CategoryDrawer({
                 onAdd={handleAddMultipleEmployees}
             />
             <AddFilesDialog
-                                                                 open={addFilesOpen}
-                                                                 onOpenChange={setAddFilesOpen}
-                                                                 unselectedFiles={availableFilesPool}
-                                                                 alreadySelectedFileIds={selectedFiles.map((f) => f.id)}
-                                                                 onAdd={handleAddMultipleFiles}
-                                                             />
+                open={addFilesOpen}
+                onOpenChange={setAddFilesOpen}
+                unselectedFiles={availableFilesPool}
+                alreadySelectedFileIds={selectedFiles.map((f) => f.id)}
+                onAdd={handleAddMultipleFiles}
+            />
         </Sheet>
     );
 }

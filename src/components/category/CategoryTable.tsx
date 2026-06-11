@@ -2,7 +2,6 @@ import { useMemo, useState, type JSX } from "react";
 import {
     MoreVertical,
     Eye,
-    Pencil,
     UserPlus,
 
     Trash2,
@@ -49,16 +48,13 @@ import { type Category } from "@/types/category";
 type RowMenuProps = {
     category: Category;
     onDelete: (id: string) => void;
-    onEdit: (category: Category) => void;
     onView: (category: Category) => void;
     onAddEmployees: (category: Category) => void;
-
 };
 
 type CategoryTableProps = {
     categories: Category[];
     onDelete: (id: string) => void;
-    onEdit: (category: Category) => void;
     onView: (category: Category) => void;
     onAddEmployees: (category: Category) => void;
 
@@ -70,13 +66,10 @@ type CategoryTableProps = {
 function RowMenu({
     category,
     onDelete,
-    onEdit,
     onView,
     onAddEmployees,
-
 }: RowMenuProps): JSX.Element {
     const { hasPermission } = usePermissions();
-    const canEdit = hasPermission(PERMISSIONS.GROUP_UPDATE);
     const canManageMembers = hasPermission(PERMISSIONS.GROUP_MANAGE_MEMBERS);
     const canDelete = hasPermission(PERMISSIONS.GROUP_DELETE);
 
@@ -105,17 +98,6 @@ function RowMenu({
                     <Eye className="mr-2 h-4 w-4 text-zinc-600 dark:text-zinc-400" />
                     View Details
                 </DropdownMenuItem>
-
-                {canEdit && (
-                    <DropdownMenuItem
-                        data-testid={`edit-${category.id}`}
-                        onClick={() => onEdit(category)}
-                        className="cursor-pointer"
-                    >
-                        <Pencil className="mr-2 h-4 w-4 text-zinc-600 dark:text-zinc-400" />
-                        Edit
-                    </DropdownMenuItem>
-                )}
 
                 {canManageMembers && (
                     <DropdownMenuItem
@@ -157,7 +139,6 @@ const COLUMN_WIDTHS: Record<string, string> = {
 export default function CategoryTable({
     categories,
     onDelete,
-    onEdit,
     onView,
     onAddEmployees,
     visibleColumns = ["name", "managerName", "kbCount", "employeeCount"],
@@ -333,7 +314,6 @@ export default function CategoryTable({
                                             <RowMenu
                                                 category={cat}
                                                 onDelete={(id) => setConfirmDeleteId(id)}
-                                                onEdit={onEdit}
                                                 onView={onView}
                                                 onAddEmployees={onAddEmployees}
                                             />
@@ -344,7 +324,6 @@ export default function CategoryTable({
                                         <RowMenu
                                             category={cat}
                                             onDelete={(id) => setConfirmDeleteId(id)}
-                                            onEdit={onEdit}
                                             onView={onView}
                                             onAddEmployees={onAddEmployees}
                                         />
@@ -423,7 +402,6 @@ export default function CategoryTable({
                                     <RowMenu
                                         category={cat}
                                         onDelete={(id) => setConfirmDeleteId(id)}
-                                        onEdit={onEdit}
                                         onView={onView}
                                         onAddEmployees={onAddEmployees}
                                     />

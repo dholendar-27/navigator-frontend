@@ -248,7 +248,8 @@ export default function ProfilePage({ onClose }: { onClose?: () => void }) {
                             type="button"
                             onClick={handleClose}
                             className="text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors cursor-pointer"
-                            aria-label="Close"
+                            tabIndex={-1}
+                        aria-label="Close"
                             disabled={isSaving}
                         >
                             <X className="h-5 w-5" />

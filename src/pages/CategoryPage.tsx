@@ -761,12 +761,6 @@ export default function CategoryPage() {
         setDrawerOpen(true);
     };
 
-    const triggerEditMode = (cat: Category) => {
-        setSelectedCategory(cat);
-        setDrawerMode("edit");
-        setDrawerOpen(true);
-    };
-
     const triggerViewMode = (cat: Category) => {
         setSelectedCategory(cat);
         setDrawerMode("view");
@@ -1009,7 +1003,6 @@ export default function CategoryPage() {
                     <CategoryTable
                         categories={filteredCategories}
                         onDelete={handleDeleteCategory}
-                        onEdit={triggerEditMode}
                         onView={triggerViewMode}
                         onAddEmployees={triggerAddEmployeesMode}
                         visibleColumns={isMember ? MEMBER_TEAM_COLUMNS : visibleColumns}

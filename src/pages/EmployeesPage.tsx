@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 
 import {
@@ -48,9 +47,9 @@ import EmptyState from "@/components/employees/EmptyState";
 import UnifiedEmptyState from "@/components/ui/empty-state";
 import AddEmployeeDrawer from "@/components/employees/AddEmployeeDrawer";
 import EmployeeDetailsDrawer from "@/components/employees/EmployeeDrawer";
-import EditEmployeeDrawer from "@/components/employees/EditEmployeeDrawer";
 import FilterDropdown from "@/components/FilterDropdown";
 import { useKindeAuth } from "@kinde-oss/kinde-auth-react";
+import { MultiSelect } from "@/components/ui/multi-select";
 
 import { listEmployees, listInvites, resendInvite, revokeInvite, listRoles, deleteEmployee, listGroups } from "@/lib/api";
 
@@ -82,7 +81,7 @@ export default function EmployeesPage() {
 
     const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
     const [detailDrawerOpen, setDetailDrawerOpen] = useState<boolean>(false);
-    const [editDrawerOpen, setEditDrawerOpen] = useState<boolean>(false);
+    const [detailDrawerEditMode, setDetailDrawerEditMode] = useState<boolean>(false);
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
     const [search, setSearch] = useState<string>("");
 
@@ -157,7 +156,7 @@ export default function EmployeesPage() {
     });
 
     const [batchTeamPickerOpen, setBatchTeamPickerOpen] = useState(false);
-    const [selectedGroupBatch, setSelectedGroupBatch] = useState<string>("");
+    const [selectedGroupBatch, setSelectedGroupBatch] = useState<string[]>([]);
     const [isBatchAdding, setIsBatchAdding] = useState(false);
 
     const isEmpty = employees.length === 0;
@@ -505,45 +504,42 @@ export default function EmployeesPage() {
                     </div>
 
                     {/* Batch Add to Category Dialog */}
-                    <Dialog open={batchTeamPickerOpen} onOpenChange={(open) => !open && setBatchTeamPickerOpen(false)}>
+                    <Dialog open={batchTeamPickerOpen} onOpenChange={(open) => { if (!open) { setBatchTeamPickerOpen(false); setSelectedGroupBatch([]); } }}>
                         <DialogContent className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md border border-zinc-150 dark:border-zinc-800 shadow-xl p-6">
                             <DialogHeader>
                                 <DialogTitle className="text-zinc-900 dark:text-zinc-100 font-semibold text-lg">Add Selected to Category</DialogTitle>
                                 <DialogDescription className="text-zinc-500 dark:text-zinc-400 text-sm mt-2">
-                                    Select a category to add the {selected.size} selected employees to.
+                                    Select categories to add the {selected.size} selected employees to.
                                 </DialogDescription>
                             </DialogHeader>
 
                             <div className="mt-4">
-                                <Select value={selectedGroupBatch} onValueChange={setSelectedGroupBatch}>
-                                    <SelectTrigger className="h-10 rounded-lg border-zinc-200 text-base md:text-sm font-medium w-full">
-                                        <SelectValue placeholder="Select category" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {teams.map((t) => (
-                                            <SelectItem key={t.id} value={t.id}>
-                                                {t.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <MultiSelect
+                                    options={teams}
+                                    selected={selectedGroupBatch}
+                                    onChange={setSelectedGroupBatch}
+                                    placeholder="Select categories"
+                                />
                             </div>
 
                             <DialogFooter className="mt-6 gap-2">
-                                <Button variant="outline" onClick={() => setBatchTeamPickerOpen(false)} disabled={isBatchAdding} className="rounded-lg text-zinc-700 dark:text-zinc-300">
+                                <Button variant="outline" onClick={() => { setBatchTeamPickerOpen(false); setSelectedGroupBatch([]); }} disabled={isBatchAdding} className="rounded-lg text-zinc-700 dark:text-zinc-300">
                                     Cancel
                                 </Button>
                                 <Button
                                     onClick={async () => {
-                                        if (!selectedGroupBatch || selected.size === 0) return;
+                                        if (selectedGroupBatch.length === 0 || selected.size === 0) return;
                                         setIsBatchAdding(true);
                                         try {
                                             const token = await getToken();
                                             if (!token) throw new Error("Not authenticated");
                                             const ids = Array.from(selected);
-                                            await (await import("@/lib/api")).addGroupMembers(selectedGroupBatch, ids, token);
-                                            toast.success(`Added ${ids.length} employees to category`);
+                                            for (const groupId of selectedGroupBatch) {
+                                                await (await import("@/lib/api")).addGroupMembers(groupId, ids, token);
+                                            }
+                                            toast.success(`Added ${ids.length} employees to categories`);
                                             setSelected(new Set());
+                                            setSelectedGroupBatch([]);
                                             setBatchTeamPickerOpen(false);
                                             
                                             // Clear the groups/categories cache so team membership updates are fetched
@@ -559,7 +555,7 @@ export default function EmployeesPage() {
                                             setIsBatchAdding(false);
                                         }
                                     }}
-                                    disabled={isBatchAdding || !selectedGroupBatch}
+                                    disabled={isBatchAdding || selectedGroupBatch.length === 0}
                                     className="rounded-lg h-10 px-4 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center gap-2"
                                 >
                                     {isBatchAdding ? "Adding..." : "Add to Category"}
@@ -801,11 +797,13 @@ export default function EmployeesPage() {
                             onDelete={handleDeleteEmployee}
                             onView={(emp) => {
                                 setSelectedEmployee(emp);
+                                setDetailDrawerEditMode(false);
                                 setDetailDrawerOpen(true);
                             }}
                             onEdit={(emp) => {
                                 setSelectedEmployee(emp);
-                                setEditDrawerOpen(true);
+                                setDetailDrawerEditMode(true);
+                                setDetailDrawerOpen(true);
                             }}
                             onResendInvite={handleResendInvite}
                             onRevokeInvite={handleRevokeInvite}
@@ -828,14 +826,14 @@ export default function EmployeesPage() {
 
                 <EmployeeDetailsDrawer
                     open={detailDrawerOpen}
-                    onOpenChange={setDetailDrawerOpen}
+                    onOpenChange={(open) => {
+                        setDetailDrawerOpen(open);
+                        if (!open) {
+                            setDetailDrawerEditMode(false);
+                        }
+                    }}
                     employee={selectedEmployee}
-                />
-
-                <EditEmployeeDrawer
-                    open={editDrawerOpen}
-                    onOpenChange={setEditDrawerOpen}
-                    employee={selectedEmployee}
+                    initialEditMode={detailDrawerEditMode}
                     onSave={(updated) => {
                         setEmployees(prev => prev.map(emp => emp.id === updated.id ? updated : emp));
                     }}
