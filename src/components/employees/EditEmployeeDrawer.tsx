@@ -78,7 +78,7 @@ export default function EditEmployeeDrawer({
 
     if (!employee) return <></>;
 
-    const validation = employeeEditSchema.safeParse({ firstName, lastName, email });
+    const validation = employeeEditSchema.safeParse({ firstName, lastName, email, employeeCode });
     const canSave = validation.success;
     const fieldErrors = !validation.success
         ? validation.error.flatten().fieldErrors
@@ -336,7 +336,13 @@ export default function EditEmployeeDrawer({
                                 maxLength={50}
                                 className="h-10 rounded-lg border-zinc-200 text-base md:text-sm font-normal"
                             />
-                            {touched.employeeCode && (
+                            {touched.employeeCode && fieldErrors.employeeCode && (
+                                <div className="text-red-500 text-[10px] flex items-center gap-1 mt-0.5">
+                                    <AlertCircle className="h-3 w-3" />
+                                    <span>{fieldErrors.employeeCode[0]}</span>
+                                </div>
+                            )}
+                            {!touched.employeeCode && (
                                 <div className="text-zinc-400 text-[10px]">
                                     {EMPLOYEE_CODE_CONSTRAINTS.MIN_LENGTH}-{EMPLOYEE_CODE_CONSTRAINTS.MAX_LENGTH} characters, alphanumeric, hyphens, underscores, dots
                                 </div>

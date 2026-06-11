@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/dialog";
 
 const TEAM_COLUMNS = [
-    { key: "name", label: "Team Name" },
+    { key: "name", label: "Category Name" },
     { key: "managerName", label: "Manager" },
     { key: "kbCount", label: "No. Of Knowledge Base" },
     { key: "employeeCount", label: "No. Of Employees" },
@@ -514,7 +514,7 @@ export default function CategoryPage() {
                             files: mappedFiles,
                         } : c));
 
-                        toast.success(`Team "${newCat.name}" updated successfully`);
+                        toast.success(`Category "${newCat.name}" updated successfully`);
                     } else {
                         // 1. Create group
                         const response = await createGroup({
@@ -583,7 +583,7 @@ export default function CategoryPage() {
                         };
                         setCategories(prev => [...prev, createdCat]);
 
-                        toast.success(`Team "${newCat.name}" created successfully`);
+                        toast.success(`Category "${newCat.name}" created successfully`);
                     }
 
                     setDrawerOpen(false);
@@ -592,8 +592,8 @@ export default function CategoryPage() {
                 toast.error("Not authenticated");
             }
         } catch (err) {
-            console.error("API Error creating/updating team:", err);
-            toast.error("API error creating/updating team");
+            console.error("API Error creating/updating category:", err);
+            toast.error("API error creating/updating category");
         } finally {
             setIsLoading(false);
         }
@@ -611,7 +611,7 @@ export default function CategoryPage() {
                 const token = await getToken();
                 if (token) {
                     await deleteGroup(id, token);
-                    toast.success(`Team "${target.name}" deleted successfully`);
+                    toast.success(`Category "${target.name}" deleted successfully`);
                 } else {
                     toast.error("Not authenticated");
                     setCategories(prevCategories);
@@ -621,13 +621,13 @@ export default function CategoryPage() {
                 setCategories(prevCategories);
             }
         } catch (err) {
-            console.error("API Error deleting team:", err);
-            toast.error("API error deleting team");
+            console.error("API Error deleting category:", err);
+            toast.error("API error deleting category");
             setCategories(prevCategories);
         }
     };
 
-    // Archive/unarchive removed for teams
+    // Archive/unarchive removed for categories
 
     const handleBatchDelete = async () => {
         setIsBatchProcessing(true);
@@ -640,10 +640,10 @@ export default function CategoryPage() {
 
             setCategories((prev) => prev.filter((c) => !selected.has(c.id)));
             setSelected(new Set());
-            toast.success("Selected teams deleted successfully");
+            toast.success("Selected categories deleted successfully");
         } catch (err) {
             console.error("Batch delete error:", err);
-            toast.error("Failed to delete selected teams");
+            toast.error("Failed to delete selected categories");
         } finally {
             setIsBatchProcessing(false);
             setConfirmBatchDelete(false);
@@ -696,10 +696,10 @@ export default function CategoryPage() {
             );
 
             setSelected(new Set());
-            toast.success("Files added to selected teams successfully");
+            toast.success("Files added to selected categories successfully");
         } catch (err) {
             console.error("Batch add files error:", err);
-            toast.error("Failed to add files to selected teams");
+            toast.error("Failed to add files to selected categories");
         } finally {
             setIsBatchProcessing(false);
             setBatchAddFilesOpen(false);
@@ -744,10 +744,10 @@ export default function CategoryPage() {
             );
 
             setSelected(new Set());
-            toast.success("Employees assigned to selected teams successfully");
+            toast.success("Employees assigned to selected categories successfully");
         } catch (err) {
             console.error("Batch assign employees error:", err);
-            toast.error("Failed to assign employees to selected teams");
+            toast.error("Failed to assign employees to selected categories");
         } finally {
             setIsBatchProcessing(false);
             setBatchAddEmployeesOpen(false);
@@ -778,19 +778,19 @@ export default function CategoryPage() {
         setDrawerMode("edit");
         setDrawerOpen(true);
         setTimeout(() => {
-            toast.info("Click '+ Add' on the Employees tab to link employees to this team.");
+            toast.info("Click '+ Add' on the Employees tab to link employees to this category.");
         }, 300);
     };
 
     return (
-        <div className="p-3 sm:p-6 md:p-8 flex flex-col h-auto lg:h-full w-full bg-transparent dark:bg-zinc-950/20 lg:overflow-hidden" data-testid="teams-page" data-tour="teams-page">
+        <div className="p-3 sm:p-6 md:p-8 flex flex-col h-auto lg:h-full w-full bg-transparent dark:bg-zinc-950/20 lg:overflow-hidden" data-testid="categories-page" data-tour="categories-page">
 
             {/* Header */}
             <div className="flex flex-col gap-1 shrink-0">
                 <div className="flex flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-2.5">
                         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-                            Teams
+                            Categories
                         </h1>
                         {!isLoading && (
                             <Badge className="rounded-full bg-blue-50 dark:bg-blue-900/30 px-2.5 py-0.5 text-xs font-semibold text-blue-600 dark:text-blue-400 animate-fade-in">
@@ -822,7 +822,7 @@ export default function CategoryPage() {
                     fallback={null}
                 >
                     <PageActionButton
-                        data-tour="add-team-btn"
+                        data-tour="add-category-btn"
                         icon={<Plus className="h-3.5 w-3.5" />}
                         label="Add"
                         onClick={triggerAddMode}
@@ -841,9 +841,9 @@ export default function CategoryPage() {
                         setSearch(e.target.value);
                         setSelected(new Set());
                     }}
-                    placeholder="Search teams..."
-                    className="h-10 rounded-lg border-[#E7E7E0] dark:border-zinc-700 bg-[#FEFFFA] dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 pl-11 pr-10 placeholder:text-zinc-400 dark:placeholder:text-zinc-550 focus:ring-blue-500/20"
-                    data-testid="team-search-input"
+                    placeholder="Search categories..."
+                    className="h-10 rounded-lg border-[#E7E7E0] dark:border-zinc-700 bg-[#FEFFFA] dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 pl-11 pr-10 placeholder:text-zinc-400 dark:placeholder:text-zinc-555 focus:ring-blue-500/20"
+                    data-testid="category-search-input"
                 />
                 {search && (
                     <button
@@ -921,7 +921,7 @@ export default function CategoryPage() {
                     </div>
                 </div>
             ) : (
-                <div data-tour="team-filters" className="mt-4 shrink-0 flex items-center justify-between gap-3 w-full select-none">
+                <div data-tour="category-filters" className="mt-4 shrink-0 flex items-center justify-between gap-3 w-full select-none">
                     <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar flex-1 min-w-0">
                         <FilterDropdown
                             label="Creator"
@@ -965,7 +965,7 @@ export default function CategoryPage() {
                         gridCols="[48px_2.5fr_2fr_1.8fr_1.5fr_56px]"
                         headers={[
                             <div className="h-4 w-4 rounded bg-zinc-200 dark:bg-zinc-700 animate-pulse" />,
-                            "Team Name",
+                            "Category Name",
                             "Manager",
                             "No. Of Knowledge Base",
                             "No. Of Employees",
@@ -983,15 +983,15 @@ export default function CategoryPage() {
                 ) : isEmpty ? (
                     <UnifiedEmptyState
                         title="No Data Found"
-                        description="No teams have been added yet."
+                        description="No categories have been added yet."
                         icon={<FolderClosed className="h-8 w-8 text-[#60646B] dark:text-zinc-400" />}
-                        testId="teams-empty-state"
+                        testId="categories-empty-state"
                     />
                 ) : isNoResults ? (
                     <UnifiedEmptyState
                         title={search ? `No results found for "${search}"` : "No results found"}
                         description="Try adjusting your filters or clearing search parameters."
-                        testId="teams-search-empty-state"
+                        testId="categories-search-empty-state"
                     >
                         <Button
                             variant="link"
@@ -1048,9 +1048,9 @@ export default function CategoryPage() {
             <Dialog open={confirmBatchDelete} onOpenChange={(open) => !open && setConfirmBatchDelete(false)}>
                 <DialogContent className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md border border-zinc-150 dark:border-zinc-800 shadow-xl p-6">
                     <DialogHeader>
-                        <DialogTitle className="text-zinc-900 dark:text-zinc-100 font-semibold text-lg">Delete Selected Teams</DialogTitle>
+                        <DialogTitle className="text-zinc-900 dark:text-zinc-100 font-semibold text-lg">Delete Selected Categories</DialogTitle>
                         <DialogDescription className="text-zinc-500 dark:text-zinc-400 text-sm mt-2">
-                            Are you sure you want to delete the {selected.size} selected teams? This action is irreversible and cannot be undone.
+                            Are you sure you want to delete the {selected.size} selected categories? This action is irreversible and cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="mt-6 gap-2">

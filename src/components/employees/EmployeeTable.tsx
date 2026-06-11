@@ -194,15 +194,15 @@ function RowMenu({
                 <PermissionGate
                     permission={PERMISSIONS.GROUP_MANAGE_MEMBERS}
                     fallback={
-                        <DropdownMenuItem onClick={() => toast("You don't have permission to add to team")} className="cursor-pointer flex items-center">
+                        <DropdownMenuItem onClick={() => toast("You don't have permission to add to category")} className="cursor-pointer flex items-center">
                             <FolderPlus className="mr-2 h-4 w-4 text-zinc-600 dark:text-zinc-400" />
-                            Add to Team
+                            Add to Category
                         </DropdownMenuItem>
                     }
                 >
                     <DropdownMenuItem onClick={() => onAddToTeam?.(employee)} className="cursor-pointer flex items-center">
                         <FolderPlus className="mr-2 h-4 w-4 text-zinc-600 dark:text-zinc-400" />
-                        Add to Team
+                        Add to Category
                     </DropdownMenuItem>
                 </PermissionGate>
 
@@ -708,20 +708,20 @@ export default function EmployeeTable({
                 </div>
             </div>
 
-            {/* Team picker dialog */}
+            {/* Category picker dialog */}
             <Dialog open={teamPickerOpen} onOpenChange={(open) => !open && setTeamPickerOpen(false)}>
-                <DialogContent className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md border border-zinc-100 dark:border-zinc-800 shadow-xl p-6">
+                <DialogContent className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md border border-zinc-150 dark:border-zinc-800 shadow-xl p-6">
                     <DialogHeader>
-                        <DialogTitle className="text-zinc-900 dark:text-zinc-100 font-semibold text-lg">Add to Team</DialogTitle>
+                        <DialogTitle className="text-zinc-900 dark:text-zinc-100 font-semibold text-lg">Add to Category</DialogTitle>
                         <DialogDescription className="text-zinc-500 dark:text-zinc-400 text-sm mt-2">
-                            Select a team to add {teamTarget?.name} to.
+                            Select a category to add {teamTarget?.name} to.
                         </DialogDescription>
                     </DialogHeader>
 
                     <div className="mt-4">
                         <Select value={selectedGroup} onValueChange={setSelectedGroup}>
                             <SelectTrigger className="h-10 rounded-lg border-zinc-200 text-base md:text-sm font-medium w-full">
-                                <SelectValue placeholder="Select team" />
+                                <SelectValue placeholder="Select category" />
                             </SelectTrigger>
                             <SelectContent>
                                 {groups.map((g) => (
@@ -745,11 +745,11 @@ export default function EmployeeTable({
                                     const token = await getToken();
                                     if (!token) throw new Error("Not authenticated");
                                     await addGroupMembers(selectedGroup, [teamTarget.id], token);
-                                    toast.success(`${teamTarget.name} added to team`);
+                                    toast.success(`${teamTarget.name} added to category`);
                                     setTeamPickerOpen(false);
                                 } catch (err: any) {
-                                    console.error("Add to team error", err);
-                                    toast.error(err?.message || "Failed to add to team");
+                                    console.error("Add to category error", err);
+                                    toast.error(err?.message || "Failed to add to category");
                                 } finally {
                                     setIsAddingToTeam(false);
                                 }
@@ -757,7 +757,7 @@ export default function EmployeeTable({
                             disabled={isAddingToTeam || !selectedGroup}
                             className="rounded-lg h-10 px-4 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center gap-2"
                         >
-                            {isAddingToTeam ? "Adding..." : "Add to Team"}
+                            {isAddingToTeam ? "Adding..." : "Add to Category"}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

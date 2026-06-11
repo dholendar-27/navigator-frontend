@@ -87,7 +87,7 @@ function RowMenu({
                     type="button"
                     data-testid={`category-row-menu-${category.id}`}
                     className="rounded-md p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
-                    aria-label="Team row actions"
+                    aria-label="Category row actions"
                 >
                     <MoreVertical className="h-4 w-4" />
                 </button>
@@ -256,7 +256,7 @@ export default function CategoryTable({
     return (
         <div
             className="overflow-hidden rounded-2xl bg-white dark:bg-zinc-900 flex flex-col h-full"
-            data-testid="teams-table"
+            data-testid="categories-table"
         >
             <div className="w-full flex-1 flex flex-col min-h-0 overflow-x-auto">
                 <div className="w-full flex-1 flex flex-col min-h-0">
@@ -270,13 +270,13 @@ export default function CategoryTable({
                                 <Checkbox
                                     checked={allChecked}
                                     onCheckedChange={toggleAll}
-                                    data-testid="team-select-all"
+                                    data-testid="category-select-all"
                                 />
                             </div>
                         )}
                         {visibleColumns.includes("name") && (
                             <div className="text-sm normal-case tracking-normal text-[#171717] dark:text-[#E7E7E0] font-semibold cursor-pointer hover:opacity-80" onClick={() => handleSort("name")}>
-                                Team Name <SortIcon columnKey="name" />
+                                Category Name <SortIcon columnKey="name" />
                             </div>
                         )}
                         {visibleColumns.includes("managerName") && (
@@ -318,7 +318,7 @@ export default function CategoryTable({
                                     "flex flex-col md:grid items-start md:items-center gap-3 md:gap-2 px-5 py-4 transition-all hover:bg-zinc-50/50 dark:hover:bg-zinc-800/40 cursor-pointer group relative border-b border-zinc-100 dark:border-zinc-800/50 last:border-b-0",
                                     cat.isArchived && "opacity-60 bg-zinc-50/30 dark:bg-zinc-900/30"
                                 )}
-                                data-testid={`team-row-${cat.id}`}
+                                data-testid={`category-row-${cat.id}`}
                             >
                                 {canSelect ? (
                                     <div className="absolute top-5 right-5 md:static md:block" onClick={(e) => e.stopPropagation()}>
@@ -326,7 +326,7 @@ export default function CategoryTable({
                                             <Checkbox
                                                 checked={selected.has(cat.id)}
                                                 onCheckedChange={() => toggleOne(cat.id)}
-                                                data-testid={`team-select-row-${cat.id}`}
+                                                data-testid={`category-select-row-${cat.id}`}
                                             />
                                         </div>
                                         <div className="md:hidden">
@@ -358,7 +358,7 @@ export default function CategoryTable({
                                                 <Checkbox
                                                     checked={selected.has(cat.id)}
                                                     onCheckedChange={() => toggleOne(cat.id)}
-                                                    data-testid={`team-select-row-mobile-${cat.id}`}
+                                                    data-testid={`category-select-row-mobile-${cat.id}`}
                                                 />
                                             </div>
                                         )}
@@ -515,10 +515,10 @@ export default function CategoryTable({
                 <DialogContent className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md border border-zinc-200 dark:border-zinc-800 shadow-xl p-6">
                     <DialogHeader>
                         <DialogTitle className="text-zinc-900 dark:text-zinc-100 font-semibold text-lg">
-                            Delete Team
+                            Delete Category
                         </DialogTitle>
                         <DialogDescription className="text-zinc-500 dark:text-zinc-400 text-sm mt-2 leading-relaxed">
-                            Are you sure you want to delete this team? This action cannot be undone and will un-link all employees and knowledge base materials currently associated with it.
+                            Are you sure you want to delete this category? This action cannot be undone and will un-link all employees and knowledge base materials currently associated with it.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="mt-6 gap-2">

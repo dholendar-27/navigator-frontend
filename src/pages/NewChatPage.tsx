@@ -524,6 +524,17 @@ function formatInline(text: string, citations?: Citation[], onCitationClick?: (c
                     }
                 }
 
+                // Check for numeric citations (e.g. [1] or [^1])
+                const numericMatch = part.match(/^\[\^?(\d+)\]$/);
+                if (numericMatch) {
+                    const index = parseInt(numericMatch[1], 10);
+                    if (citations && index > 0 && index <= citations.length) {
+                        const citation = citations[index - 1];
+                        const type = (citation.file_id !== null && citation.file_id !== undefined) ? "Source" : "Web";
+                        return <CitationPill key={i} citation={citation} type={type} onSourceClick={onCitationClick} />;
+                    }
+                }
+
                 // Check for filename-based citations (e.g. [Volunteer_Guidelines.docx, Section])
                 const genericMatch = part.match(/^\[([^\]]+)\]$/);
                 if (genericMatch) {
@@ -563,7 +574,7 @@ export default function NewChatPage(): JSX.Element {
     const [isResponding, setIsResponding] = useState(false);
     const [isLoadingMessages, setIsLoadingMessages] = useState(false);
     const [greeting, setGreeting] = useState("Good Morning");
-    const [selectedModel, setSelectedModel] = useState("Auto");
+    const [selectedModel, setSelectedModel] = useState("MiniMax 2.7");
     const [conversationId, setConversationId] = useState<string | null>(null);
     const [thinkingLabel, setThinkingLabel] = useState("Thinking...");
 
@@ -853,7 +864,7 @@ export default function NewChatPage(): JSX.Element {
                 {
                     query: text,
                     conversation_id: convId ?? undefined,
-                    model: selectedModel === "Auto" ? undefined : selectedModel.toLowerCase(),
+                    model: selectedModel === "MiniMax 2.7" ? "minimax/minimax-01" : undefined,
                     truncate_message_id: truncateMessageId,
                 },
                 token,
@@ -951,6 +962,7 @@ export default function NewChatPage(): JSX.Element {
                         citations.push(citation);
                     },
                     onDone: (data) => {
+                        console.log(`[Token Usage] Total tokens used for response: ${data.tokens_used ?? "unknown"}`);
                         if (convId !== currentConversationIdRef.current) return;
                         setMessages((prev) => {
                             if (!prev.some((m) => m.id === streamingId)) return prev;
@@ -1168,9 +1180,7 @@ export default function NewChatPage(): JSX.Element {
                                             </div>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end" className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
-                                            <DropdownMenuItem onClick={() => setSelectedModel("Auto")}>Auto</DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => setSelectedModel("GPT-4o")}>GPT-4o</DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => setSelectedModel("Claude-3.5")}>Claude-3.5</DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => setSelectedModel("MiniMax 2.7")}>MiniMax 2.7</DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
 
@@ -1392,9 +1402,7 @@ export default function NewChatPage(): JSX.Element {
                                         </div>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="start" className="w-36 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
-                                        <DropdownMenuItem onClick={() => setSelectedModel("Auto")}>Auto</DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => setSelectedModel("GPT-4o")}>GPT-4o</DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => setSelectedModel("Claude-3.5")}>Claude-3.5</DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => setSelectedModel("MiniMax 2.7")}>MiniMax 2.7</DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
 

@@ -121,7 +121,7 @@ export default function EmployeeDetailsDrawer({
 
                         <Field label="Role" value={employee.role} testId="details-role" />
                         <Field
-                            label="Teams"
+                            label="Categories"
                             value={employee.category || "-"}
                             testId="details-categories"
                         />

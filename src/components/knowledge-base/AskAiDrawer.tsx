@@ -148,6 +148,7 @@ export default function AskAiDrawer({ open, onOpenChange, folderId }: AskAiDrawe
                         citations.push(citation);
                     },
                     onDone: (data) => {
+                        console.log(`[Token Usage] Total tokens used for response: ${data.tokens_used ?? "unknown"}`);
                         if (!conversationId) {
                             setConversationId(data.conversation_id);
                         }

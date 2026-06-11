@@ -694,7 +694,7 @@ export default function DashboardPage(): JSX.Element {
                     <div className="flex items-center justify-between w-full pb-1 border-b border-zinc-100 dark:border-zinc-800/60">
                         <div className="space-y-0.5">
                             <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Recent Activities</h2>
-                            <p className="text-[11px] text-zinc-400 font-medium">Activity updates across the team</p>
+                            <p className="text-[11px] text-zinc-400 font-medium">Activity updates across categories</p>
                         </div>
 
                         <button
@@ -771,7 +771,7 @@ export default function DashboardPage(): JSX.Element {
                             Recent Activities
                         </DialogTitle>
                         <DialogDescription className="text-xs text-zinc-500 dark:text-zinc-400">
-                            A complete log of team actions and file operations.
+                            A complete log of category actions and file operations.
                         </DialogDescription>
                     </DialogHeader>
 

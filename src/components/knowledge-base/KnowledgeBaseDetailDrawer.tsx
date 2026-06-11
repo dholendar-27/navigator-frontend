@@ -426,9 +426,49 @@ export default function KnowledgeBaseDetailDrawer({
             setIsLoading(true);
             const token = await getToken();
             if (token) {
+                const fileList = Array.from(e.target.files);
+                const existingNames = files.map((f: any) => (f.original_filename || f.name).toLowerCase());
+                
+                const duplicates = fileList.filter((f) => existingNames.includes(f.name.toLowerCase()));
+                const toUpload = fileList.filter((f) => !existingNames.includes(f.name.toLowerCase()));
+                
+                if (duplicates.length > 0) {
+                    const duplicateNames = duplicates.map((f) => `"${f.name}"`).join(", ");
+                    if (toUpload.length === 0) {
+                        toast.error(`File(s) already present, skipping: ${duplicateNames}`, { id: "drawer-upload" });
+                        setIsLoading(false);
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                        return;
+                    } else {
+                        toast.warning(`Skipped already present file(s): ${duplicateNames}`, { id: "drawer-upload-warning", duration: 5000 });
+                    }
+                }
+
                 toast.loading("Uploading documents to folder...", { id: "drawer-upload" });
-                await uploadFiles(entry.id, Array.from(e.target.files), token);
-                toast.success("Documents added successfully", { id: "drawer-upload" });
+                const result = await uploadFiles(entry.id, toUpload, token);
+
+                if (result.errors && result.errors.length > 0) {
+                    const serverDuplicates = result.errors.filter((err: any) => err.error?.includes("already exists"));
+                    const otherErrors = result.errors.filter((err: any) => !err.error?.includes("already exists"));
+                    
+                    if (serverDuplicates.length > 0) {
+                        const duplicateNames = serverDuplicates.map((err: any) => `"${err.filename}"`).join(", ");
+                        toast.error(`File(s) already present, skipping: ${duplicateNames}`, { id: "drawer-upload-server-dup", duration: 5000 });
+                    }
+                    if (otherErrors.length > 0) {
+                        const otherNames = otherErrors.map((err: any) => `"${err.filename}" (${err.error})`).join(", ");
+                        toast.error(`Failed to upload: ${otherNames}`, { id: "drawer-upload-server-err" });
+                    }
+                    
+                    if (result.successful_uploads > 0) {
+                        toast.success(`Successfully uploaded ${result.successful_uploads} document(s)`, { id: "drawer-upload" });
+                    } else {
+                        toast.dismiss("drawer-upload");
+                    }
+                } else {
+                    toast.success("Documents added successfully", { id: "drawer-upload" });
+                }
+                
                 fetchFolderFiles();
             }
         } catch (err: any) {

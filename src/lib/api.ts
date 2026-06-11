@@ -311,7 +311,7 @@ export interface ChatStreamCallbacks {
     onToolResult?: (toolName: string, resultCount: number) => void;
     onToken: (token: string) => void;
     onCitation?: (citation: Citation) => void;
-    onDone: (data: { conversation_id: string; message_id: string }) => void;
+    onDone: (data: { conversation_id: string; message_id: string; tokens_used?: number }) => void;
     onError?: (error: string) => void;
 }
 
@@ -426,6 +426,7 @@ export async function sendChatQueryStream(
                             callbacks.onDone({
                                 conversation_id: data.conversation_id,
                                 message_id: data.message_id,
+                                tokens_used: data.tokens_used,
                             });
                             break;
                         case "error":

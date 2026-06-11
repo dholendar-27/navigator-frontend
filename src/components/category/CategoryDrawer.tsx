@@ -320,7 +320,7 @@ export default function CategoryDrawer({
                 side="right"
                 className="flex w-full flex-col gap-0 p-0 sm:max-w-[1000px] bg-[#FEFFFA] dark:bg-zinc-900"
                 hideClose
-                data-testid="team-drawer"
+                data-testid="category-drawer"
             >
                 {/* Header */}
                 <div className="flex items-center justify-between px-8 py-5 shrink-0 select-none">
@@ -329,7 +329,7 @@ export default function CategoryDrawer({
                             type="button"
                             onClick={() => onOpenChange(false)}
                             className="rounded-md p-1.5 -ml-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
-                            data-testid="close-team-drawer-btn"
+                            data-testid="close-category-drawer-btn"
                             aria-label="Close drawer"
                         >
                             <X className="h-5 w-5" />
@@ -361,7 +361,7 @@ export default function CategoryDrawer({
                                 placeholder="Enter category name"
                                 maxLength={50}
                                 className="h-11 rounded-lg border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
-                                data-testid="team-name-input"
+                                data-testid="category-name-input"
                             />
                             {touched.name && fieldErrors.name && (
                                 <div className="flex items-center gap-1.5 text-xs text-red-500 mt-1">
@@ -854,7 +854,7 @@ export default function CategoryDrawer({
                         <Button
                             disabled={!canSave || isSubmitting}
                             onClick={handleSave}
-                            data-testid="save-team-btn"
+                            data-testid="save-category-btn"
                             className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold h-10 px-6 shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             {isSubmitting ? (

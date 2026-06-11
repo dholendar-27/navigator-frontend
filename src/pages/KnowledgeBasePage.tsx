@@ -571,7 +571,29 @@ export default function KnowledgeBasePage() {
             if (!token) return;
             toast.loading("Uploading files...", { id: "uploading-files" });
             const result = await uploadFiles(folderId, files, token);
-            toast.success("Files uploaded successfully", { id: "uploading-files" });
+
+            if (result.errors && result.errors.length > 0) {
+                const duplicates = result.errors.filter((e: any) => e.error?.includes("already exists"));
+                const otherErrors = result.errors.filter((e: any) => !e.error?.includes("already exists"));
+                
+                if (duplicates.length > 0) {
+                    const duplicateNames = duplicates.map((e: any) => `"${e.filename}"`).join(", ");
+                    toast.error(`File(s) already present, skipping: ${duplicateNames}`, { id: "uploading-files-dup", duration: 5000 });
+                }
+                
+                if (otherErrors.length > 0) {
+                    const otherNames = otherErrors.map((e: any) => `"${e.filename}" (${e.error})`).join(", ");
+                    toast.error(`Failed to upload: ${otherNames}`, { id: "uploading-files-err" });
+                }
+                
+                if (result.successful_uploads > 0) {
+                    toast.success(`Successfully uploaded ${result.successful_uploads} file(s)`, { id: "uploading-files" });
+                } else {
+                    toast.dismiss("uploading-files");
+                }
+            } else {
+                toast.success("Files uploaded successfully", { id: "uploading-files" });
+            }
 
             const uploadedFiles = (result.files || []).map((f: any) => ({
                 id: f.file_id,
@@ -610,6 +632,17 @@ export default function KnowledgeBasePage() {
             const file = new File([blob], fileName, { type: "text/plain" });
 
             const result = await uploadFiles(payload.folderId, [file], token);
+            
+            if (result.errors && result.errors.length > 0) {
+                const dup = result.errors.find((e: any) => e.error?.includes("already exists"));
+                if (dup) {
+                    toast.error(`"${payload.title}" already present, skipping`, { id: "add-text" });
+                    return;
+                }
+                toast.error(result.errors[0].error || "Failed to save text", { id: "add-text" });
+                return;
+            }
+
             toast.success(`"${payload.title}" saved successfully`, { id: "add-text" });
 
             const uploadedFile = result.files?.[0];

@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import { Plus, RefreshCw, Search, X, Trash2, Mail, Pencil, FolderPlus } from "lucide-react";
+import { Plus, RefreshCw, Search, X, Trash2, Mail, FolderPlus } from "lucide-react";
 import { PageActionButton } from "@/components/ui/page-action-button";
 import { PermissionGate } from "@/components/PermissionGate";
 import { PERMISSIONS } from "@/utils/rbacConfig";
@@ -14,11 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import {
-    Avatar,
-    AvatarImage,
-    AvatarFallback,
-} from "@/components/ui/avatar";
+
 import {
     Dialog,
     DialogContent,
@@ -310,8 +306,9 @@ export default function EmployeesPage() {
 
             // Separate current user from employees
             let currentUser: Employee | null = null;
-            if (user?.email) {
-                currentUser = [...mappedEmployees, ...uniqueInvites].find((emp) => emp.email?.toLowerCase() === user.email.toLowerCase()) || null;
+            const userEmail = user?.email;
+            if (userEmail) {
+                currentUser = [...mappedEmployees, ...uniqueInvites].find((emp) => emp.email?.toLowerCase() === userEmail.toLowerCase()) || null;
             }
             const filteredEmployees = [...mappedEmployees, ...uniqueInvites];
 
@@ -507,20 +504,20 @@ export default function EmployeesPage() {
                         </div>
                     </div>
 
-                    {/* Batch Add to Team Dialog */}
+                    {/* Batch Add to Category Dialog */}
                     <Dialog open={batchTeamPickerOpen} onOpenChange={(open) => !open && setBatchTeamPickerOpen(false)}>
                         <DialogContent className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md border border-zinc-150 dark:border-zinc-800 shadow-xl p-6">
                             <DialogHeader>
-                                <DialogTitle className="text-zinc-900 dark:text-zinc-100 font-semibold text-lg">Add Selected to Team</DialogTitle>
+                                <DialogTitle className="text-zinc-900 dark:text-zinc-100 font-semibold text-lg">Add Selected to Category</DialogTitle>
                                 <DialogDescription className="text-zinc-500 dark:text-zinc-400 text-sm mt-2">
-                                    Select a team to add the {selected.size} selected employees to.
+                                    Select a category to add the {selected.size} selected employees to.
                                 </DialogDescription>
                             </DialogHeader>
 
                             <div className="mt-4">
                                 <Select value={selectedGroupBatch} onValueChange={setSelectedGroupBatch}>
                                     <SelectTrigger className="h-10 rounded-lg border-zinc-200 text-base md:text-sm font-medium w-full">
-                                        <SelectValue placeholder="Select team" />
+                                        <SelectValue placeholder="Select category" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {teams.map((t) => (
@@ -545,7 +542,7 @@ export default function EmployeesPage() {
                                             if (!token) throw new Error("Not authenticated");
                                             const ids = Array.from(selected);
                                             await (await import("@/lib/api")).addGroupMembers(selectedGroupBatch, ids, token);
-                                            toast.success(`Added ${ids.length} employees to team`);
+                                            toast.success(`Added ${ids.length} employees to category`);
                                             setSelected(new Set());
                                             setBatchTeamPickerOpen(false);
                                             
@@ -556,8 +553,8 @@ export default function EmployeesPage() {
                                             // Refresh employee list to reflect team membership changes
                                             await fetchEmployees(false);
                                         } catch (err: any) {
-                                            console.error("Batch add to team error", err);
-                                            toast.error(err?.message || "Failed to add to team");
+                                            console.error("Batch add to category error", err);
+                                            toast.error(err?.message || "Failed to add to category");
                                         } finally {
                                             setIsBatchAdding(false);
                                         }
@@ -565,13 +562,13 @@ export default function EmployeesPage() {
                                     disabled={isBatchAdding || !selectedGroupBatch}
                                     className="rounded-lg h-10 px-4 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center gap-2"
                                 >
-                                    {isBatchAdding ? "Adding..." : "Add to Team"}
+                                    {isBatchAdding ? "Adding..." : "Add to Category"}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
                     <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                        Manage your team members, their roles, access permissions, and track their activity.
+                        Manage your employees, their roles, access permissions, and track their activity.
                     </p>
                 </div>
 
@@ -663,7 +660,7 @@ export default function EmployeesPage() {
                                     className="h-6 px-2.5 border-[#E7E7E0] dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 bg-[#FEFFFA] dark:bg-zinc-900 hover:bg-[#F5F5F0] dark:hover:bg-zinc-800 text-xs font-normal rounded-md shadow-sm flex items-center justify-center gap-1.5"
                                 >
                                     <FolderPlus className="h-3.5 w-3.5 text-zinc-500" />
-                                    Add to Team
+                                    Add to Category
                                 </Button>
                             </PermissionGate>
 
@@ -738,7 +735,7 @@ export default function EmployeesPage() {
                             />
 
                             <FilterDropdown
-                                label="Team"
+                                label="Category"
                                 value={filters.category}
                                 options={teams.map((t) => t.name)}
                                 onChange={(v: string) =>

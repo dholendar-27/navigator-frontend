@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import type { KBEntry } from "@/types/knowledge-base";
+import { useKindeAuth } from "@kinde-oss/kinde-auth-react";
+import { listFiles } from "@/lib/api";
 
 const MAX_FILE_SIZE_MB = 50;
 const ALLOWED_EXTENSIONS = /\.(pdf|docx|txt)$/i;
@@ -45,11 +47,14 @@ export default function AddFilesDrawer({
     folders,
     isInsideFolder = false,
 }: AddFilesDrawerProps) {
-    const [folder, setFolder] = useState<string>("");
+    const [folder, setFolder] = useState<string>( "");
     const [items, setItems] = useState<FileWithProgress[]>([]);
     const [isDragging, setIsDragging] = useState<boolean>(false);
     const [isUploading, setIsUploading] = useState<boolean>(false);
     const [rejectedFiles, setRejectedFiles] = useState<string[]>([]);
+
+    const { getToken } = useKindeAuth();
+    const [existingFileNames, setExistingFileNames] = useState<string[]>([]);
 
     const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -60,28 +65,91 @@ export default function AddFilesDrawer({
             setIsDragging(false);
             setIsUploading(false);
             setRejectedFiles([]);
+            setExistingFileNames([]);
         } else if (folders.length > 0) {
             setFolder(folders[0].id);
         }
     }, [open, folders]);
 
+    useEffect(() => {
+        if (!open || !folder) {
+            setExistingFileNames([]);
+            return;
+        }
+
+        let isMounted = true;
+        const fetchExistingFiles = async () => {
+            try {
+                const token = await getToken();
+                if (!token) return;
+                const data = await listFiles(folder, token);
+                const names = (data.items || []).map((f: any) => f.original_filename || f.name);
+                if (isMounted) {
+                    setExistingFileNames(names);
+                    
+                    // Re-validate current items against new folder's files
+                    setItems((prevItems) => {
+                        const valid: FileWithProgress[] = [];
+                        const newlyRejected: string[] = [];
+                        const existingNamesLower = names.map((n: string) => n.toLowerCase());
+                        
+                        prevItems.forEach((item) => {
+                            if (existingNamesLower.includes(item.file.name.toLowerCase())) {
+                                newlyRejected.push(`"${item.file.name}" — file already present, skipping`);
+                            } else {
+                                valid.push(item);
+                            }
+                        });
+                        
+                        if (newlyRejected.length > 0) {
+                            setRejectedFiles((prev) => {
+                                const filtered = prev.filter(msg => !newlyRejected.some(newMsg => msg.split(" — ")[0] === newMsg.split(" — ")[0]));
+                                return [...filtered, ...newlyRejected];
+                            });
+                            toast.warning("Some files were removed from the queue because they are already present in the folder.", { id: "files-revalidate" });
+                        }
+                        return valid;
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to fetch files for duplication check:", err);
+            }
+        };
+
+        fetchExistingFiles();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [open, folder, getToken]);
+
     const handleFiles = (newFiles: FileList | File[]) => {
         const arr = Array.from(newFiles);
         const valid: FileWithProgress[] = [];
         const rejected: string[] = [];
+        const existingNamesLower = existingFileNames.map(n => n.toLowerCase());
 
         arr.forEach((f) => {
             if (!ALLOWED_EXTENSIONS.test(f.name)) {
                 rejected.push(`"${f.name}" — unsupported file type`);
             } else if (f.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
                 rejected.push(`"${f.name}" — exceeds ${MAX_FILE_SIZE_MB} MB limit`);
+            } else if (existingNamesLower.includes(f.name.toLowerCase())) {
+                rejected.push(`"${f.name}" — file already present, skipping`);
+            } else if (items.some((item) => item.file.name.toLowerCase() === f.name.toLowerCase())) {
+                rejected.push(`"${f.name}" — already added to upload queue`);
             } else {
                 valid.push({ file: f, progress: 0, uploading: false });
             }
         });
 
         setItems((prev) => [...prev, ...valid]);
-        if (rejected.length > 0) setRejectedFiles(rejected);
+        if (rejected.length > 0) {
+            setRejectedFiles((prev) => {
+                const filtered = prev.filter(msg => !rejected.some(newMsg => msg.split(" — ")[0] === newMsg.split(" — ")[0]));
+                return [...filtered, ...rejected];
+            });
+        }
     };
 
     const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
