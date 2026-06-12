@@ -384,7 +384,7 @@ export default function DashboardPage(): JSX.Element {
     const [employeesCount, setEmployeesCount] = useState<number>(0);
     const [kbSizeBytes, setKbSizeBytes] = useState<number>(0); // 0 bytes
     const [usageLimit, setUsageLimit] = useState<number>(0);
-    const [plan, setPlan] = useState<string>("Core Plan");
+    const [plan] = useState<string>("Core Plan");
     const [credits, setCredits] = useState<number>(50);
     const [recentActivities, setRecentActivities] = useState<any[]>([]);
     const [chartData, setChartData] = useState<Record<string, DataPoint[]>>({

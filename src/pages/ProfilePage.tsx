@@ -599,6 +599,7 @@ export default function ProfilePage({ onClose }: { onClose?: () => void }) {
                                     )}
                                     {isDeletionRequesting ? "Submitting request..." : "Request Account Deletion"}
                                 </button>
+                            </div>
                         </div>
                     )}
                 </div>

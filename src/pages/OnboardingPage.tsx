@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useKindeAuth } from "@kinde-oss/kinde-auth-react";
 import { createOrganization, uploadLogo } from "@/lib/api";
 import { toast } from "sonner";
-import { Building, Loader2, Sun, Moon, Image as ImageIcon, AlertCircle } from "lucide-react";
+import { Loader2, Sun, Moon, Image as ImageIcon, AlertCircle } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { organizationCreateSchema } from "@/schemas/organization";
 import { Button } from "@/components/ui/button";
@@ -197,9 +197,7 @@ export default function OnboardingPage({ onComplete }: OnboardingPageProps) {
         }
     };
 
-    const steps = [
-        { id: 1, label: "Company Setup", icon: Building },
-    ];
+
 
     return (
         <div className="min-h-screen w-full flex flex-col bg-surface-page dark:bg-zinc-950 transition-colors duration-300 relative">
