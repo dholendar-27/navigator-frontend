@@ -599,26 +599,6 @@ export default function ProfilePage({ onClose }: { onClose?: () => void }) {
                                     )}
                                     {isDeletionRequesting ? "Submitting request..." : "Request Account Deletion"}
                                 </button>
-                            </div>
-                            <div className="mt-3 flex items-center gap-3">
-                                <a
-                                    href="/privacy-policy"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                                >
-                                    Privacy Policy
-                                </a>
-                                <span className="text-zinc-300 dark:text-zinc-600">·</span>
-                                <a
-                                    href="/terms"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                                >
-                                    Terms of Service
-                                </a>
-                            </div>
                         </div>
                     )}
                 </div>

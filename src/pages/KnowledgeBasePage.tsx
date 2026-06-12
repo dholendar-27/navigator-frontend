@@ -178,6 +178,8 @@ export default function KnowledgeBasePage() {
     const [rootFolderId, setRootFolderId] = useState<string | null>(null);
     // Ref mirrors rootFolderId so fetchContents can read it without being a dep
     const rootFolderIdRef = useRef<string | null>(null);
+    // Version counter to discard stale concurrent fetches
+    const fetchVersionRef = useRef(0);
     const [folderJobs, setFolderJobs] = useState<any[]>([]);
 
     // PERFORMANCE: Search with debouncing
@@ -226,6 +228,7 @@ export default function KnowledgeBasePage() {
     // ── Data fetching ──────────────────────────────────────────────────────────
 
     const fetchContents = useCallback(async (folderId: string | null, showSkeleton = false) => {
+        const thisVersion = ++fetchVersionRef.current;
         try {
             if (showSkeleton || (childFolders.length === 0 && childFiles.length === 0)) {
                 setIsLoading(true);
@@ -237,6 +240,9 @@ export default function KnowledgeBasePage() {
             const data = folderId
                 ? await getFolderContents(folderId, token)
                 : await getRootContents(token);
+
+            // Discard if a newer fetch has already started
+            if (thisVersion !== fetchVersionRef.current) return;
 
             const folders: any[] = data.folders || [];
             const files: any[] = data.files || [];
@@ -254,7 +260,9 @@ export default function KnowledgeBasePage() {
             if (targetFolderId && !isMember) {
                 try {
                     const jobsData = await listFolderOcrJobs(targetFolderId, token);
-                    setFolderJobs(jobsData.jobs || []);
+                    if (thisVersion === fetchVersionRef.current) {
+                        setFolderJobs(jobsData.jobs || []);
+                    }
                 } catch (jobsErr) {
                     console.error("Error fetching folder OCR jobs:", jobsErr);
                 }
@@ -263,7 +271,9 @@ export default function KnowledgeBasePage() {
             console.error("Error fetching contents:", err);
             toast.error(err.message || "Failed to load contents");
         } finally {
-            setIsLoading(false);
+            if (thisVersion === fetchVersionRef.current) {
+                setIsLoading(false);
+            }
         }
     }, [getToken, isMember]);
 
@@ -310,6 +320,17 @@ export default function KnowledgeBasePage() {
         fetchContents(currentFolderId, true);
     }, [currentFolderId, fetchContents]);
 
+    // Refs that always point to the latest values — used by the WS handler so it
+    // never reads from a stale closure even if the effect deps haven't changed yet.
+    const fetchContentsRef = useRef(fetchContents);
+    const currentFolderIdRef = useRef(currentFolderId);
+    const getTokenRef = useRef(getToken);
+    const folderStackRef = useRef(folderStack);
+    useEffect(() => { fetchContentsRef.current = fetchContents; });
+    useEffect(() => { currentFolderIdRef.current = currentFolderId; });
+    useEffect(() => { getTokenRef.current = getToken; });
+    useEffect(() => { folderStackRef.current = folderStack; });
+
     useEffect(() => {
         const handleWsChange = (event: any) => {
             if (import.meta.env.DEV) console.log("[KBPage] WS Event received:", event);
@@ -351,9 +372,9 @@ export default function KnowledgeBasePage() {
             if (event && event.event === "folder:updated") {
                 const folderId = event.resource_id;
                 if (folderId) {
-                    const inStack = folderStack.some(item => item.id === folderId);
+                    const inStack = folderStackRef.current.some(item => item.id === folderId);
                     if (inStack) {
-                        getToken().then(token => {
+                        getTokenRef.current().then(token => {
                             if (token) {
                                 getFolder(folderId, token).then(folderData => {
                                     setFolderStack(prev =>
@@ -368,7 +389,7 @@ export default function KnowledgeBasePage() {
                 }
             }
 
-            // Refresh list for structural changes (create/delete/folder updates).
+            // Refresh list for structural changes (create/delete/folder updates/access changes).
             // ocr:job_completed is intentionally excluded — useRealTimeFileProcessing
             // already calls fetchContents via onStatusChange for OCR completions.
             if (
@@ -377,9 +398,16 @@ export default function KnowledgeBasePage() {
                     event.event === "file:deleted" ||
                     event.event === "folder:created" ||
                     event.event === "folder:updated" ||
-                    event.event === "folder:deleted")
+                    event.event === "folder:deleted" ||
+                    event.event === "group:member_added" ||
+                    event.event === "group:member_removed" ||
+                    event.event === "group:file_added" ||
+                    event.event === "group:file_removed" ||
+                    event.event === "share:created" ||
+                    event.event === "share:updated" ||
+                    event.event === "share:deleted")
             ) {
-                fetchContents(currentFolderId);
+                fetchContentsRef.current(currentFolderIdRef.current);
             }
         };
 
@@ -391,6 +419,13 @@ export default function KnowledgeBasePage() {
         cacheWebSocket.on("folder:deleted", handleWsChange);
         cacheWebSocket.on("ocr:job_created", handleWsChange);
         cacheWebSocket.on("ocr:job_updated", handleWsChange);
+        cacheWebSocket.on("group:member_added", handleWsChange);
+        cacheWebSocket.on("group:member_removed", handleWsChange);
+        cacheWebSocket.on("group:file_added", handleWsChange);
+        cacheWebSocket.on("group:file_removed", handleWsChange);
+        cacheWebSocket.on("share:created", handleWsChange);
+        cacheWebSocket.on("share:updated", handleWsChange);
+        cacheWebSocket.on("share:deleted", handleWsChange);
 
         return () => {
             cacheWebSocket.off("file:created", handleWsChange);
@@ -401,8 +436,15 @@ export default function KnowledgeBasePage() {
             cacheWebSocket.off("folder:deleted", handleWsChange);
             cacheWebSocket.off("ocr:job_created", handleWsChange);
             cacheWebSocket.off("ocr:job_updated", handleWsChange);
+            cacheWebSocket.off("group:member_added", handleWsChange);
+            cacheWebSocket.off("group:member_removed", handleWsChange);
+            cacheWebSocket.off("group:file_added", handleWsChange);
+            cacheWebSocket.off("group:file_removed", handleWsChange);
+            cacheWebSocket.off("share:created", handleWsChange);
+            cacheWebSocket.off("share:updated", handleWsChange);
+            cacheWebSocket.off("share:deleted", handleWsChange);
         };
-    }, [currentFolderId, fetchContents, folderStack]);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Derived data ───────────────────────────────────────────────────────────
 
@@ -573,17 +615,17 @@ export default function KnowledgeBasePage() {
             if (result.errors && result.errors.length > 0) {
                 const duplicates = result.errors.filter((e: any) => e.error?.includes("already exists"));
                 const otherErrors = result.errors.filter((e: any) => !e.error?.includes("already exists"));
-                
+
                 if (duplicates.length > 0) {
                     const duplicateNames = duplicates.map((e: any) => `"${e.filename}"`).join(", ");
                     toast.error(`File(s) already present, skipping: ${duplicateNames}`, { id: "uploading-files-dup", duration: 5000 });
                 }
-                
+
                 if (otherErrors.length > 0) {
                     const otherNames = otherErrors.map((e: any) => `"${e.filename}" (${e.error})`).join(", ");
                     toast.error(`Failed to upload: ${otherNames}`, { id: "uploading-files-err" });
                 }
-                
+
                 if (result.successful_uploads > 0) {
                     toast.success(`Successfully uploaded ${result.successful_uploads} file(s)`, { id: "uploading-files" });
                 } else {

@@ -138,6 +138,14 @@ class CacheWebSocketManager {
                 cacheManager.invalidatePattern("/api/root-folder");
                 break;
 
+            case "share:created":
+            case "share:updated":
+            case "share:deleted":
+                cacheManager.invalidatePattern("/files");
+                cacheManager.invalidatePattern("/folders");
+                cacheManager.invalidatePattern("/api/root-folder");
+                break;
+
             case "user:added":
             case "user:updated":
             case "user:removed":
@@ -156,6 +164,15 @@ class CacheWebSocketManager {
 
             case "notification:created":
                 // Handled directly in TopBar component subscription
+                break;
+
+            case "group:member_added":
+            case "group:member_removed":
+            case "group:file_added":
+            case "group:file_removed":
+                cacheManager.invalidatePattern("/groups");
+                cacheManager.invalidatePattern("/folders");
+                cacheManager.invalidatePattern("/api/root-folder");
                 break;
 
             default:

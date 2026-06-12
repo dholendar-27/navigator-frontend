@@ -37,6 +37,7 @@ const TEAM_COLUMNS = [
 const DEFAULT_TEAM_COLUMNS = ["name", "kbCount", "employeeCount"];
 const MEMBER_TEAM_COLUMNS = ["name", "kbCount"];
 
+import { cacheWebSocket } from "@/utils/cacheWebSocket";
 import CategoryDrawer from "@/components/category/CategoryDrawer";
 import FilterDropdown from "@/components/FilterDropdown";
 import { SkeletonTable } from "@/components/ui/skeleton-table";
@@ -291,9 +292,20 @@ export default function CategoryPage() {
 
     // Load categories on mount and when dependencies change
     useEffect(() => {
-        if (isAuthenticated && !isPermissionsLoading) {
-            loadCategories(true);
-        }
+        if (!isAuthenticated || isPermissionsLoading) return;
+        loadCategories(true);
+
+        const handleGroupChange = () => loadCategories();
+        cacheWebSocket.on("group:member_added", handleGroupChange);
+        cacheWebSocket.on("group:member_removed", handleGroupChange);
+        cacheWebSocket.on("group:file_added", handleGroupChange);
+        cacheWebSocket.on("group:file_removed", handleGroupChange);
+        return () => {
+            cacheWebSocket.off("group:member_added", handleGroupChange);
+            cacheWebSocket.off("group:member_removed", handleGroupChange);
+            cacheWebSocket.off("group:file_added", handleGroupChange);
+            cacheWebSocket.off("group:file_removed", handleGroupChange);
+        };
     }, [isAuthenticated, isPermissionsLoading, loadCategories]);
 
     // Fetch all KB files from every folder so the drawer file-pool is complete

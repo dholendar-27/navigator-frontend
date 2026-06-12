@@ -111,20 +111,6 @@ export default function LandingPage() {
                     <p className="text-xs text-[hsl(var(--muted-foreground))]">
                         © {new Date().getFullYear()} Navigator. All rights reserved.
                     </p>
-                    <div className="flex items-center gap-4">
-                        <a
-                            href="/privacy-policy"
-                            className="text-xs text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors"
-                        >
-                            Privacy Policy
-                        </a>
-                        <a
-                            href="/terms"
-                            className="text-xs text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors"
-                        >
-                            Terms of Service
-                        </a>
-                    </div>
                 </div>
             </footer>
         </div>

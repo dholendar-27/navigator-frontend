@@ -70,15 +70,16 @@ class ApiClient {
     }
 
     private async _fetchWithRetry(url: string, init: RequestInit): Promise<Response> {
-        const response = await fetch(url, init);
+        const noStoreInit: RequestInit = { ...init, cache: "no-store" };
+        const response = await fetch(url, noStoreInit);
         if (response.status !== 401 || !this.tokenRefresher) return response;
 
         const fresh = await this._refreshToken();
         if (!fresh) return response;
 
         const retryInit: RequestInit = {
-            ...init,
-            headers: { ...(init.headers as Record<string, string>), Authorization: `Bearer ${fresh}` },
+            ...noStoreInit,
+            headers: { ...(noStoreInit.headers as Record<string, string>), Authorization: `Bearer ${fresh}` },
         };
         return fetch(url, retryInit);
     }
@@ -132,7 +133,7 @@ class ApiClient {
                 const retryHeaders: HeadersInit = { "Content-Type": "application/json" };
                 const currentToken = this.token;
                 if (currentToken) retryHeaders["Authorization"] = `Bearer ${currentToken}`;
-                const retryResponse = await fetch(url, { method: "GET", headers: retryHeaders });
+                const retryResponse = await fetch(url, { method: "GET", headers: retryHeaders, cache: "no-store" });
                 if (!retryResponse.ok) {
                     const errorData = await retryResponse.json().catch(() => ({}));
                     throw new Error(parseErrorDetail(errorData, `API error: ${retryResponse.status}`));
