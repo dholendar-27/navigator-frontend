@@ -291,6 +291,9 @@ export interface ChatMessage {
     citations?: Citation[];
     thinking_steps?: ThinkingStep[];
     tokens_used?: number;
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    duration_ms?: number;
 }
 
 export interface Conversation {

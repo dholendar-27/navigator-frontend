@@ -1,7 +1,14 @@
 import { useState } from "react";
-import { Folder } from "lucide-react";
+import { Folder, Globe } from "lucide-react";
 import type { Citation } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import { safeOpen } from "@/utils/safeUrl";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export const getCitationForReference = (
     refType: "Source" | "Web",
@@ -10,35 +17,32 @@ export const getCitationForReference = (
 ): Citation | undefined => {
     if (!citations) return undefined;
     if (refType === "Source") {
-        const internalCitations = citations.filter(c => c.file_id !== null && c.file_id !== undefined);
-        return internalCitations[index - 1];
+        const internal = citations.filter(c => c.file_id !== null && c.file_id !== undefined);
+        return internal[index - 1];
     } else {
-        const webCitations = citations.filter(c => c.file_id === null || c.file_id === undefined);
-        return webCitations[index - 1];
+        const web = citations.filter(c => c.file_id === null || c.file_id === undefined);
+        return web[index - 1];
     }
 };
 
 interface CitationPillProps {
     citation: Citation;
     type: "Source" | "Web";
+    index: number;
     onSourceClick?: (citation: Citation) => void;
 }
 
-export function CitationPill({ citation, type, onSourceClick }: CitationPillProps) {
+export function CitationPill({ citation, type, index, onSourceClick }: CitationPillProps) {
     const isWeb = type === "Web";
     const [imgError, setImgError] = useState(false);
 
     const getDomain = (url?: string) => {
         if (!url) return null;
-        try {
-            return new URL(url).hostname;
-        } catch {
-            return null;
-        }
+        try { return new URL(url).hostname; } catch { return null; }
     };
 
-    const domain = getDomain(citation.heading_path);
-    const faviconUrl = isWeb && domain ? `https://www.google.com/s2/favicons?sz=64&domain=${domain}` : null;
+    const domain = isWeb ? getDomain(citation.heading_path) : null;
+    const faviconUrl = domain ? `https://www.google.com/s2/favicons?sz=64&domain=${domain}` : null;
 
     const handleClick = () => {
         if (isWeb && citation.heading_path) {
@@ -49,28 +53,44 @@ export function CitationPill({ citation, type, onSourceClick }: CitationPillProp
     };
 
     return (
-        <span
-            onClick={handleClick}
-            title={citation.content_preview || citation.filename}
-            className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#eae9e4] hover:bg-[#e0dfda] dark:bg-zinc-800 dark:hover:bg-zinc-700/80 border border-zinc-200/40 dark:border-zinc-700/50 rounded-full text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition-all cursor-pointer select-none mx-1 relative -top-[1px]"
-        >
-            <span className="max-w-[150px] truncate">{citation.filename}</span>
-            {isWeb ? (
-                faviconUrl && !imgError ? (
-                    <img
-                        src={faviconUrl}
-                        alt=""
-                        onError={() => setImgError(true)}
-                        className="h-3.5 w-3.5 rounded-full object-contain shrink-0 bg-white"
-                    />
-                ) : (
-                    <span className="h-3.5 w-3.5 rounded-full bg-zinc-300 dark:bg-zinc-650 flex items-center justify-center shrink-0">
-                        <span className="text-[8px] font-bold text-zinc-600 dark:text-zinc-400">W</span>
+        <TooltipProvider delayDuration={150}>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <span
+                        onClick={handleClick}
+                        className={cn(
+                            "inline-flex items-center gap-[3px] px-[5px] py-[2px] rounded-[4px] text-[10px] font-bold transition-all cursor-pointer select-none align-baseline relative -top-[2px] mx-[2px]",
+                            isWeb
+                                ? "bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-zinc-500 dark:text-zinc-400 border border-zinc-200/70 dark:border-zinc-700/50"
+                                : "bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/30 dark:hover:bg-teal-900/50 text-teal-700 dark:text-teal-400 border border-teal-200/60 dark:border-teal-800/40"
+                        )}
+                    >
+                        {isWeb ? (
+                            faviconUrl && !imgError ? (
+                                <img
+                                    src={faviconUrl}
+                                    alt=""
+                                    onError={() => setImgError(true)}
+                                    className="h-2.5 w-2.5 rounded-full object-contain shrink-0"
+                                />
+                            ) : (
+                                <Globe className="h-2.5 w-2.5 shrink-0" />
+                            )
+                        ) : (
+                            <Folder className="h-2.5 w-2.5 shrink-0" />
+                        )}
+                        <span>{index}</span>
                     </span>
-                )
-            ) : (
-                <Folder className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400 shrink-0" />
-            )}
-        </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-52 p-2">
+                    <p className="font-semibold text-[11px] leading-snug">{citation.filename}</p>
+                    {citation.content_preview && (
+                        <p className="text-[10px] text-muted-foreground mt-1 leading-snug line-clamp-3">
+                            {citation.content_preview}
+                        </p>
+                    )}
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
     );
 }

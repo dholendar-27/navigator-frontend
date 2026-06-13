@@ -34,7 +34,7 @@ export function formatInline(text: string, citations?: Citation[], onCitationCli
                     const index = parseInt(citationMatch[2], 10);
                     const citation = getCitationForReference(type, index, citations);
                     if (citation) {
-                        return <CitationPill key={i} citation={citation} type={type} onSourceClick={onCitationClick} />;
+                        return <CitationPill key={i} citation={citation} type={type} index={index} onSourceClick={onCitationClick} />;
                     }
                 }
 
@@ -44,7 +44,7 @@ export function formatInline(text: string, citations?: Citation[], onCitationCli
                     if (citations && index > 0 && index <= citations.length) {
                         const citation = citations[index - 1];
                         const type = (citation.file_id !== null && citation.file_id !== undefined) ? "Source" : "Web";
-                        return <CitationPill key={i} citation={citation} type={type} onSourceClick={onCitationClick} />;
+                        return <CitationPill key={i} citation={citation} type={type} index={index} onSourceClick={onCitationClick} />;
                     }
                 }
 
@@ -62,7 +62,8 @@ export function formatInline(text: string, citations?: Citation[], onCitationCli
 
                     if (foundCitation) {
                         const type = (foundCitation.file_id !== null && foundCitation.file_id !== undefined) ? "Source" : "Web";
-                        return <CitationPill key={i} citation={foundCitation} type={type} onSourceClick={onCitationClick} />;
+                        const fallbackIdx = (citations?.indexOf(foundCitation) ?? 0) + 1;
+                        return <CitationPill key={i} citation={foundCitation} type={type} index={fallbackIdx} onSourceClick={onCitationClick} />;
                     }
                 }
 

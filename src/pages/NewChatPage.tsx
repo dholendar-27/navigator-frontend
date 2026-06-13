@@ -782,9 +782,9 @@ export default function NewChatPage(): JSX.Element {
                                                         </div>
                                                     )}
 
-                                                    {/* Message content - 60% max width, clean layout without bubble background */}
+                                                    {/* Message content */}
                                                     {(m.content || m.isStreaming) && (
-                                                        <div className="w-full max-w-[90%] sm:max-w-[75%] md:max-w-[60%] text-zinc-800 dark:text-zinc-200 select-text">
+                                                        <div className="w-full max-w-[95%] sm:max-w-[85%] md:max-w-[78%] text-zinc-800 dark:text-zinc-200 select-text">
                                                             <MessageContent
                                                                 content={m.content}
                                                                 citations={m.sources}
@@ -794,9 +794,16 @@ export default function NewChatPage(): JSX.Element {
                                                         </div>
                                                     )}
 
-                                                    {/* Action buttons toolbar */}
+                                                    {/* Sources — visible chip row, above toolbar */}
+                                                    {!m.isStreaming && m.sources && m.sources.length > 0 && (
+                                                        <div className="w-full max-w-[95%] sm:max-w-[85%] md:max-w-[78%] mt-1">
+                                                            <SourcesPill sources={m.sources} onSourceClick={handleCitationClick} />
+                                                        </div>
+                                                    )}
+
+                                                    {/* Action toolbar */}
                                                     {!m.isStreaming && m.content && (
-                                                        <div className="flex items-center gap-5 text-zinc-450 dark:text-zinc-500 text-xs font-semibold select-none flex-wrap mt-3">
+                                                        <div className="flex items-center gap-5 text-zinc-450 dark:text-zinc-500 text-xs font-semibold select-none mt-2">
                                                             <TooltipProvider delayDuration={200}>
                                                                 <Tooltip>
                                                                     <TooltipTrigger asChild>
@@ -821,11 +828,6 @@ export default function NewChatPage(): JSX.Element {
                                                                     <TooltipContent side="top">Regenerate response</TooltipContent>
                                                                 </Tooltip>
                                                             </TooltipProvider>
-
-                                                            {/* Sources stacked pill */}
-                                                            {m.sources && m.sources.length > 0 && (
-                                                                <SourcesPill sources={m.sources} onSourceClick={handleCitationClick} />
-                                                            )}
                                                         </div>
                                                     )}
 
