@@ -17,19 +17,20 @@
     --card-foreground: 240 10% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
+    /* Blue brand primary */
+    --primary: 221 83% 53%;
     --primary-foreground: 0 0% 98%;
     --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;
     --muted: 240 4.8% 95.9%;
     --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --accent: 213 100% 96%;
+    --accent-foreground: 221 83% 45%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
-    --ring: 240 10% 3.9%;
+    --ring: 221 83% 53%;
     --radius: 0.5rem;
   }
 
@@ -39,50 +40,50 @@
        Inspired by ElevenLabs / Lovable / Linear dark modes.
     ─────────────────────────────────────────────────────────────────────── */
 
-    /* Dark-mode surface tokens */
-    --surface-page: #0f0f0f;
-    --surface-sidebar: rgba(231,231,224,0.10);
+    /* Dark-mode surface tokens — blue-tinted deep dark */
+    --surface-page: #080e1a;
+    --surface-sidebar: rgba(30, 64, 175, 0.10);
     --surface-sidebar-dark: transparent;
-    --surface-hover-muted: rgba(255,255,255,0.06);
+    --surface-hover-muted: rgba(96, 165, 250, 0.07);
 
-    --background: 0 0% 6%;
-    /* #0f0f0f  — page canvas               */
+    --background: 216 28% 5%;
+    /* #080e1a  — deep blue-black canvas      */
     --foreground: 0 0% 95%;
-    /* #f2f2f2  — primary text               */
+    /* #f2f2f2  — primary text                */
 
-    --card: 0 0% 9%;
-    /* #171717  — panels / cards             */
+    --card: 214 30% 8%;
+    /* #0d1625  — panels / cards              */
     --card-foreground: 0 0% 95%;
 
-    --popover: 0 0% 11%;
-    /* #1c1c1c  — dropdowns / tooltips       */
+    --popover: 214 28% 10%;
+    /* #101d2e  — dropdowns / tooltips        */
     --popover-foreground: 0 0% 95%;
 
-    /* Accent: a restrained violet — visible but not garish */
-    --primary: 258 80% 70%;
-    /* #a78bfa-ish                           */
-    --primary-foreground: 0 0% 6%;
+    /* Blue brand accent */
+    --primary: 213 94% 68%;
+    /* #60a5fa — blue-400                     */
+    --primary-foreground: 216 28% 5%;
 
-    --secondary: 0 0% 13%;
-    /* #212121  — secondary surfaces         */
+    --secondary: 214 25% 13%;
+    /* #131f30  — secondary surfaces          */
     --secondary-foreground: 0 0% 90%;
 
-    --muted: 0 0% 13%;
+    --muted: 214 25% 13%;
     --muted-foreground: 0 0% 50%;
-    /* #808080  — placeholder / captions     */
+    /* #808080  — placeholder / captions      */
 
-    --accent: 258 30% 18%;
-    /* subtle violet tint for hover states   */
-    --accent-foreground: 0 0% 95%;
+    --accent: 213 50% 16%;
+    /* subtle blue tint for hover states      */
+    --accent-foreground: 213 94% 80%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 14%;
-    /* #242424  — dividers                   */
-    --input: 0 0% 13%;
-    --ring: 258 80% 70%;
-    /* violet focus ring                     */
+    --border: 213 35% 13%;
+    /* #0f1e33  — dividers                    */
+    --input: 214 25% 13%;
+    --ring: 213 94% 68%;
+    /* blue focus ring                        */
   }
 }
 
@@ -128,92 +129,84 @@
     background-color: hsl(72 60% 97%);
   }
 
-  /* ── Dark-mode surface overrides ─────────────────────────────────────── */
+  /* ── Dark-mode surface overrides — blue-tinted deep dark ─────────────── */
 
-  /* Backgrounds — true-black elevation stack */
+  /* Backgrounds — deep blue-dark elevation stack */
   .dark .bg-white {
-    background-color: hsl(0 0% 9%) !important;
+    background-color: hsl(214 30% 8%) !important;
   }
 
   /* card */
   .dark .bg-zinc-50 {
-    background-color: hsl(0 0% 8%) !important;
+    background-color: hsl(214 28% 7%) !important;
   }
 
   /* subtle lift */
   .dark .bg-zinc-100 {
-    background-color: hsl(0 0% 11%) !important;
+    background-color: hsl(213 28% 11%) !important;
   }
 
   /* hover target */
   .dark .bg-zinc-800 {
-    background-color: hsl(0 0% 11%) !important;
+    background-color: hsl(213 28% 11%) !important;
   }
 
   .dark .bg-zinc-900 {
-    background-color: hsl(0 0% 9%) !important;
+    background-color: hsl(214 30% 8%) !important;
   }
 
   .dark .bg-zinc-950 {
-    background-color: hsl(0 0% 6%) !important;
+    background-color: hsl(216 28% 5%) !important;
   }
-
-  /* page bg */
 
   /* ── Text — high-contrast hierarchy ──────────────────────────────────── */
   .dark .text-zinc-900 {
     color: hsl(0 0% 95%) !important;
   }
 
-  /* headings     */
   .dark .text-zinc-800 {
     color: hsl(0 0% 88%) !important;
   }
 
-  /* body         */
   .dark .text-zinc-700 {
     color: hsl(0 0% 75%) !important;
   }
 
-  /* secondary    */
   .dark .text-zinc-600 {
     color: hsl(0 0% 60%) !important;
   }
 
-  /* tertiary     */
   .dark .text-zinc-500 {
     color: hsl(0 0% 50%) !important;
   }
 
-  /* placeholder  */
-
-  /* ── Borders — barely-there separators ───────────────────────────────── */
+  /* ── Borders — subtle blue-dark separators ────────────────────────────── */
   .dark .border-zinc-100 {
-    border-color: hsl(0 0% 12%) !important;
+    border-color: hsl(213 30% 12%) !important;
   }
 
   .dark .border-zinc-200 {
-    border-color: hsl(0 0% 14%) !important;
+    border-color: hsl(213 30% 14%) !important;
   }
 
   .dark .border-zinc-300 {
-    border-color: hsl(0 0% 16%) !important;
+    border-color: hsl(213 30% 16%) !important;
   }
 
   .dark .border-zinc-700 {
-    border-color: hsl(0 0% 16%) !important;
+    border-color: hsl(213 30% 16%) !important;
   }
 
   .dark .border-zinc-800 {
-    border-color: hsl(0 0% 12%) !important;
+    border-color: hsl(213 30% 12%) !important;
   }
 
-  /* ── Inputs — clean, low-noise ────────────────────────────────────────── */
+  /* ── Inputs ───────────────────────────────────────────────────────────── */
   .dark input:not(.bg-transparent),
   .dark textarea:not(.bg-transparent) {
-    background-color: hsl(0 0% 11%) !important;
+    background-color: hsl(213 28% 11%) !important;
     color: hsl(0 0% 95%) !important;
-    border-color: hsl(0 0% 17%) !important;
+    border-color: hsl(213 30% 17%) !important;
   }
 
   .dark input::placeholder,
@@ -223,25 +216,25 @@
 
   /* ── Dividers ─────────────────────────────────────────────────────────── */
   .dark .divide-zinc-100>*+* {
-    border-color: hsl(0 0% 12%) !important;
+    border-color: hsl(213 30% 12%) !important;
   }
 
   /* ── Skeleton pulses ──────────────────────────────────────────────────── */
   .dark .bg-zinc-100.animate-pulse {
-    background-color: hsl(0 0% 13%) !important;
+    background-color: hsl(213 28% 13%) !important;
   }
 
   .dark .bg-zinc-200.animate-pulse {
-    background-color: hsl(0 0% 16%) !important;
+    background-color: hsl(213 28% 16%) !important;
   }
 
-  /* ── Scrollbar ────────────────────────────────────────────────────────── */
+  /* ── Scrollbar — blue-tinted ──────────────────────────────────────────── */
   .dark ::-webkit-scrollbar-thumb {
-    background: hsl(0 0% 18%);
+    background: hsl(213 30% 20%);
   }
 
   .dark ::-webkit-scrollbar-thumb:hover {
-    background: hsl(0 0% 24%);
+    background: hsl(213 40% 28%);
   }
 
   .dark .hover-scrollbar::-webkit-scrollbar-thumb {
@@ -249,7 +242,7 @@
   }
 
   .dark .hover-scrollbar:hover::-webkit-scrollbar-thumb {
-    background: hsl(0 0% 20%);
+    background: hsl(213 30% 22%);
   }
 }
 

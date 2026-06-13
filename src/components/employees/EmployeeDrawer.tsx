@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { X, FileText, MessageSquare, MessagesSquare, Pencil, AlertCircle, Loader2 } from "lucide-react";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -39,16 +40,20 @@ type UsageCardProps = {
     icon: React.ElementType;
     label: string;
     value: string | number;
+    tooltip?: string;
 };
 
-function UsageCard({ icon: Icon, label, value }: UsageCardProps) {
+function UsageCard({ icon: Icon, label, value, tooltip }: UsageCardProps) {
     return (
         <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800">
                 <Icon className="h-5 w-5 text-zinc-700 dark:text-zinc-400" />
             </div>
             <div>
-                <div className="text-xs text-zinc-500">{label}</div>
+                <div className="text-xs text-zinc-500 flex items-center gap-1">
+                    {label}
+                    {tooltip && <InfoTooltip content={tooltip} side="right" />}
+                </div>
                 <div className="text-sm font-normal text-zinc-900 dark:text-zinc-100">{value}</div>
             </div>
         </div>
@@ -338,22 +343,28 @@ export default function EmployeeDetailsDrawer({
 
                             {/* Usage */}
                             <div>
-                                <div className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Usage</div>
+                                <div className="text-sm font-medium text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+                                    Usage
+                                    <InfoTooltip content="Activity metrics for this employee across all categories they belong to." side="right" />
+                                </div>
                                 <div className="mt-3 space-y-3">
                                     <UsageCard
                                         icon={FileText}
                                         label="No. Of KB Files"
                                         value={employee.kbFiles !== undefined && employee.kbFiles !== null ? employee.kbFiles : "-"}
+                                        tooltip="Total knowledge base files this employee can access across all their assigned categories."
                                     />
                                     <UsageCard
                                         icon={MessageSquare}
                                         label="Simple Interaction"
                                         value={employee.simpleInteraction !== undefined && employee.simpleInteraction !== null ? employee.simpleInteraction : "-"}
+                                        tooltip="Number of standard AI chat queries this employee has made. Each costs 0.5 credits."
                                     />
                                     <UsageCard
                                         icon={MessagesSquare}
                                         label="Complex Interaction"
                                         value={employee.complexInteraction !== undefined && employee.complexInteraction !== null ? employee.complexInteraction : "-"}
+                                        tooltip="Number of advanced AI queries using multi-step reasoning. Each costs 1.0 credit."
                                     />
                                 </div>
                             </div>
@@ -433,7 +444,10 @@ export default function EmployeeDetailsDrawer({
 
                             {/* Role */}
                             <div className="space-y-1.5">
-                                <Label className="text-xs font-semibold text-zinc-500">Role</Label>
+                                <Label className="text-xs font-semibold text-zinc-500 flex items-center gap-1.5">
+                                    Role
+                                    <InfoTooltip content="Member: chat only. Editor: upload files too. Admin: full access. Super Admin: cannot be changed here." side="right" />
+                                </Label>
                                 <Select 
                                     value={(roleName || "").toLowerCase().replace(/\s+/g, "_")} 
                                     onValueChange={(val) => {
@@ -470,8 +484,9 @@ export default function EmployeeDetailsDrawer({
 
                             {/* Employee Code */}
                             <div className="space-y-1.5">
-                                <Label htmlFor="edit-employee-code" className="text-xs font-semibold text-zinc-500">
+                                <Label htmlFor="edit-employee-code" className="text-xs font-semibold text-zinc-500 flex items-center gap-1.5">
                                     Employee Code <span className="text-xs text-zinc-400 font-normal">(optional)</span>
+                                    <InfoTooltip content="A unique identifier for internal tracking (e.g. EMP-001). Visible in tables and exports." side="right" />
                                 </Label>
                                 <Input
                                     id="edit-employee-code"

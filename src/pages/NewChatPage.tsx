@@ -17,6 +17,9 @@ import {
     Square,
     Search,
     BarChart2,
+    Paperclip,
+    X,
+    Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -25,14 +28,17 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 import {
     sendChatQueryStream,
     createConversation,
     getConversation,
     updateConversation,
+    extractChatContext,
     type ChatMessage,
     type Citation,
+    type ChatContextResult,
     type Conversation,
     type ThinkingStep,
 } from "@/lib/api";
@@ -40,6 +46,17 @@ import { ThinkingAccordion, THINKING_STEP_LABELS } from "@/components/chat/Think
 import { SourcesPill } from "@/components/chat/SourcesPill";
 import { MessageContent } from "@/components/chat/MessageContent";
 import { safeOpen } from "@/utils/safeUrl";
+
+// Strip <think>...</think> blocks emitted by reasoning models (e.g. DeepSeek R1).
+// Handles both complete blocks and unclosed blocks that arrive mid-stream.
+function stripThinkBlocks(text: string): string {
+    // Remove fully closed blocks
+    let result = text.replace(/<think>[\s\S]*?<\/think>/gi, "");
+    // Remove any trailing unclosed block (streaming — closing tag not yet arrived)
+    const openIdx = result.toLowerCase().indexOf("<think>");
+    if (openIdx !== -1) result = result.substring(0, openIdx);
+    return result.trimStart();
+}
 
 // ── Module-level constants ─────────────────────────────────────────────────────
 
@@ -61,6 +78,7 @@ interface Message {
     sources?: Citation[];
     isStreaming?: boolean;
     thinkingSteps?: ThinkingStep[];
+    attachedFileName?: string;
 }
 
 
@@ -84,6 +102,11 @@ export default function NewChatPage(): JSX.Element {
     const [thinkingLabel, setThinkingLabel] = useState("Thinking...");
 
 
+
+    const [attachedFile, setAttachedFile] = useState<ChatContextResult | null>(null);
+    const [isExtractingFile, setIsExtractingFile] = useState(false);
+    const [extractingFileName, setExtractingFileName] = useState("");
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -283,6 +306,44 @@ export default function NewChatPage(): JSX.Element {
         }
     }, []);
 
+    // ── File attachment ───────────────────────────────────────────────────────
+
+    const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!fileInputRef.current) return;
+        fileInputRef.current.value = "";
+        if (!file) return;
+
+        const ALLOWED = ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain", "text/markdown", "text/csv"];
+        if (!ALLOWED.includes(file.type) && !file.name.match(/\.(pdf|docx|txt|md|csv)$/i)) {
+            toast.error("Unsupported file type. Upload PDF, DOCX, or TXT.");
+            return;
+        }
+        if (file.size > 25 * 1024 * 1024) {
+            toast.error("File exceeds 25 MB limit.");
+            return;
+        }
+
+        setExtractingFileName(file.name);
+        setIsExtractingFile(true);
+        try {
+            const token = await getToken();
+            if (!token) { toast.error("Not authenticated."); return; }
+            const result = await extractChatContext(file, token);
+            setAttachedFile(result);
+        } catch (err: any) {
+            toast.error(err.message || "Failed to process file.");
+        } finally {
+            setIsExtractingFile(false);
+            setExtractingFileName("");
+        }
+    }, [getToken]);
+
+    const handleRemoveFile = useCallback(() => {
+        setAttachedFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+    }, []);
+
     // ── Send message ──────────────────────────────────────────────────────────
 
     const handleSendMessage = useCallback(async (text: string, truncateMessageId?: string) => {
@@ -290,11 +351,16 @@ export default function NewChatPage(): JSX.Element {
 
         isAtBottomRef.current = true;
 
+        // Capture and clear attached file before any async work
+        const fileContext = attachedFile;
+        setAttachedFile(null);
+
         const userMsg: Message = {
             id: `msg-${Date.now()}-user`,
             role: "user",
             content: text,
             timestamp: new Date(),
+            attachedFileName: fileContext?.filename,
         };
 
         // Streaming placeholder for assistant
@@ -316,7 +382,7 @@ export default function NewChatPage(): JSX.Element {
         const controller = new AbortController();
         abortControllerRef.current = controller;
 
-        let convId = conversationId;
+        let convId = currentConversationIdRef.current;
 
         try {
             const token = await getToken();
@@ -367,6 +433,7 @@ export default function NewChatPage(): JSX.Element {
                     conversation_id: convId ?? undefined,
                     model: undefined,
                     truncate_message_id: truncateMessageId,
+                    context_s3_key: fileContext?.s3_key,
                 },
                 token,
                 {
@@ -448,7 +515,7 @@ export default function NewChatPage(): JSX.Element {
                     onToken: (token) => {
                         if (convId !== currentConversationIdRef.current) return;
                         accumulatedContent += token;
-                        const snapshot = accumulatedContent;
+                        const snapshot = stripThinkBlocks(accumulatedContent);
                         setMessages((prev) => {
                             if (!prev.some((m) => m.id === streamingId)) return prev;
                             return prev.map((m) =>
@@ -472,7 +539,7 @@ export default function NewChatPage(): JSX.Element {
                                     ? {
                                         ...m,
                                         id: data.message_id || streamingId,
-                                        content: accumulatedContent,
+                                        content: stripThinkBlocks(accumulatedContent),
                                         isStreaming: false,
                                         sources: citations.length > 0 ? citations : undefined,
                                         statusText:
@@ -553,7 +620,7 @@ export default function NewChatPage(): JSX.Element {
             }
         }
     // isResponding accessed via isRespondingRef; conversationId via currentConversationIdRef
-    }, [getToken, navigate]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [getToken, navigate, attachedFile]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Stop streaming ────────────────────────────────────────────────────────
 
@@ -625,7 +692,14 @@ export default function NewChatPage(): JSX.Element {
             data-testid="new-chat-page"
             data-tour="chat-page"
         >
-
+            {/* Hidden file input */}
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.docx,.txt,.md,.csv"
+                className="hidden"
+                onChange={handleFileSelect}
+            />
 
             {/* ── Scrollable Messages Area ──────────────────────────────── */}
             <div
@@ -652,6 +726,27 @@ export default function NewChatPage(): JSX.Element {
 
                         {/* Centered Input Box */}
                         <div className="w-full max-w-4xl mb-6 md:mb-10" data-tour="chat-input-welcome">
+                            {/* File pill — welcome state */}
+                            {(attachedFile || isExtractingFile) && (
+                                <div className="mb-2 flex justify-start">
+                                    {isExtractingFile ? (
+                                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-500 dark:text-zinc-400">
+                                            <Loader2 className="h-3 w-3 shrink-0 animate-spin" />
+                                            <span className="truncate max-w-[200px]">{extractingFileName}</span>
+                                            <span>Extracting…</span>
+                                        </div>
+                                    ) : attachedFile && (
+                                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/40 text-xs text-blue-700 dark:text-blue-300">
+                                            <Paperclip className="h-3 w-3 shrink-0" />
+                                            <span className="truncate max-w-[200px]">{attachedFile.filename}</span>
+                                            <span className="text-blue-400 dark:text-blue-500 shrink-0">({attachedFile.file_size >= 1024 * 1024 ? `${(attachedFile.file_size / (1024 * 1024)).toFixed(1)} MB` : `${Math.round(attachedFile.file_size / 1024)} KB`})</span>
+                                            <button type="button" onClick={handleRemoveFile} className="ml-0.5 text-blue-400 hover:text-blue-600 dark:hover:text-blue-200 cursor-pointer">
+                                                <X className="h-3 w-3" />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl sm:rounded-full shadow-md focus-within:shadow-lg focus-within:border-zinc-300 dark:focus-within:border-zinc-700 transition-all p-2.5 sm:p-2 pl-4 sm:pl-5 pr-2.5 sm:pr-2 flex flex-col sm:flex-row sm:items-center gap-2">
                                 <textarea
                                     value={inputVal}
@@ -670,6 +765,16 @@ export default function NewChatPage(): JSX.Element {
                                 />
 
                                 <div className="flex items-center justify-end gap-2 shrink-0 w-full sm:w-auto pt-2 sm:pt-0 border-t border-zinc-100 dark:border-zinc-800 sm:border-none">
+                                    {/* Attach file */}
+                                    <button
+                                        type="button"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={isExtractingFile}
+                                        title="Attach file (PDF, DOCX, TXT — up to 25 MB)"
+                                        className="flex items-center justify-center h-8 w-8 rounded-full text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                                    >
+                                        {isExtractingFile ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
+                                    </button>
                                     {/* Send button */}
                                     <button
                                         type="button"
@@ -746,6 +851,12 @@ export default function NewChatPage(): JSX.Element {
                                             /* User bubble */
                                             <div className="flex w-full justify-end">
                                                 <div className="flex flex-col items-end gap-1.5 max-w-[75%]">
+                                                    {m.attachedFileName && (
+                                                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/40 text-xs text-blue-600 dark:text-blue-400">
+                                                            <Paperclip className="h-3 w-3 shrink-0" />
+                                                            <span className="truncate max-w-[200px]">{m.attachedFileName}</span>
+                                                        </div>
+                                                    )}
                                                     <div className="rounded-2xl rounded-br-sm px-4 py-2.5 text-sm leading-relaxed shadow-sm bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200/30 dark:border-zinc-700/30 select-text">
                                                         <div className="whitespace-pre-wrap">{m.content}</div>
                                                     </div>
@@ -856,6 +967,28 @@ export default function NewChatPage(): JSX.Element {
                         data-tour="chat-input"
                         className="max-w-4xl mx-auto bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm focus-within:shadow-md focus-within:border-zinc-300 dark:focus-within:border-zinc-700 transition-all p-2.5 sm:p-3.5 flex flex-col gap-1.5 sm:gap-2"
                     >
+                        {/* File pill — active state */}
+                        {(attachedFile || isExtractingFile) && (
+                            <div className="flex">
+                                {isExtractingFile ? (
+                                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-500 dark:text-zinc-400">
+                                        <Loader2 className="h-3 w-3 shrink-0 animate-spin" />
+                                        <span className="truncate max-w-[200px]">{extractingFileName}</span>
+                                        <span>Extracting…</span>
+                                    </div>
+                                ) : attachedFile && (
+                                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/40 text-xs text-blue-700 dark:text-blue-300">
+                                        <Paperclip className="h-3 w-3 shrink-0" />
+                                        <span className="truncate max-w-[220px]">{attachedFile.filename}</span>
+                                        <span className="text-blue-400 dark:text-blue-500 shrink-0">({attachedFile.file_size >= 1024 * 1024 ? `${(attachedFile.file_size / (1024 * 1024)).toFixed(1)} MB` : `${Math.round(attachedFile.file_size / 1024)} KB`})</span>
+                                        <button type="button" onClick={handleRemoveFile} className="ml-0.5 text-blue-400 hover:text-blue-600 dark:hover:text-blue-200 cursor-pointer">
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         <textarea
                             ref={textareaRef}
                             value={inputVal}
@@ -875,29 +1008,48 @@ export default function NewChatPage(): JSX.Element {
                             className="w-full bg-transparent border-none outline-none focus:ring-0 text-base sm:text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 resize-none min-h-[28px] max-h-[200px] leading-relaxed disabled:opacity-60"
                         />
 
-                        {/* Bottom row: send / stop */}
-                        <div className="flex items-center justify-end gap-2">
-                            {/* Send / Stop button */}
-                            {isResponding ? (
-                                <button
-                                    type="button"
-                                    onClick={handleStop}
-                                    className="flex items-center justify-center h-8 w-8 rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-all shadow-sm cursor-pointer"
-                                    aria-label="Stop response"
-                                >
-                                    <Square className="h-3 w-3 fill-current" />
-                                </button>
-                            ) : (
-                                <button
-                                    type="button"
-                                    onClick={() => handleSendMessage(inputVal)}
-                                    disabled={!inputVal.trim()}
-                                    className="flex items-center justify-center h-8 w-8 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                                    aria-label="Send message"
-                                >
-                                    <ArrowUp className="h-4 w-4 stroke-[2.5px]" />
-                                </button>
-                            )}
+                        {/* Bottom row: info / attach / send-stop */}
+                        <div className="flex items-center justify-between gap-2">
+                            <InfoTooltip
+                                content="Simple questions (0.5 cr) get fast, direct answers. Complex queries (1.0 cr) involve multi-step reasoning across many documents. The AI picks the right mode automatically."
+                                side="top"
+                                maxWidth="270px"
+                            />
+                            <div className="flex items-center gap-2">
+                                {/* Attach file */}
+                                {!isResponding && (
+                                    <button
+                                        type="button"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={isExtractingFile}
+                                        title="Attach file (PDF, DOCX, TXT — up to 25 MB)"
+                                        className="flex items-center justify-center h-8 w-8 rounded-full text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                                    >
+                                        {isExtractingFile ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
+                                    </button>
+                                )}
+                                {/* Send / Stop */}
+                                {isResponding ? (
+                                    <button
+                                        type="button"
+                                        onClick={handleStop}
+                                        className="flex items-center justify-center h-8 w-8 rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-all shadow-sm cursor-pointer"
+                                        aria-label="Stop response"
+                                    >
+                                        <Square className="h-3 w-3 fill-current" />
+                                    </button>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={() => handleSendMessage(inputVal)}
+                                        disabled={!inputVal.trim()}
+                                        className="flex items-center justify-center h-8 w-8 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                                        aria-label="Send message"
+                                    >
+                                        <ArrowUp className="h-4 w-4 stroke-[2.5px]" />
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
 

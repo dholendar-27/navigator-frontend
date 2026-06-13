@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { X, FileText, Loader2, Plus, Search, Minus, Download, Clock, CheckCircle2, XCircle, Pencil } from "lucide-react";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -583,8 +584,9 @@ export default function KnowledgeBaseDetailDrawer({
 
                                 {/* Document Pages */}
                                 <div className="flex flex-col">
-                                    <span className="text-[12px] text-zinc-400 dark:text-zinc-500 font-medium">
+                                    <span className="text-[12px] text-zinc-400 dark:text-zinc-500 font-medium flex items-center gap-1">
                                         Document Pages
+                                        <InfoTooltip content="Estimated page count based on extracted text. Each page consumes one page credit from your plan." side="right" />
                                     </span>
                                     <span className="text-[13px] text-zinc-900 dark:text-zinc-100 font-normal mt-0.5">
                                         {isOcrLoading ? (
@@ -597,8 +599,9 @@ export default function KnowledgeBaseDetailDrawer({
 
                                 {/* OCR Status */}
                                 <div className="flex flex-col">
-                                    <span className="text-[12px] text-zinc-400 dark:text-zinc-500 font-medium">
+                                    <span className="text-[12px] text-zinc-400 dark:text-zinc-500 font-medium flex items-center gap-1">
                                         Processing Status
+                                        <InfoTooltip content="Tracks text extraction (OCR). The file must be Indexed before it can be searched or used in AI chat. Hover the badge for details." maxWidth="250px" side="right" />
                                     </span>
                                     <span className="mt-1">
                                         {(() => {

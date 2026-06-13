@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import type { KBEntry } from "@/types/knowledge-base";
 import { PermissionGate } from "@/components/PermissionGate";
 import { PERMISSIONS } from "@/utils/rbacConfig";
@@ -258,8 +259,9 @@ export default function KnowledgeBaseTable({
                             </div>
                         )}
                         {visibleColumns.includes("ocr_status") && (
-                            <div className="text-sm normal-case tracking-normal text-[#171717] dark:text-[#E7E7E0] font-semibold cursor-pointer hover:opacity-80" onClick={() => handleSort("ocr_status")} title="Status of document text extraction and indexing. Hover over status badges to see detailed descriptions.">
+                            <div className="text-sm normal-case tracking-normal text-[#171717] dark:text-[#E7E7E0] font-semibold cursor-pointer hover:opacity-80 flex items-center gap-1.5" onClick={() => handleSort("ocr_status")}>
                                 Status <SortIcon columnKey="ocr_status" />
+                                <InfoTooltip content="Processing status of the document's text extraction (OCR). Files must be Complete before they're searchable in AI chat. Hover a status badge for details." maxWidth="260px" side="bottom" />
                             </div>
                         )}
                         <div />

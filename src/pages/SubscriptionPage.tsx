@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, type JSX } from "react";
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Tag } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -147,7 +148,7 @@ export default function SubscriptionPage(): JSX.Element {
     return (
         <div className="flex flex-col min-h-full w-full max-w-7xl mx-auto p-3 sm:p-6 md:p-8 space-y-5 bg-transparent shrink-0">
             {/* Header Title Row */}
-            <div className="flex flex-row items-center w-full shrink-0">
+            <div className="flex flex-row items-center gap-2 w-full shrink-0">
                 <h1 className="text-[22px] font-medium text-zinc-900 dark:text-zinc-100">Subscription</h1>
             </div>
 
@@ -181,6 +182,7 @@ export default function SubscriptionPage(): JSX.Element {
                     </DropdownMenu>
 
                     {/* Billing Cycle Toggle */}
+                    <div className="flex items-center gap-2">
                     <div className="flex items-center p-1 bg-surface-page dark:bg-zinc-900 border border-surface-sidebar dark:border-zinc-800 rounded-[10px] h-10 select-none gap-1">
                         <button
                             type="button"
@@ -209,6 +211,7 @@ export default function SubscriptionPage(): JSX.Element {
                                 Up to 12% Off
                             </span>
                         </button>
+                    </div>
                     </div>
                 </div>
 

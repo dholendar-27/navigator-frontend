@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { Plus, RefreshCw, Search, FolderClosed, X, Trash2, Users, FileText } from "lucide-react";
+
 import { PageActionButton } from "@/components/ui/page-action-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -785,6 +786,7 @@ export default function CategoryPage() {
                         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
                             Categories
                         </h1>
+
                         {!isLoading && (
                             <Badge className="rounded-full bg-blue-50 dark:bg-blue-900/30 px-2.5 py-0.5 text-xs font-semibold text-blue-600 dark:text-blue-400 animate-fade-in">
                                 {categories.length}

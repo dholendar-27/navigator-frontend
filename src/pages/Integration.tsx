@@ -4,6 +4,7 @@ import IntegrationCard from "@/components/integration/IntegrationCard";
 import UnifiedEmptyState from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 
+
 const SlackIcon = () => (
     <img src="/Slack.svg" alt="Slack" className="h-7 w-7 object-contain" />
 );
@@ -89,6 +90,7 @@ const Integration: React.FC<IntegrationProps> = ({ variant = "populated" }) => {
                         >
                             Integration
                         </h1>
+
                         <span className="rounded-full border border-zinc-200 bg-zinc-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                             Coming soon
                         </span>

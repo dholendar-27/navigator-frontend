@@ -263,6 +263,13 @@ export interface ChatQueryPayload {
     max_iterations?: number;
     model?: string;
     truncate_message_id?: string;
+    context_s3_key?: string;
+}
+
+export interface ChatContextResult {
+    filename: string;
+    file_size: number;
+    s3_key: string;
 }
 
 /** A citation from the backend SSE stream */
@@ -582,6 +589,34 @@ export async function updateProfile(payload: { first_name: string; last_name: st
 }
 
 
+
+/**
+ * Upload a file and extract its text for use as ephemeral chat context.
+ * The file is processed server-side; nothing is stored permanently.
+ * Returns extracted text, filename, and char count.
+ */
+export async function extractChatContext(
+    file: File,
+    token: string
+): Promise<ChatContextResult> {
+    const baseURL = (await import("../config")).config.apiBaseUrl;
+    const form = new FormData();
+    form.append("file", file);
+    const res = await fetch(`${baseURL}/chat/extract-context`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(
+            err?.detail
+                ? typeof err.detail === "string" ? err.detail : JSON.stringify(err.detail)
+                : `Upload failed: ${res.status}`
+        );
+    }
+    return res.json();
+}
 
 /** Clear all messages in a conversation */
 export async function clearConversationMessages(

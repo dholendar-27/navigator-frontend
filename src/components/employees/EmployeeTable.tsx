@@ -55,6 +55,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { Button } from "@/components/ui/button";
 
 import { toast } from "sonner";
@@ -412,26 +413,30 @@ export default function EmployeeTable({
                         )}
 
                         {visibleColumns.includes("employeeCode") && (
-                            <div className="text-sm normal-case tracking-normal text-[#171717] dark:text-[#E7E7E0] font-semibold cursor-pointer hover:opacity-80 px-3" onClick={() => handleSort("employeeCode")}>
+                            <div className="text-sm normal-case tracking-normal text-[#171717] dark:text-[#E7E7E0] font-semibold cursor-pointer hover:opacity-80 px-3 flex items-center gap-1.5" onClick={() => handleSort("employeeCode")}>
                                 Employee Code <SortIcon columnKey="employeeCode" />
+                                <InfoTooltip content="A unique identifier assigned to each employee, used for tracking and reporting." side="bottom" />
                             </div>
                         )}
 
                         {visibleColumns.includes("kbFiles") && (
-                            <div className="text-sm normal-case tracking-normal text-[#171717] dark:text-[#E7E7E0] font-semibold cursor-pointer hover:opacity-80 px-3" onClick={() => handleSort("kbFiles")}>
+                            <div className="text-sm normal-case tracking-normal text-[#171717] dark:text-[#E7E7E0] font-semibold cursor-pointer hover:opacity-80 px-3 flex items-center gap-1.5" onClick={() => handleSort("kbFiles")}>
                                 No. Of KB Files <SortIcon columnKey="kbFiles" />
+                                <InfoTooltip content="Number of knowledge base files this employee can access across all categories." side="bottom" />
                             </div>
                         )}
 
                         {visibleColumns.includes("simpleInteraction") && (
-                            <div className="text-sm normal-case tracking-normal text-[#171717] dark:text-[#E7E7E0] font-semibold cursor-pointer hover:opacity-80 px-3" onClick={() => handleSort("simpleInteraction")}>
+                            <div className="text-sm normal-case tracking-normal text-[#171717] dark:text-[#E7E7E0] font-semibold cursor-pointer hover:opacity-80 px-3 flex items-center gap-1.5" onClick={() => handleSort("simpleInteraction")}>
                                 Simple Interaction <SortIcon columnKey="simpleInteraction" />
+                                <InfoTooltip content="Total standard AI chat queries this employee has made. Each costs 0.5 credits." side="bottom" />
                             </div>
                         )}
 
                         {visibleColumns.includes("complexInteraction") && (
-                            <div className="text-sm normal-case tracking-normal text-[#171717] dark:text-[#E7E7E0] font-semibold cursor-pointer hover:opacity-80 px-3" onClick={() => handleSort("complexInteraction")}>
+                            <div className="text-sm normal-case tracking-normal text-[#171717] dark:text-[#E7E7E0] font-semibold cursor-pointer hover:opacity-80 px-3 flex items-center gap-1.5" onClick={() => handleSort("complexInteraction")}>
                                 Complex Interaction <SortIcon columnKey="complexInteraction" />
+                                <InfoTooltip content="Total advanced AI queries using multi-step reasoning. Each costs 1.0 credit." side="bottom" />
                             </div>
                         )}
 

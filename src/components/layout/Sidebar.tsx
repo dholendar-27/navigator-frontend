@@ -112,8 +112,8 @@ function NavItem({
                                 cn(
                                     "flex items-center justify-center h-10 w-10 rounded-lg transition-colors",
                                     isActive
-                                        ? "bg-zinc-100 text-zinc-900"
-                                        : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
+                                        ? "bg-blue-50 dark:bg-blue-900/25 text-blue-700 dark:text-blue-300"
+                                        : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100/70 dark:hover:bg-blue-900/15 hover:text-zinc-900 dark:hover:text-zinc-100"
                                 )
                             }
                         >
@@ -138,8 +138,8 @@ function NavItem({
                 cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                     isActive
-                        ? "bg-surface-sidebar dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
-                        : "text-zinc-600 dark:text-zinc-400 hover:bg-surface-sidebar dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100"
+                        ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
+                        : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100/70 dark:hover:bg-zinc-800/70 hover:text-zinc-900 dark:hover:text-zinc-100"
                 )
             }
         >
@@ -281,7 +281,7 @@ function ChatHistoryList({ onConversationDeleted }: { onConversationDeleted?: ()
                                 className={cn(
                                     "group w-full flex items-center gap-2 py-2 px-3 text-left text-sm transition-all cursor-pointer shrink-0 relative rounded-lg",
                                     isActive
-                                        ? "bg-surface-sidebar text-zinc-900 dark:bg-surface-sidebar dark:text-zinc-100 font-semibold"
+                                        ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-semibold"
                                         : "text-zinc-655 hover:bg-zinc-100/60 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-100"
                                 )}
                             >
@@ -431,8 +431,8 @@ export default function Sidebar({
                                                     cn(
                                                         "mx-auto flex items-center justify-center h-10 w-10 rounded-xl transition-all",
                                                         active
-                                                            ? "bg-surface-sidebar dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm"
-                                                            : "text-zinc-550 dark:text-zinc-400 hover:bg-surface-sidebar dark:hover:bg-zinc-800 hover:text-zinc-800 dark:hover:text-zinc-100"
+                                                            ? "bg-blue-50 dark:bg-blue-900/25 text-blue-700 dark:text-blue-300 shadow-sm"
+                                                            : "text-zinc-550 dark:text-zinc-400 hover:bg-zinc-100/70 dark:hover:bg-blue-900/15 hover:text-zinc-800 dark:hover:text-zinc-100"
                                                     )
                                                 }
                                             >
@@ -475,8 +475,8 @@ export default function Sidebar({
                                                     cn(
                                                         "mx-auto flex items-center justify-center h-10 w-10 rounded-xl transition-all",
                                                         isItemActive(item.to)
-                                                            ? "bg-surface-sidebar dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm border border-zinc-200/50 dark:border-zinc-700/50"
-                                                            : "text-zinc-550 dark:text-zinc-400 hover:bg-surface-sidebar dark:hover:bg-zinc-800 hover:text-zinc-800 dark:hover:text-zinc-100"
+                                                            ? "bg-blue-50 dark:bg-blue-900/25 text-blue-700 dark:text-blue-300 shadow-sm border border-blue-100/50 dark:border-blue-800/30"
+                                                            : "text-zinc-550 dark:text-zinc-400 hover:bg-zinc-100/70 dark:hover:bg-blue-900/15 hover:text-zinc-800 dark:hover:text-zinc-100"
                                                     )
                                                 }
                                             >
@@ -552,7 +552,7 @@ export default function Sidebar({
                                     onClick={onSearchClick}
                                     data-testid="nav-search-chats"
                                     data-tour="nav-search-chats"
-                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-zinc-600 hover:bg-surface-sidebar hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 cursor-pointer text-left w-full"
+                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-zinc-600 hover:bg-zinc-100/70 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/70 dark:hover:text-zinc-100 cursor-pointer text-left w-full"
                                 >
                                     <div className="flex h-4 w-4 items-center justify-center shrink-0">
                                         <item.icon className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
@@ -575,8 +575,8 @@ export default function Sidebar({
                                         cn(
                                             "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                                             isItemActive(item.to)
-                                                ? "bg-surface-sidebar dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
-                                                : "text-zinc-600 dark:text-zinc-400 hover:bg-surface-sidebar hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                                                ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
+                                                : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100/70 hover:text-zinc-900 dark:hover:bg-zinc-800/70 dark:hover:text-zinc-100"
                                         )
                                     }
                                 >

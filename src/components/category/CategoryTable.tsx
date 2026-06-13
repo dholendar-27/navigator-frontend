@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { type Category } from "@/types/category";
 
 type RowMenuProps = {
@@ -260,13 +261,15 @@ export default function CategoryTable({
                             </div>
                         )}
                         {visibleColumns.includes("kbCount") && (
-                            <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100 whitespace-nowrap" onClick={() => handleSort("kbCount")}>
+                            <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100 whitespace-nowrap flex items-center gap-1.5" onClick={() => handleSort("kbCount")}>
                                 No. Of Knowledge Base <SortIcon columnKey="kbCount" />
+                                <InfoTooltip content="Knowledge base files assigned to this category. Employees in this category can use these files in AI chat." side="bottom" />
                             </div>
                         )}
                         {visibleColumns.includes("employeeCount") && (
-                            <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100 whitespace-nowrap" onClick={() => handleSort("employeeCount")}>
+                            <div className="text-sm normal-case tracking-normal text-zinc-600 dark:text-zinc-300 font-semibold cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100 whitespace-nowrap flex items-center gap-1.5" onClick={() => handleSort("employeeCount")}>
                                 No. Of Employees <SortIcon columnKey="employeeCount" />
+                                <InfoTooltip content="Team members assigned to this category. They share access to the same knowledge base files." side="bottom" />
                             </div>
                         )}
                         {visibleColumns.includes("createdBy") && (

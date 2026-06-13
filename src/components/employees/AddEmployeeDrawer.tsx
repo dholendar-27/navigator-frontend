@@ -1,5 +1,6 @@
 import { useEffect, useState, type JSX } from "react";
 import { X, AlertCircle, Loader2 } from "lucide-react";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { employeeInviteSchema } from "@/schemas/employee";
 import { Button } from "@/components/ui/button";
@@ -252,8 +253,13 @@ export default function AddEmployeeDrawer({
 
                     {/* Role */}
                     <div className="space-y-1.5">
-                        <Label className="text-sm font-medium text-zinc-700">
+                        <Label className="text-sm font-medium text-zinc-700 flex items-center gap-1.5">
                             Role <span className="text-red-500 ml-0.5">*</span>
+                            <InfoTooltip
+                                content="Member: can only chat. Editor: can also upload files. Admin: full access including managing employees. Super Admin: organization owner."
+                                maxWidth="260px"
+                                side="right"
+                            />
                         </Label>
 
                         <Select
@@ -301,9 +307,14 @@ export default function AddEmployeeDrawer({
                     <div className="space-y-1.5">
                         <Label
                             htmlFor="emp-code"
-                            className="text-sm font-medium text-zinc-700"
+                            className="text-sm font-medium text-zinc-700 flex items-center gap-1.5"
                         >
                             Employee Code <span className="text-xs text-zinc-400 font-normal">(optional)</span>
+                            <InfoTooltip
+                                content="A unique identifier for this employee (e.g. EMP-001). Used for reporting and tracking. You can set it now or update it later."
+                                maxWidth="250px"
+                                side="right"
+                            />
                         </Label>
 
                         <Input

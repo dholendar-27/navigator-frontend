@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Send, Bot, User, Sparkles, X, FileText } from "lucide-react";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { safeOpen } from "@/utils/safeUrl";
 import {
     Sheet,
@@ -288,7 +289,14 @@ export default function AskAiDrawer({ open, onOpenChange, folderId }: AskAiDrawe
                             <Sparkles className="h-4 w-4" />
                         </div>
                         <div>
-                            <SheetTitle className="text-sm font-semibold text-slate-900">Navigator AI</SheetTitle>
+                            <SheetTitle className="text-sm font-semibold text-slate-900 flex items-center gap-1.5">
+                                Navigator AI
+                                <InfoTooltip
+                                    content={folderId ? "Searches only within this folder's documents. Ask anything about their content — the AI cites its sources." : "Searches across your entire Knowledge Base. Ask questions, request summaries, or find specific information."}
+                                    side="bottom"
+                                    maxWidth="240px"
+                                />
+                            </SheetTitle>
                             <p className="text-xs text-slate-500 font-normal">
                                 {folderId ? "Folder Search" : "Knowledge Base"}
                             </p>

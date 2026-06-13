@@ -40,6 +40,7 @@ import { cacheWebSocket } from "@/utils/cacheWebSocket";
 import { USFlag, FrenchFlag, JapaneseFlag, SpanishFlag } from "@/utils/flagIcons";
 import ChangePasswordDrawer from "@/components/layout/ChangePasswordDrawer";
 import OrganizationProfileDrawer from "@/components/layout/OrganizationProfileDrawer";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 
 function usageBarColor(pct: number): string {
     if (pct >= 90) return "#ef4444";
@@ -51,9 +52,10 @@ interface UsageRowProps {
     label: string;
     used: number | undefined;
     limit: number;
+    tooltip?: string;
 }
 
-function UsageRow({ label, used, limit }: UsageRowProps): JSX.Element {
+function UsageRow({ label, used, limit, tooltip }: UsageRowProps): JSX.Element {
     const pct = used != null ? Math.min((used / limit) * 100, 100) : 0;
     const color = usageBarColor(pct);
     const displayText = used != null ? `${used}/${limit}` : `—/${limit}`;
@@ -61,7 +63,10 @@ function UsageRow({ label, used, limit }: UsageRowProps): JSX.Element {
     return (
         <div className="space-y-1">
             <div className="flex justify-between items-center text-zinc-500 dark:text-zinc-400">
-                <span>{label}</span>
+                <span className="flex items-center gap-1">
+                    {label}
+                    {tooltip && <InfoTooltip content={tooltip} side="right" maxWidth="220px" />}
+                </span>
                 <span
                     className="font-medium tabular-nums"
                     style={{ color: used != null && pct >= 70 ? color : undefined }}
@@ -174,9 +179,9 @@ export function UserMenuDropdown({ onProfileClick }: UserMenuDropdownProps): JSX
                                         {usage?.plan ?? "Core"}
                                     </span>
                                 </div>
-                                <UsageRow label="Pages" used={usage?.pages.used} limit={usage?.pages.limit ?? 500} />
-                                <UsageRow label="Simple (0.5 cr)" used={usage?.simple_interactions.used} limit={usage?.simple_interactions.limit ?? 350} />
-                                <UsageRow label="Complex (1.0 cr)" used={usage?.complex_interactions.used} limit={usage?.complex_interactions.limit ?? 100} />
+                                <UsageRow label="Pages" used={usage?.pages.used} limit={usage?.pages.limit ?? 500} tooltip="Document pages extracted via OCR. Each page processed counts against your monthly page limit." />
+                                <UsageRow label="Simple (0.5 cr)" used={usage?.simple_interactions.used} limit={usage?.simple_interactions.limit ?? 350} tooltip="Basic AI queries that cost 0.5 credits each — fast lookups, short summaries, and direct questions." />
+                                <UsageRow label="Complex (1.0 cr)" used={usage?.complex_interactions.used} limit={usage?.complex_interactions.limit ?? 100} tooltip="In-depth AI queries that cost 1.0 credit each — multi-step reasoning, long documents, and detailed analysis." />
                             </div>
                         </div>
                     )}

@@ -9,6 +9,7 @@ import {
     UserPlus,
     Activity
 } from "lucide-react";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -488,7 +489,10 @@ export default function DashboardPage(): JSX.Element {
                     {/* Total Employees */}
                     <div className="flex items-center justify-between rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-surface-page dark:bg-zinc-900/80 p-5 shadow-sm transition-all hover:shadow">
                         <div className="space-y-2.5">
-                            <p className="text-xs font-medium text-zinc-450 dark:text-zinc-500 uppercase tracking-wider">Total Employees</p>
+                            <p className="text-xs font-medium text-zinc-450 dark:text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
+                                Total Employees
+                                <InfoTooltip content="Active team members who have accepted their invitation. Pending invites are excluded." />
+                            </p>
                             <h3 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 tabular-nums">
                                 {new Intl.NumberFormat().format(employeesCount)}
                             </h3>
@@ -504,7 +508,10 @@ export default function DashboardPage(): JSX.Element {
                     {/* Total Files Size (dynamic KB/MB/GB label) */}
                     <div className="flex items-center justify-between rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-surface-page dark:bg-zinc-900/80 p-5 shadow-sm transition-all hover:shadow">
                         <div className="space-y-2.5">
-                            <p className="text-xs font-medium text-zinc-450 dark:text-zinc-500 uppercase tracking-wider">Total Files Size</p>
+                            <p className="text-xs font-medium text-zinc-450 dark:text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
+                                Total Files Size
+                                <InfoTooltip content="Combined storage used by all files across every knowledge base folder in your organization." />
+                            </p>
                             <h3 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 tabular-nums">
                                 {formatSize(kbSizeBytes)}
                             </h3>
@@ -520,7 +527,10 @@ export default function DashboardPage(): JSX.Element {
                     {/* Usage Limit */}
                     <div className="flex items-center justify-between rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-surface-page dark:bg-zinc-900/80 p-5 shadow-sm transition-all hover:shadow">
                         <div className="space-y-2.5 flex-1 pr-3">
-                            <p className="text-xs font-medium text-zinc-450 dark:text-zinc-500 uppercase tracking-wider">Usage Limit</p>
+                            <p className="text-xs font-medium text-zinc-450 dark:text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
+                                Usage Limit
+                                <InfoTooltip content="Your highest usage percentage across credits, pages, and AI interactions this billing cycle. Consider upgrading if you're near 100%." maxWidth="240px" />
+                            </p>
                             <h3 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 tabular-nums">{Math.round(usageLimit)}%</h3>
 
                             <div className="space-y-1.5 pt-1">
@@ -559,7 +569,10 @@ export default function DashboardPage(): JSX.Element {
                     {/* Subscription */}
                     <div className="flex items-center justify-between rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-surface-page dark:bg-zinc-900/80 p-5 shadow-sm transition-all hover:shadow">
                         <div className="space-y-2.5">
-                            <p className="text-xs font-medium text-zinc-450 dark:text-zinc-500 uppercase tracking-wider">Subscription</p>
+                            <p className="text-xs font-medium text-zinc-450 dark:text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
+                                Subscription
+                                <InfoTooltip content="Your current billing plan and AI credits consumed. Credits reset each billing cycle and are shared across all employees." maxWidth="240px" />
+                            </p>
                             <h3 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 capitalize">{plan}</h3>
                             <p className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
                                 Credits used:{' '}
@@ -628,16 +641,19 @@ export default function DashboardPage(): JSX.Element {
                                 <span className="h-2.5 w-2.5 rounded-sm bg-blue-600 block shrink-0" />
                                 <span className="text-zinc-500 dark:text-zinc-400">Simple</span>
                                 <span className="text-zinc-400 dark:text-zinc-600 text-[10px]">(0.5cr)</span>
+                                <InfoTooltip content="Standard AI chat queries. Each costs 0.5 credits." side="top" />
                             </div>
                             <div className="flex items-center gap-1.5">
                                 <span className="h-2.5 w-2.5 rounded-sm bg-orange-600 block shrink-0" />
                                 <span className="text-zinc-500 dark:text-zinc-400">Complex</span>
                                 <span className="text-zinc-400 dark:text-zinc-600 text-[10px]">(1.0cr)</span>
+                                <InfoTooltip content="Advanced AI queries using multi-step reasoning. Each costs 1.0 credit." side="top" />
                             </div>
                             <div className="flex items-center gap-1.5">
                                 <span className="h-2.5 w-2.5 rounded-sm bg-green-600 block shrink-0" style={{ backgroundImage: "repeating-linear-gradient(90deg,#16a34a 0,#16a34a 4px,transparent 4px,transparent 7px)" }} />
                                 <span className="text-zinc-500 dark:text-zinc-400">Extraction</span>
                                 <span className="text-zinc-400 dark:text-zinc-600 text-[10px]">(0.5cr)</span>
+                                <InfoTooltip content="Document data extraction queries (e.g. OCR search). Each costs 0.5 credits." side="top" />
                             </div>
                             <span className="text-zinc-300 dark:text-zinc-700">·</span>
                             <span className="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase tracking-wider font-semibold">Interactions / Day</span>

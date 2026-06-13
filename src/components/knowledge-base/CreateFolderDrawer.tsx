@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { X, Loader2, AlertCircle } from "lucide-react";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -109,9 +110,14 @@ export default function CreateFolderDrawer({
                     <div className="space-y-1.5">
                         <Label
                             htmlFor="folder-description"
-                            className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                            className="text-sm font-medium text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5"
                         >
                             Description <span className="text-xs text-zinc-400 dark:text-zinc-500 font-normal">(optional)</span>
+                            <InfoTooltip
+                                content="A short summary of what this folder contains. Helps team members understand the folder's purpose at a glance."
+                                side="right"
+                                maxWidth="230px"
+                            />
                         </Label>
                         <Textarea
                             id="folder-description"
